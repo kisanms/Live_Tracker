@@ -98,7 +98,7 @@ export default function SignIn() {
             <View>
               {loading ? (
                 <View className="flex-row justify-center">
-                  <ActivityIndicator size={hp(8)} />
+                  <ActivityIndicator size={hp(6.5)} />
                 </View>
               ) : (
                 <TouchableOpacity
