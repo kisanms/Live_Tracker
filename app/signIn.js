@@ -1,4 +1,6 @@
 import {
+  ActivityIndicator,
+  Alert,
   Image,
   Pressable,
   StyleSheet,
@@ -7,7 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import React from "react";
+import React, { useRef, useState } from "react";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -17,6 +19,19 @@ import Octicons from "@expo/vector-icons/Octicons";
 import { useRouter } from "expo-router";
 export default function SignIn() {
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const emailRef = useRef("");
+  const passwordRef = useRef("");
+
+  const handleLogin = async () => {
+    if (!emailRef.current || !passwordRef.current) {
+      Alert.alert("SignIn", "Please fill all the details!");
+      return;
+    }
+
+    //login Process
+  };
+
   return (
     <View style={{ flex: 1 }}>
       <StatusBar style="dark" />
@@ -50,6 +65,7 @@ export default function SignIn() {
             >
               <Octicons name="mail" size={hp(2.7)} color="gray" />
               <TextInput
+                onChangeText={(value) => (emailRef.current = value)}
                 style={{ fontSize: hp(2) }}
                 className="flex-1 font-semibold text-neutral-700"
                 placeholder="Email address"
@@ -63,9 +79,11 @@ export default function SignIn() {
               >
                 <Octicons name="lock" size={hp(2.7)} color="gray" />
                 <TextInput
+                  onChangeText={(value) => (passwordRef.current = value)}
                   style={{ fontSize: hp(2) }}
                   className="flex-1 font-semibold text-neutral-700"
                   placeholder="Password"
+                  secureTextEntry
                   placeholderTextColor={"gray"}
                 />
               </View>
@@ -77,17 +95,27 @@ export default function SignIn() {
               </Text>
             </View>
             {/*Submit Button */}
-            <TouchableOpacity
-              style={{ backgroundColor: "#DE89DD", height: hp(6.5) }}
-              className="justify-center rounded-xl items-center"
-            >
-              <Text
-                style={{ fontSize: hp(2.7) }}
-                className="text-white font-bold tracking-wider text-center"
-              >
-                Sign In
-              </Text>
-            </TouchableOpacity>
+            <View>
+              {loading ? (
+                <View className="flex-row justify-center">
+                  <ActivityIndicator size={hp(8)} />
+                </View>
+              ) : (
+                <TouchableOpacity
+                  onPress={handleLogin}
+                  style={{ backgroundColor: "#DE89DD", height: hp(6.5) }}
+                  className="justify-center rounded-xl items-center"
+                >
+                  <Text
+                    style={{ fontSize: hp(2.7) }}
+                    className="text-white font-bold tracking-wider text-center"
+                  >
+                    Sign In
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
             {/*SignUp text */}
             <View className="flex-row justify-center">
               <Text
