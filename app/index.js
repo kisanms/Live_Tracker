@@ -1,14 +1,14 @@
-import { StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import React from "react";
 
-const Home = () => {
+const StartPage = () => {
   return (
-    <View className="p-0">
-      <Text className="text-3xl text-center">Hom Hii</Text>
+    <View className="flex-1 justify-center items-center ">
+      <ActivityIndicator size="large" color="gray" />
     </View>
   );
 };
 
-export default Home;
+export default StartPage;
 
 const styles = StyleSheet.create({});
