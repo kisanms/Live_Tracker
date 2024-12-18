@@ -109,7 +109,7 @@ export default function SignUp() {
                 placeholderTextColor={"gray"}
               />
             </View>
-            <View
+            {/* <View
               style={{ height: hp(7) }}
               className="flex-row font-bold gap-4 px-4 bg-neutral-100 items-center rounded-xl"
             >
@@ -121,7 +121,7 @@ export default function SignUp() {
                 placeholder="Profile Url"
                 placeholderTextColor={"gray"}
               />
-            </View>
+            </View> */}
 
             {/*Submit Button */}
             <View>
