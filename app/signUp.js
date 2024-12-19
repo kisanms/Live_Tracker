@@ -17,11 +17,15 @@ import {
 import { StatusBar } from "expo-status-bar";
 import Octicons from "@expo/vector-icons/Octicons";
 import Feather from "@expo/vector-icons/Feather";
+import { Picker } from "@react-native-picker/picker";
+import AntDesign from "@expo/vector-icons/AntDesign";
 import { useRouter } from "expo-router";
-import Entypo from "@expo/vector-icons/Entypo";
+
 export default function SignUp() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [gender, setGender] = useState("");
+  const [role, setRole] = useState("");
   const emailRef = useRef("");
   const passwordRef = useRef("");
   const userNameRef = useRef("");
@@ -43,7 +47,7 @@ export default function SignUp() {
 
   return (
     <View style={{ flex: 1 }}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" backgroundColor="#DE89DD" />
       <View
         style={{
           paddingTop: hp(7),
@@ -66,8 +70,31 @@ export default function SignUp() {
           >
             Sign Up
           </Text>
+
           {/*inputs */}
           <View style={{ gap: hp(2) }}>
+            {/* Role Dropdown (Picker) */}
+            <View
+              style={{
+                height: hp(7),
+              }}
+              className="font-bold bg-neutral-100 rounded-2xl"
+            >
+              <Picker
+                selectedValue={role}
+                onValueChange={(itemValue) => setRole(itemValue)}
+                style={{
+                  height: 60,
+                  fontSize: hp(2),
+                  color: "gray",
+                }}
+              >
+                <Picker.Item label="Select Your Role" value="" />
+                <Picker.Item label="Admin" value="admin" />
+                <Picker.Item label="Manager" value="manager" />
+                <Picker.Item label="Employee" value="employee" />
+              </Picker>
+            </View>
             <View
               style={{ height: hp(7) }}
               className="flex-row font-bold gap-4 px-4 bg-neutral-100 items-center rounded-xl"

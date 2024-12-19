@@ -34,7 +34,7 @@ export default function SignIn() {
 
   return (
     <View style={{ flex: 1 }}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" backgroundColor="#DE89DD" />
       <View
         style={{
           paddingTop: hp(8),
