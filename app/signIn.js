@@ -34,7 +34,7 @@ export default function SignIn() {
 
   return (
     <View style={{ flex: 1 }}>
-      <StatusBar style="light" backgroundColor="#DE89DD" />
+      <StatusBar style="light" backgroundColor="red" />
       <View
         style={{
           paddingTop: hp(8),
@@ -47,7 +47,7 @@ export default function SignIn() {
         <View style={{ alignItems: "center" }}>
           <Image
             style={{ height: hp(30), resizeMode: "contain" }}
-            source={require("../assets/images/signIn.jpg")}
+            source={require("../assets/images/signUP1.jpg")}
           />
         </View>
         <View style={{ gap: 10 }}>
@@ -103,7 +103,7 @@ export default function SignIn() {
               ) : (
                 <TouchableOpacity
                   onPress={handleLogin}
-                  style={{ backgroundColor: "#DE89DD", height: hp(6.5) }}
+                  style={{ backgroundColor: "red", height: hp(6.5) }}
                   className="justify-center rounded-xl items-center"
                 >
                   <Text
@@ -126,7 +126,7 @@ export default function SignIn() {
               </Text>
               <Pressable onPress={() => router.push("signUp")}>
                 <Text
-                  style={{ fontSize: hp(1.8), color: "#DE89DD" }}
+                  style={{ fontSize: hp(1.8), color: "red" }}
                   className="font-semibold"
                 >
                   Sign Up
