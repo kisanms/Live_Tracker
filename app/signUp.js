@@ -18,7 +18,6 @@ import { StatusBar } from "expo-status-bar";
 import Octicons from "@expo/vector-icons/Octicons";
 import Feather from "@expo/vector-icons/Feather";
 import { Picker } from "@react-native-picker/picker";
-import AntDesign from "@expo/vector-icons/AntDesign";
 import { useRouter } from "expo-router";
 
 export default function SignUp() {
@@ -30,19 +29,20 @@ export default function SignUp() {
   const passwordRef = useRef("");
   const userNameRef = useRef("");
   const profileRef = useRef("");
+  const keyRef = useRef("");
 
   const handleRegister = async () => {
     if (
       !emailRef.current ||
       !passwordRef.current ||
       !userNameRef.current ||
-      !profileRef.current
+      ((role === "admin" || role === "manager") && !keyRef.current)
     ) {
       Alert.alert("Sign Up", "Please fill all the details!");
       return;
     }
 
-    //login Process
+    // Registration Process
   };
 
   return (
@@ -59,7 +59,7 @@ export default function SignUp() {
         {/* signIn Image*/}
         <View style={{ alignItems: "center" }}>
           <Image
-            style={{ height: hp(30), resizeMode: "contain" }}
+            style={{ height: hp(25), resizeMode: "contain" }}
             source={require("../assets/images/signIn1.jpg")}
           />
         </View>
@@ -95,6 +95,24 @@ export default function SignUp() {
                 <Picker.Item label="Employee" value="employee" />
               </Picker>
             </View>
+
+            {/* Conditional TextInput for Key */}
+            {(role === "admin" || role === "manager") && (
+              <View
+                style={{ height: hp(7) }}
+                className="flex-row font-bold gap-4 px-4 bg-neutral-100 items-center rounded-xl"
+              >
+                <Feather name="key" size={hp(2.7)} color="gray" />
+                <TextInput
+                  onChangeText={(value) => (keyRef.current = value)}
+                  style={{ fontSize: hp(2) }}
+                  className="flex-1 font-semibold text-neutral-700"
+                  placeholder="Enter Key"
+                  placeholderTextColor={"gray"}
+                />
+              </View>
+            )}
+
             <View
               style={{ height: hp(7) }}
               className="flex-row font-bold gap-4 px-4 bg-neutral-100 items-center rounded-xl"
@@ -136,19 +154,6 @@ export default function SignUp() {
                 placeholderTextColor={"gray"}
               />
             </View>
-            {/* <View
-              style={{ height: hp(7) }}
-              className="flex-row font-bold gap-4 px-4 bg-neutral-100 items-center rounded-xl"
-            >
-              <Feather name="image" size={hp(2.7)} color="gray" />
-              <TextInput
-                onChangeText={(value) => (profileRef.current = value)}
-                style={{ fontSize: hp(2) }}
-                className="flex-1 font-semibold text-neutral-700"
-                placeholder="Profile Url"
-                placeholderTextColor={"gray"}
-              />
-            </View> */}
 
             {/*Submit Button */}
             <View>
