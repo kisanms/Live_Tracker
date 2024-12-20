@@ -1,25 +1,32 @@
 import React, { useState, useEffect, useRef } from "react";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
-import { StyleSheet, View, Text, TouchableOpacity, Alert } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  Alert,
+  Linking,
+} from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Maps() {
   const [mapRegion, setMapRegion] = useState(null);
-  const [isLocationFetched, setIsLocationFetched] = useState(false); // Track if location is fetched
+  const [isLocationFetched, setIsLocationFetched] = useState(false);
   const mapRef = useRef(null);
 
-  // Load saved location from AsyncStorage when app starts
+  // Load saved location from AsyncStorage
   const loadSavedLocation = async () => {
     try {
       const savedLocation = await AsyncStorage.getItem("userLocation");
       if (savedLocation) {
         const parsedLocation = JSON.parse(savedLocation);
-        setMapRegion(parsedLocation); // Parse and set saved location
+        setMapRegion(parsedLocation);
       } else {
-        // Default fallback region if no saved location is found
+        // Default fallback region
         setMapRegion({
           latitude: 37.78825,
           longitude: -122.4324,
@@ -32,10 +39,9 @@ export default function Maps() {
     }
   };
 
-  // Request location permission and update the map
+  // Request location permission and navigate to current location
   const handleLocationPermissionAndNavigate = async () => {
     try {
-      // Request location permissions
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         Alert.alert(
@@ -45,7 +51,6 @@ export default function Maps() {
         return;
       }
 
-      // Get current location
       let location = await Location.getCurrentPositionAsync({
         enableHighAccuracy: true,
       });
@@ -55,29 +60,38 @@ export default function Maps() {
       const updatedRegion = {
         latitude,
         longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
+        latitudeDelta: 0.001,
+        longitudeDelta: 0.001,
       };
 
-      // Save location to AsyncStorage for persistence
       await AsyncStorage.setItem("userLocation", JSON.stringify(updatedRegion));
 
-      // Update the map region
       setMapRegion(updatedRegion);
-      setIsLocationFetched(true); // Set location fetched flag to true
-
-      // Animate the map to the current location
-      mapRef.current.animateToRegion(updatedRegion, 1000);
+      setIsLocationFetched(true);
 
       console.log("Latitude:", latitude, "Longitude:", longitude);
+      mapRef.current.animateToRegion(updatedRegion, 1000);
     } catch (error) {
       Alert.alert("Error", "An error occurred while fetching location.");
       console.error(error);
     }
   };
 
+  // Open current location in Google Maps
+  const handleOpenInGoogleMaps = () => {
+    if (mapRegion) {
+      const { latitude, longitude } = mapRegion;
+      const googleMapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+      Linking.openURL(googleMapsUrl).catch((err) =>
+        Alert.alert("Error", "Unable to open Google Maps.")
+      );
+    } else {
+      Alert.alert("Location Not Found", "No location data available.");
+    }
+  };
+
   useEffect(() => {
-    loadSavedLocation(); // Load saved location when component mounts
+    loadSavedLocation();
   }, []);
 
   return (
@@ -87,9 +101,9 @@ export default function Maps() {
         <MapView
           ref={mapRef}
           style={styles.map}
-          region={mapRegion} // Use controlled region
-          showsUserLocation={true} // Show the blue dot for the current location
-          followsUserLocation={true} // Follow the user's location on map
+          region={mapRegion}
+          showsUserLocation={true}
+          followsUserLocation={true}
         >
           {isLocationFetched && mapRegion && (
             <Marker
@@ -98,17 +112,26 @@ export default function Maps() {
                 longitude: mapRegion.longitude,
               }}
               title="Your Location"
-              pinColor="red" // Set the pin color to red
+              pinColor="red"
             />
           )}
         </MapView>
       )}
+      {/* My Location Button */}
       <TouchableOpacity
-        style={styles.locationButton}
+        style={[styles.locationButton, { bottom: 20, left: 20 }]}
         onPress={handleLocationPermissionAndNavigate}
       >
-        <Ionicons name="locate" size={24} color="white" />
+        <Ionicons name="locate" size={20} color="white" />
         <Text style={styles.buttonText}>My Location</Text>
+      </TouchableOpacity>
+      {/* Get Location Button */}
+      <TouchableOpacity
+        style={[styles.locationButton, { bottom: 80, left: 20 }]}
+        onPress={handleOpenInGoogleMaps}
+      >
+        <Ionicons name="map" size={20} color="white" />
+        <Text style={styles.buttonText}>Get Location</Text>
       </TouchableOpacity>
     </View>
   );
@@ -124,11 +147,9 @@ const styles = StyleSheet.create({
   },
   locationButton: {
     position: "absolute",
-    bottom: 50,
-    right: 20,
     backgroundColor: "#4285F4",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
     borderRadius: 25,
     flexDirection: "row",
     alignItems: "center",
@@ -136,7 +157,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: "white",
-    fontSize: 16,
+    fontSize: 14,
     marginLeft: 8,
     fontWeight: "bold",
   },
