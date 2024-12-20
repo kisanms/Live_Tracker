@@ -22,9 +22,10 @@ import Octicons from "@expo/vector-icons/Octicons";
 import Feather from "@expo/vector-icons/Feather";
 import { Picker } from "@react-native-picker/picker";
 import { useRouter } from "expo-router";
+import { useNavigation } from "@react-navigation/native";
 
 export default function SignUp() {
-  const router = useRouter();
+  const navigation = useNavigation();
   const [loading, setLoading] = useState(false);
   const [gender, setGender] = useState("");
   const [role, setRole] = useState("");
@@ -48,7 +49,7 @@ export default function SignUp() {
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1 }}
+      style={{ flex: 1, backgroundColor: "white" }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView
@@ -94,7 +95,7 @@ export default function SignUp() {
                     onValueChange={(itemValue) => {
                       setRole(itemValue);
                       if (!["admin", "manager"].includes(itemValue)) {
-                        setAdminManagerKey(""); // Reset key if not admin/manager
+                        setAdminManagerKey(""); // Reset key if the default role is selected
                       }
                     }}
                     style={{
@@ -119,6 +120,7 @@ export default function SignUp() {
                     <Feather name="key" size={hp(2.7)} color="gray" />
                     <TextInput
                       onChangeText={(value) => setAdminManagerKey(value)}
+                      value={adminManagerKey}
                       style={{ fontSize: hp(2) }}
                       className="flex-1 font-semibold text-neutral-700"
                       placeholder="Enter Key"
@@ -203,7 +205,7 @@ export default function SignUp() {
                   >
                     Already have an account?{" "}
                   </Text>
-                  <Pressable onPress={() => router.push("signIn")}>
+                  <Pressable onPress={() => navigation.navigate("signIn")}>
                     <Text
                       style={{ fontSize: hp(1.8), color: "red" }}
                       className="font-semibold"

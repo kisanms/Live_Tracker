@@ -1,32 +1,17 @@
 import { StyleSheet, Text, View } from "react-native";
-import React, { useEffect } from "react";
-import "../global.css";
-import { Slot, useRouter, useSegments } from "expo-router";
-import { AuthContextProvider, useAuth } from "../context/authContext";
+import React from "react";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import SignIn from "./signIn";
+import SignUp from "./signUp";
 
-const Mainlayout = () => {
-  const { isAuthenticated } = useAuth();
-  const segments = useSegments();
-  const router = useRouter();
+const Stack = createNativeStackNavigator();
 
-  useEffect(() => {
-    //check if the user is authenticated
-    if (typeof isAuthenticated == "undefined") return;
-    const inApp = segments[0] == "(app)";
-    if (isAuthenticated && !inApp) {
-      router.replace("home");
-    } else if (isAuthenticated == false) {
-      router.replace("signIn");
-    }
-  }, [isAuthenticated]);
-
-  return <Slot />;
-};
 const RootLayout = () => {
   return (
-    <AuthContextProvider>
-      <Mainlayout />
-    </AuthContextProvider>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="signIn" component={SignIn} />
+      <Stack.Screen name="signUp" component={SignUp} />
+    </Stack.Navigator>
   );
 };
 

@@ -1,14 +1,11 @@
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import React from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import RootLayout from "./_layout";
 
-const StartPage = () => {
+export default function App() {
   return (
-    <View className="flex-1 justify-center items-center ">
-      <ActivityIndicator size="large" color="gray" />
-    </View>
+    <NavigationContainer>
+      <RootLayout />
+    </NavigationContainer>
   );
-};
-
-export default StartPage;
-
-const styles = StyleSheet.create({});
+}

@@ -17,8 +17,9 @@ import {
 import { StatusBar } from "expo-status-bar";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useRouter } from "expo-router";
+import { useNavigation } from "@react-navigation/native";
 export default function SignIn() {
-  const router = useRouter();
+  const navigation = useNavigation();
   const [loading, setLoading] = useState(false);
   const emailRef = useRef("");
   const passwordRef = useRef("");
@@ -33,7 +34,7 @@ export default function SignIn() {
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: "white" }}>
       <StatusBar style="light" backgroundColor="red" />
       <View
         style={{
@@ -124,7 +125,7 @@ export default function SignIn() {
               >
                 Don't have an account?{" "}
               </Text>
-              <Pressable onPress={() => router.push("signUp")}>
+              <Pressable onPress={() => navigation.navigate("signUp")}>
                 <Text
                   style={{ fontSize: hp(1.8), color: "red" }}
                   className="font-semibold"
