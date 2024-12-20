@@ -48,7 +48,7 @@ export default function SignIn() {
         <View style={{ alignItems: "center" }}>
           <Image
             style={{ height: hp(30), resizeMode: "contain" }}
-            source={require("../assets/images/signUP1.jpg")}
+            source={require("../../assets/images/signUP1.jpg")}
           />
         </View>
         <View style={{ gap: 10 }}>
