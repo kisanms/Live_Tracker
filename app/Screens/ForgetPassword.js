@@ -24,18 +24,44 @@ export default function ForgotPassword() {
   const navigation = useNavigation();
   const [loading, setLoading] = useState(false);
   const emailRef = useRef("");
+  const passwordRef = useRef("");
+  const confirmPasswordRef = useRef("");
 
-  const handleForgotPassword = async () => {
-    if (!emailRef.current) {
-      Alert.alert("Forgot Password", "Please enter your email!");
+  const handleReset = async () => {
+    if (
+      !emailRef.current ||
+      !passwordRef.current ||
+      !confirmPasswordRef.current
+    ) {
+      Alert.alert("Reset Password", "Please fill all the details!");
       return;
     }
 
-    // Reset password logic here
-    Alert.alert(
-      "Forgot Password",
-      "If the email exists in our system, you will receive a password reset link."
-    );
+    if (passwordRef.current !== confirmPasswordRef.current) {
+      Alert.alert("Reset Password", "Passwords do not match!");
+      return;
+    }
+
+    setLoading(true);
+
+    // Simulate the reset process
+    try {
+      // Add logic for email/password reset here (e.g., Firebase Auth update)
+      // Example:
+      // await auth.updatePassword(passwordRef.current);
+
+      setTimeout(() => {
+        setLoading(false);
+        Alert.alert(
+          "Reset Successful",
+          "Your email and password have been updated successfully."
+        );
+        navigation.navigate("signIn");
+      }, 2000);
+    } catch (error) {
+      setLoading(false);
+      Alert.alert("Reset Failed", error.message || "Something went wrong!");
+    }
   };
 
   return (
@@ -57,7 +83,7 @@ export default function ForgotPassword() {
               gap: 12,
             }}
           >
-            {/* ForgotPassword Image */}
+            {/* Reset Password Image */}
             <View style={{ alignItems: "center" }}>
               <Image
                 style={{ height: hp(30), resizeMode: "contain" }}
@@ -70,11 +96,12 @@ export default function ForgotPassword() {
                 style={{ fontSize: hp(4) }}
                 className="font-bold tracking-wider text-center text-neutral-800"
               >
-                Forgot Password
+                Reset Password
               </Text>
 
-              {/* Email Input */}
+              {/* Input Fields */}
               <View style={{ gap: hp(2) }}>
+                {/* Email Input */}
                 <View
                   style={{ height: hp(7) }}
                   className="flex-row font-bold gap-4 px-4 bg-neutral-100 items-center rounded-xl"
@@ -89,6 +116,40 @@ export default function ForgotPassword() {
                   />
                 </View>
 
+                {/* New Password Input */}
+                <View
+                  style={{ height: hp(7) }}
+                  className="flex-row font-bold gap-4 px-4 bg-neutral-100 items-center rounded-xl"
+                >
+                  <Octicons name="lock" size={hp(2.7)} color="gray" />
+                  <TextInput
+                    onChangeText={(value) => (passwordRef.current = value)}
+                    style={{ fontSize: hp(2) }}
+                    className="flex-1 font-semibold text-neutral-700"
+                    placeholder="New Password"
+                    secureTextEntry
+                    placeholderTextColor={"gray"}
+                  />
+                </View>
+
+                {/* Confirm Password Input */}
+                <View
+                  style={{ height: hp(7) }}
+                  className="flex-row font-bold gap-4 px-4 bg-neutral-100 items-center rounded-xl"
+                >
+                  <Octicons name="lock" size={hp(2.7)} color="gray" />
+                  <TextInput
+                    onChangeText={(value) =>
+                      (confirmPasswordRef.current = value)
+                    }
+                    style={{ fontSize: hp(2) }}
+                    className="flex-1 font-semibold text-neutral-700"
+                    placeholder="Confirm Password"
+                    secureTextEntry
+                    placeholderTextColor={"gray"}
+                  />
+                </View>
+
                 {/* Submit Button */}
                 <View>
                   {loading ? (
@@ -97,7 +158,7 @@ export default function ForgotPassword() {
                     </View>
                   ) : (
                     <TouchableOpacity
-                      onPress={handleForgotPassword}
+                      onPress={handleReset}
                       style={{ backgroundColor: "red", height: hp(6.5) }}
                       className="justify-center rounded-xl items-center"
                     >
@@ -117,7 +178,7 @@ export default function ForgotPassword() {
                     style={{ fontSize: hp(1.8) }}
                     className="font-semibold text-neutral-500"
                   >
-                    Remember your password?{" "}
+                    Remember your credentials?{" "}
                   </Text>
                   <TouchableOpacity
                     onPress={() => navigation.navigate("signIn")}
