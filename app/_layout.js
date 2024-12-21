@@ -20,7 +20,7 @@ const RootLayout = () => {
       <Stack.Screen name="signUp" component={SignUp} />
       <Stack.Screen name="admin" component={AdminDashboard} />
       <Stack.Screen name="maps" component={Maps} />
-      <Stack.Screen name="forgetPassword" component={ForgetPassword} />
+      <Stack.Screen name="forgotPassword" component={ForgetPassword} />
     </Stack.Navigator>
   );
 };

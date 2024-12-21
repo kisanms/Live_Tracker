@@ -99,12 +99,16 @@ export default function SignIn() {
                       placeholderTextColor={"gray"}
                     />
                   </View>
-                  <Text
-                    style={{ fontSize: hp(1.8) }}
-                    className="font-semibold text-right text-neutral-500"
+                  <TouchableOpacity
+                    onPress={() => navigation.navigate("forgotPassword")}
                   >
-                    Forgot Password ?
-                  </Text>
+                    <Text
+                      style={{ fontSize: hp(1.8) }}
+                      className="font-semibold text-right text-neutral-500"
+                    >
+                      Forgot Password ?
+                    </Text>
+                  </TouchableOpacity>
                 </View>
                 {/*Submit Button */}
                 <View>
