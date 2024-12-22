@@ -19,8 +19,8 @@ import {
 } from "react-native-responsive-screen";
 import { StatusBar } from "expo-status-bar";
 import Octicons from "@expo/vector-icons/Octicons";
-import { useRouter } from "expo-router";
 import { useNavigation } from "@react-navigation/native";
+
 export default function SignIn() {
   const navigation = useNavigation();
   const [loading, setLoading] = useState(false);
@@ -33,7 +33,7 @@ export default function SignIn() {
       return;
     }
 
-    //login Process
+    // Login Process
   };
 
   return (
@@ -55,7 +55,7 @@ export default function SignIn() {
               gap: 12,
             }}
           >
-            {/* signIn Image*/}
+            {/* signIn Image */}
             <View style={{ alignItems: "center" }}>
               <Image
                 style={{ height: hp(30), resizeMode: "contain" }}
@@ -69,7 +69,7 @@ export default function SignIn() {
               >
                 Sign In
               </Text>
-              {/*inputs */}
+              {/* Inputs */}
               <View style={{ gap: hp(2) }}>
                 <View
                   style={{ height: hp(7) }}
@@ -110,7 +110,8 @@ export default function SignIn() {
                     </Text>
                   </TouchableOpacity>
                 </View>
-                {/*Submit Button */}
+
+                {/* Submit Button */}
                 <View>
                   {loading ? (
                     <View className="flex-row justify-center">
@@ -132,7 +133,7 @@ export default function SignIn() {
                   )}
                 </View>
 
-                {/*SignUp text */}
+                {/* SignUp Text */}
                 <View className="flex-row justify-center">
                   <Text
                     style={{ fontSize: hp(1.8) }}
@@ -149,6 +150,30 @@ export default function SignIn() {
                     </Text>
                   </Pressable>
                 </View>
+
+                {/* Map Button */}
+                <TouchableOpacity
+                  onPress={() => navigation.navigate("maps")}
+                  style={{
+                    marginTop: hp(3),
+                    backgroundColor: "#4CAF50", // Green color
+                    height: hp(6.5),
+                    justifyContent: "center",
+                    alignItems: "center",
+                    borderRadius: hp(1),
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 3,
+                  }}
+                >
+                  <Text
+                    style={{ fontSize: hp(2.5), color: "white" }}
+                    className="font-bold tracking-wider text-center"
+                  >
+                    Open Map
+                  </Text>
+                </TouchableOpacity>
               </View>
             </View>
           </View>
