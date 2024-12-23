@@ -60,8 +60,8 @@ export default function Maps() {
       const updatedRegion = {
         latitude,
         longitude,
-        latitudeDelta: 0.001,
-        longitudeDelta: 0.001,
+        latitudeDelta: 0.0015,
+        longitudeDelta: 0.0015,
       };
 
       await AsyncStorage.setItem("userLocation", JSON.stringify(updatedRegion));
