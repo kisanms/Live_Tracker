@@ -30,8 +30,8 @@ export default function Maps() {
         setMapRegion({
           latitude: 37.78825,
           longitude: -122.4324,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
+          latitudeDelta: 0.015,
+          longitudeDelta: 0.015,
         });
       }
     } catch (error) {
