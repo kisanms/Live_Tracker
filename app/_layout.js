@@ -7,13 +7,14 @@ import SignUp from "../app/Screens/signUp";
 import AdminDashboard from "./Screens/AdminDashboard";
 import Maps from "./Screens/Maps";
 import ForgetPassword from "./Screens/ForgetPassword";
+import HomeScreen from "./Screens/HomeScreen";
 
 const Stack = createNativeStackNavigator();
 
 const RootLayout = () => {
   return (
     <Stack.Navigator
-      initialRouteName="signUp"
+      initialRouteName="signIn"
       screenOptions={{ headerShown: false }}
     >
       <Stack.Screen name="signIn" component={SignIn} />
@@ -21,6 +22,7 @@ const RootLayout = () => {
       <Stack.Screen name="admin" component={AdminDashboard} />
       <Stack.Screen name="maps" component={Maps} />
       <Stack.Screen name="forgotPassword" component={ForgetPassword} />
+      <Stack.Screen name="home" component={HomeScreen} />
     </Stack.Navigator>
   );
 };
