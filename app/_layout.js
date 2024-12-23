@@ -8,6 +8,7 @@ import AdminDashboard from "./Screens/AdminDashboard";
 import Maps from "./Screens/Maps";
 import ForgetPassword from "./Screens/ForgetPassword";
 import HomeScreen from "./Screens/HomeScreen";
+import ProfileScreen from "./Screens/ProfileScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -23,6 +24,7 @@ const RootLayout = () => {
       <Stack.Screen name="maps" component={Maps} />
       <Stack.Screen name="forgotPassword" component={ForgetPassword} />
       <Stack.Screen name="home" component={HomeScreen} />
+      <Stack.Screen name="profile" component={ProfileScreen} />
     </Stack.Navigator>
   );
 };
