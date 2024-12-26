@@ -20,11 +20,8 @@ const RootLayout = () => {
     >
       <Stack.Screen name="signIn" component={SignIn} />
       <Stack.Screen name="signUp" component={SignUp} />
-      <Stack.Screen name="admin" component={AdminDashboard} />
       <Stack.Screen name="maps" component={Maps} />
       <Stack.Screen name="forgotPassword" component={ForgetPassword} />
-      <Stack.Screen name="home" component={HomeScreen} />
-      <Stack.Screen name="profile" component={ProfileScreen} />
     </Stack.Navigator>
   );
 };
