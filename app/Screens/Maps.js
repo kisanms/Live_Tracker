@@ -1,22 +1,22 @@
-import React, { useState, useEffect, useRef } from "react";
-import MapView, { Marker } from "react-native-maps";
-import * as Location from "expo-location";
+import React, { useState, useEffect } from "react";
 import {
-  StyleSheet,
   View,
   Text,
+  StyleSheet,
   TouchableOpacity,
   Alert,
   Linking,
 } from "react-native";
-import { StatusBar } from "expo-status-bar";
-import { Ionicons } from "@expo/vector-icons";
+
+import * as Location from "expo-location";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Ionicons } from "@expo/vector-icons";
+import { StatusBar } from "expo-status-bar";
+import { MapView } from "@netizen-teknologi/react-native-maps-leaflet";
 
 export default function Maps() {
-  const [mapRegion, setMapRegion] = useState(null);
+  const [mapCenter, setMapCenter] = useState(null);
   const [isLocationFetched, setIsLocationFetched] = useState(false);
-  const mapRef = useRef(null);
 
   // Load saved location from AsyncStorage
   const loadSavedLocation = async () => {
@@ -24,14 +24,12 @@ export default function Maps() {
       const savedLocation = await AsyncStorage.getItem("userLocation");
       if (savedLocation) {
         const parsedLocation = JSON.parse(savedLocation);
-        setMapRegion(parsedLocation);
+        setMapCenter(parsedLocation);
       } else {
-        // Default fallback region
-        setMapRegion({
-          latitude: 37.78825,
-          longitude: -122.4324,
-          latitudeDelta: 0.015,
-          longitudeDelta: 0.015,
+        // Default fallback location
+        setMapCenter({
+          lat: 37.78825,
+          lng: -122.4324,
         });
       }
     } catch (error) {
@@ -57,20 +55,20 @@ export default function Maps() {
 
       const { latitude, longitude } = location.coords;
 
-      const updatedRegion = {
-        latitude,
-        longitude,
-        latitudeDelta: 0.0015,
-        longitudeDelta: 0.0015,
+      const updatedLocation = {
+        lat: latitude,
+        lng: longitude,
       };
 
-      await AsyncStorage.setItem("userLocation", JSON.stringify(updatedRegion));
+      await AsyncStorage.setItem(
+        "userLocation",
+        JSON.stringify(updatedLocation)
+      );
 
-      setMapRegion(updatedRegion);
+      setMapCenter(updatedLocation);
       setIsLocationFetched(true);
 
       console.log("Latitude:", latitude, "Longitude:", longitude);
-      mapRef.current.animateToRegion(updatedRegion, 1000);
     } catch (error) {
       Alert.alert("Error", "An error occurred while fetching location.");
       console.error(error);
@@ -79,10 +77,10 @@ export default function Maps() {
 
   // Open current location in Google Maps
   const handleOpenInGoogleMaps = () => {
-    if (mapRegion) {
-      const { latitude, longitude } = mapRegion;
-      const googleMapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
-      Linking.openURL(googleMapsUrl).catch((err) =>
+    if (mapCenter) {
+      const { lat, lng } = mapCenter;
+      const googleMapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+      Linking.openURL(googleMapsUrl).catch(() =>
         Alert.alert("Error", "Unable to open Google Maps.")
       );
     } else {
@@ -97,25 +95,25 @@ export default function Maps() {
   return (
     <View style={styles.container}>
       <StatusBar style="light" backgroundColor="#89b4f8" />
-      {mapRegion && (
+      {mapCenter && (
         <MapView
-          ref={mapRef}
+          mapCenterPosition={mapCenter}
+          zoom={15}
+          zoomControl={false}
           style={styles.map}
-          region={mapRegion}
-          showsUserLocation={true}
-          followsUserLocation={true}
-        >
-          {isLocationFetched && mapRegion && (
-            <Marker
-              coordinate={{
-                latitude: mapRegion.latitude,
-                longitude: mapRegion.longitude,
-              }}
-              title="Your Location"
-              pinColor="red"
-            />
-          )}
-        </MapView>
+          markers={
+            isLocationFetched
+              ? [
+                  {
+                    position: mapCenter,
+                    icon: "📍",
+                    size: [32, 32],
+                    title: "Your Location",
+                  },
+                ]
+              : []
+          }
+        />
       )}
       {/* My Location Button */}
       <TouchableOpacity

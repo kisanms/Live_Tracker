@@ -4,11 +4,8 @@ import "../global.css";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import SignIn from "../app/Screens/signIn";
 import SignUp from "../app/Screens/signUp";
-import AdminDashboard from "./Screens/AdminDashboard";
 import Maps from "./Screens/Maps";
 import ForgetPassword from "./Screens/ForgetPassword";
-import HomeScreen from "./Screens/HomeScreen";
-import ProfileScreen from "./Screens/ProfileScreen";
 
 const Stack = createNativeStackNavigator();
 
