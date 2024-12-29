@@ -16,7 +16,12 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.deepkm.Live_Tracker"
+      "package": "com.deepkm.Live_Tracker",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyD7x8iFdGBOHQ5lWBMmRXwmLRaqRSqzxSs"
+        }
+      }
     },
     "web": {
       "bundler": "metro",

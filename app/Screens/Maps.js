@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import MapView, { Marker } from "react-native-maps";
+import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import * as Location from "expo-location";
 import {
   StyleSheet,
@@ -99,6 +99,7 @@ export default function Maps() {
       <StatusBar style="light" backgroundColor="#89b4f8" />
       {mapRegion && (
         <MapView
+          provider={PROVIDER_GOOGLE}
           ref={mapRef}
           style={styles.map}
           region={mapRegion}
