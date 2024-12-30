@@ -48,3 +48,28 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+17/12/2024 Created the expo-cli file and started building the frontend UI of Login and Register
+#
+18/12/2024 Learned about JSON and APi methods
+#
+19/12/2024 Learned about Role base access control and implemented the Ui part only
+#
+22/12/2024 Learned about react-native maps and how to use google maps api into our application.
+#
+23/12/2024 Getting issues in the production phase beacuse map is not showing in the app
+#
+24/12/2024 Learned about React-native new architecture 0.76 which remove the bridge from JS and RN-cli
+#
+25/12/2024
+installing macos in virtual box to try in windows but didn't work.
+#
+28/12/2024
+as the api is not working learned about diff dependencies which can work.
+#
+29/12/2024
+finally after finding the issues and searching in StackOverFlow and Github detected the issue and start building the expo build but failed beacuse of android folder
+#
+30/12/2024
+Finally after removing the android folder and put the google map api key in the expo app.json file , after the build successfull the apk is showing the map. 
