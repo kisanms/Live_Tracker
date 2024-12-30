@@ -46,6 +46,16 @@ export default function SignUp() {
       setNameVerify(true);
     }
   }
+
+  function handleEmail(e) {
+    const emailVar = e.nativeEvent.text;
+    setEmail(emailVar);
+    setEmailVerify(false);
+    if (/^[\w.%+-]+@[\w.-]+\.[a-zA-Z]{2,}$/.test(emailVar)) {
+      setEmail(emailVar);
+      setEmailVerify(true);
+    }
+  }
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: "white" }}
@@ -164,13 +174,28 @@ export default function SignUp() {
                 >
                   <Octicons name="mail" size={hp(2.7)} color="gray" />
                   <TextInput
-                    onChangeText={(value) => (emailRef.current = value)}
+                    onChange={(e) => handleEmail(e)}
                     style={{ fontSize: hp(2) }}
                     className="flex-1 font-semibold text-neutral-700"
                     placeholder="Email address"
                     placeholderTextColor={"gray"}
                   />
+                  {email.length < 1 ? null : emailVerify ? (
+                    <Feather name="check-circle" color="green" size={20} />
+                  ) : (
+                    <Entypo name="circle-with-cross" size={20} color="red" />
+                  )}
                 </View>
+                {email.length < 1 ? null : emailVerify ? null : (
+                  <Text
+                    style={{
+                      marginLeft: 20,
+                      color: "red",
+                    }}
+                  >
+                    Enter Proper Email Address
+                  </Text>
+                )}
 
                 {/* Mobile Number Input */}
                 <View
