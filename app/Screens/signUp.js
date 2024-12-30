@@ -20,6 +20,7 @@ import {
 import { StatusBar } from "expo-status-bar";
 import Octicons from "@expo/vector-icons/Octicons";
 import Feather from "@expo/vector-icons/Feather";
+import Entypo from "@expo/vector-icons/Entypo";
 import { Picker } from "@react-native-picker/picker";
 import { useRouter } from "expo-router";
 import { useNavigation } from "@react-navigation/native";
@@ -27,26 +28,24 @@ import { useNavigation } from "@react-navigation/native";
 export default function SignUp() {
   const navigation = useNavigation();
   const [loading, setLoading] = useState(false);
-  const [gender, setGender] = useState("");
-  const [role, setRole] = useState("");
-  const [adminManagerKey, setAdminManagerKey] = useState(""); // State for the key input
-  const emailRef = useRef("");
-  const passwordRef = useRef("");
-  const userNameRef = useRef("");
+  const [name, setName] = useState("");
+  const [nameVerify, setNameVerify] = useState(false);
+  const [email, setEmail] = useState("");
+  const [emailVerify, setEmailVerify] = useState(false);
+  const [mobile, setMobile] = useState("");
+  const [mobileVerify, setMobileVerify] = useState(false);
+  const [password, setPassword] = useState("");
+  const [passwordVerify, setPasswordVerify] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  function handleName(e) {
+    const nameVar = e.nativeEvent.text;
+    setName(nameVar);
+    setNameVerify(false);
 
-  const handleRegister = async () => {
-    if (
-      !emailRef.current ||
-      !passwordRef.current ||
-      !userNameRef.current ||
-      (["admin", "manager"].includes(role) && !adminManagerKey) // Ensure key is provided for admin/manager
-    ) {
-      Alert.alert("Sign Up", "Please fill all the details!");
-      return;
+    if (nameVar.length > 1) {
+      setNameVerify(true);
     }
-    // Registration process
-  };
-
+  }
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: "white" }}
@@ -112,7 +111,7 @@ export default function SignUp() {
                 </View>  */}
 
                 {/* Key Input for Admin/Manager */}
-                {["admin", "manager"].includes(role) && (
+                {/* {["admin", "manager"].includes(role) && (
                   <View
                     style={{ height: hp(7) }}
                     className="flex-row font-bold gap-4 px-4 bg-neutral-100 items-center rounded-xl"
@@ -127,7 +126,7 @@ export default function SignUp() {
                       placeholderTextColor={"gray"}
                     />
                   </View>
-                )}
+                )} */}
 
                 {/* Username Input */}
                 <View
@@ -136,14 +135,28 @@ export default function SignUp() {
                 >
                   <Feather name="user" size={hp(2.7)} color="gray" />
                   <TextInput
-                    onChangeText={(value) => (userNameRef.current = value)}
+                    onChange={(e) => handleName(e)}
                     style={{ fontSize: hp(2) }}
                     className="flex-1 font-semibold text-neutral-700"
                     placeholder="Username"
                     placeholderTextColor={"gray"}
                   />
+                  {name.length < 1 ? null : nameVerify ? (
+                    <Feather name="check-circle" size={20} color="green" />
+                  ) : (
+                    <Entypo name="circle-with-cross" size={20} color="red" />
+                  )}
                 </View>
-
+                {name.length < 1 ? null : nameVerify ? null : (
+                  <Text
+                    style={{
+                      marginLeft: 20,
+                      color: "red",
+                    }}
+                  >
+                    Name sholud be more then 1 characters.
+                  </Text>
+                )}
                 {/* Email Input */}
                 <View
                   style={{ height: hp(7) }}
@@ -199,7 +212,6 @@ export default function SignUp() {
                     </View>
                   ) : (
                     <TouchableOpacity
-                      onPress={handleRegister}
                       style={{ backgroundColor: "red", height: hp(6.5) }}
                       className="justify-center rounded-xl items-center"
                     >
