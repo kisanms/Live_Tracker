@@ -1,9 +1,8 @@
+import React, { useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Image,
   Pressable,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -12,7 +11,6 @@ import {
   ScrollView,
   Platform,
 } from "react-native";
-import React, { useRef, useState } from "react";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -22,7 +20,6 @@ import Octicons from "@expo/vector-icons/Octicons";
 import Feather from "@expo/vector-icons/Feather";
 import Entypo from "@expo/vector-icons/Entypo";
 import { Picker } from "@react-native-picker/picker";
-import { useRouter } from "expo-router";
 import { useNavigation } from "@react-navigation/native";
 
 export default function SignUp() {
@@ -37,44 +34,33 @@ export default function SignUp() {
   const [password, setPassword] = useState("");
   const [passwordVerify, setPasswordVerify] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [role, setRole] = useState(""); // Role state
+  const [adminManagerKey, setAdminManagerKey] = useState(""); // Key input for Admin/Manager
+
   function handleName(e) {
     const nameVar = e.nativeEvent.text;
     setName(nameVar);
-    setNameVerify(false);
-
-    if (nameVar.length > 1) {
-      setNameVerify(true);
-    }
+    setNameVerify(nameVar.length > 1);
   }
 
   function handleEmail(e) {
     const emailVar = e.nativeEvent.text;
     setEmail(emailVar);
-    setEmailVerify(false);
-    if (/^[\w.%+-]+@[\w.-]+\.[a-zA-Z]{2,}$/.test(emailVar)) {
-      setEmail(emailVar);
-      setEmailVerify(true);
-    }
+    setEmailVerify(/^[\w.%+-]+@[\w.-]+\.[a-zA-Z]{2,}$/.test(emailVar));
   }
 
   function handleMobile(e) {
     const mobileVar = e.nativeEvent.text;
     setMobile(mobileVar);
-    setMobileVerify(false);
-    if (/[6-9]{1}[0-9]{9}/.test(mobileVar)) {
-      setMobile(mobileVar);
-      setMobileVerify(true);
-    }
+    setMobileVerify(/^[6-9]{1}[0-9]{9}$/.test(mobileVar));
   }
+
   function handlePassword(e) {
     const passwordVar = e.nativeEvent.text;
     setPassword(passwordVar);
-    setPasswordVerify(false);
-    if (/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,}/.test(passwordVar)) {
-      setPassword(passwordVar);
-      setPasswordVerify(true);
-    }
+    setPasswordVerify(/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,}/.test(passwordVar));
   }
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: "white" }}
@@ -94,10 +80,9 @@ export default function SignUp() {
               gap: 12,
             }}
           >
-            {/* SignIn Image */}
             <View style={{ alignItems: "center" }}>
               <Image
-                style={{ height: hp(25), resizeMode: "contain" }}
+                style={{ height: hp(21), resizeMode: "contain" }}
                 source={require("../../assets/images/signIn1.jpg")}
               />
             </View>
@@ -108,11 +93,9 @@ export default function SignUp() {
               >
                 Sign Up
               </Text>
-
-              {/* Inputs */}
               <View style={{ gap: hp(2) }}>
                 {/* Role Dropdown (Picker) */}
-                {/* <View
+                <View
                   style={{
                     height: hp(7),
                   }}
@@ -123,7 +106,7 @@ export default function SignUp() {
                     onValueChange={(itemValue) => {
                       setRole(itemValue);
                       if (!["admin", "manager"].includes(itemValue)) {
-                        setAdminManagerKey(""); // Reset key if the default role is selected
+                        setAdminManagerKey(""); // Reset key if not Admin/Manager
                       }
                     }}
                     style={{
@@ -137,10 +120,10 @@ export default function SignUp() {
                     <Picker.Item label="Manager" value="manager" />
                     <Picker.Item label="Employee" value="employee" />
                   </Picker>
-                </View>  */}
+                </View>
 
                 {/* Key Input for Admin/Manager */}
-                {/* {["admin", "manager"].includes(role) && (
+                {["admin", "manager"].includes(role) && (
                   <View
                     style={{ height: hp(7) }}
                     className="flex-row font-bold gap-4 px-4 bg-neutral-100 items-center rounded-xl"
@@ -155,8 +138,9 @@ export default function SignUp() {
                       placeholderTextColor={"gray"}
                     />
                   </View>
-                )} */}
+                )}
 
+                {/* Other Inputs (Username, Email, etc.) */}
                 {/* Username Input */}
                 <View
                   style={{ height: hp(7) }}
@@ -313,7 +297,7 @@ export default function SignUp() {
                   )}
                 </View>
 
-                {/* Sign Up text */}
+                {/* Sign In Link */}
                 <View className="flex-row justify-center">
                   <Text
                     style={{ fontSize: hp(1.8) }}
@@ -338,5 +322,3 @@ export default function SignUp() {
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({});
