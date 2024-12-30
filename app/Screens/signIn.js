@@ -152,7 +152,7 @@ export default function SignIn() {
                 </View>
 
                 {/* Map Button */}
-                <TouchableOpacity
+                {/* <TouchableOpacity
                   onPress={() => navigation.navigate("maps")}
                   style={{
                     marginTop: hp(3),
@@ -173,7 +173,7 @@ export default function SignIn() {
                   >
                     Open Map
                   </Text>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
               </View>
             </View>
           </View>
