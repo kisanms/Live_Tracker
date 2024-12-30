@@ -84,7 +84,7 @@ export default function SignUp() {
               {/* Inputs */}
               <View style={{ gap: hp(2) }}>
                 {/* Role Dropdown (Picker) */}
-                <View
+                {/* <View
                   style={{
                     height: hp(7),
                   }}
@@ -109,7 +109,7 @@ export default function SignUp() {
                     <Picker.Item label="Manager" value="manager" />
                     <Picker.Item label="Employee" value="employee" />
                   </Picker>
-                </View>
+                </View>  */}
 
                 {/* Key Input for Admin/Manager */}
                 {["admin", "manager"].includes(role) && (
@@ -129,6 +129,21 @@ export default function SignUp() {
                   </View>
                 )}
 
+                {/* Username Input */}
+                <View
+                  style={{ height: hp(7) }}
+                  className="flex-row font-bold gap-4 px-4 bg-neutral-100 items-center rounded-xl"
+                >
+                  <Feather name="user" size={hp(2.7)} color="gray" />
+                  <TextInput
+                    onChangeText={(value) => (userNameRef.current = value)}
+                    style={{ fontSize: hp(2) }}
+                    className="flex-1 font-semibold text-neutral-700"
+                    placeholder="Username"
+                    placeholderTextColor={"gray"}
+                  />
+                </View>
+
                 {/* Email Input */}
                 <View
                   style={{ height: hp(7) }}
@@ -144,18 +159,19 @@ export default function SignUp() {
                   />
                 </View>
 
-                {/* Username Input */}
+                {/* Mobile Number Input */}
                 <View
                   style={{ height: hp(7) }}
                   className="flex-row font-bold gap-4 px-4 bg-neutral-100 items-center rounded-xl"
                 >
-                  <Feather name="user" size={hp(2.7)} color="gray" />
+                  <Feather name="phone" size={hp(2.7)} color="gray" />
                   <TextInput
-                    onChangeText={(value) => (userNameRef.current = value)}
+                    onChangeText={(value) => (mobileNumberRef.current = value)}
                     style={{ fontSize: hp(2) }}
                     className="flex-1 font-semibold text-neutral-700"
-                    placeholder="Username"
+                    placeholder="Mobile Number"
                     placeholderTextColor={"gray"}
+                    keyboardType="phone-pad"
                   />
                 </View>
 
