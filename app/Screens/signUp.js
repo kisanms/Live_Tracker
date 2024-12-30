@@ -66,6 +66,15 @@ export default function SignUp() {
       setMobileVerify(true);
     }
   }
+  function handlePassword(e) {
+    const passwordVar = e.nativeEvent.text;
+    setPassword(passwordVar);
+    setPasswordVerify(false);
+    if (/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,}/.test(passwordVar)) {
+      setPassword(passwordVar);
+      setPasswordVerify(true);
+    }
+  }
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: "white" }}
@@ -245,14 +254,43 @@ export default function SignUp() {
                 >
                   <Octicons name="lock" size={hp(2.7)} color="gray" />
                   <TextInput
-                    onChangeText={(value) => (passwordRef.current = value)}
+                    onChange={(e) => handlePassword(e)}
+                    secureTextEntry={showPassword}
                     style={{ fontSize: hp(2) }}
                     className="flex-1 font-semibold text-neutral-700"
                     placeholder="Password"
-                    secureTextEntry
                     placeholderTextColor={"gray"}
                   />
+                  <TouchableOpacity
+                    onPress={() => setShowPassword(!showPassword)}
+                  >
+                    {password.length < 1 ? null : !showPassword ? (
+                      <Feather
+                        name="eye-off"
+                        style={{ marginRight: -2 }}
+                        color={passwordVerify ? "green" : "red"}
+                        size={23}
+                      />
+                    ) : (
+                      <Feather
+                        name="eye"
+                        style={{ marginRight: -2 }}
+                        color={passwordVerify ? "green" : "red"}
+                        size={23}
+                      />
+                    )}
+                  </TouchableOpacity>
                 </View>
+                {password.length < 1 ? null : passwordVerify ? null : (
+                  <Text
+                    style={{
+                      marginLeft: 20,
+                      color: "red",
+                    }}
+                  >
+                    Uppercase, Lowercase, Number and 6 or more characters.
+                  </Text>
+                )}
 
                 {/* Submit Button */}
                 <View>
