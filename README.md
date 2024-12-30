@@ -67,4 +67,7 @@ installing macos in virtual box to try in windows but didn't work.
 #
 28/12/2024
 as the api is not working learned about diff dependencies which can work.
+#
+29/12/2024
+finally after finding the issues and searching in StackOverFlow and Github detected the issue and start building the expo build but failed beacuse of android folder
 
