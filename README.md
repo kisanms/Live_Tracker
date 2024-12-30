@@ -52,3 +52,4 @@ Join our community of developers creating universal apps.
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 17/12/2024 Created the expo-cli file and started building the frontend UI of Login and Register
 18/12/2024 Learned about JSON and APi methods
+19/12/2024 Learned about Role base access control and implemented the Ui part only
