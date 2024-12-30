@@ -70,4 +70,6 @@ as the api is not working learned about diff dependencies which can work.
 #
 29/12/2024
 finally after finding the issues and searching in StackOverFlow and Github detected the issue and start building the expo build but failed beacuse of android folder
-
+#
+30/12/2024
+Finally after removing the android folder and put the google map api key in the expo app.json file , after the build successfull the apk is showing the map. 
