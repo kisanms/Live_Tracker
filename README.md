@@ -64,3 +64,7 @@ Join our community of developers creating universal apps.
 #
 25/12/2024
 installing macos in virtual box to try in windows but didn't work.
+#
+28/12/2024
+as the api is not working learned about diff dependencies which can work.
+
