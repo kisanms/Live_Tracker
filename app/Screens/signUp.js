@@ -56,6 +56,16 @@ export default function SignUp() {
       setEmailVerify(true);
     }
   }
+
+  function handleMobile(e) {
+    const mobileVar = e.nativeEvent.text;
+    setMobile(mobileVar);
+    setMobileVerify(false);
+    if (/[6-9]{1}[0-9]{9}/.test(mobileVar)) {
+      setMobile(mobileVar);
+      setMobileVerify(true);
+    }
+  }
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: "white" }}
@@ -204,15 +214,30 @@ export default function SignUp() {
                 >
                   <Feather name="phone" size={hp(2.7)} color="gray" />
                   <TextInput
-                    onChangeText={(value) => (mobileNumberRef.current = value)}
+                    onChange={(e) => handleMobile(e)}
+                    maxLength={10}
                     style={{ fontSize: hp(2) }}
                     className="flex-1 font-semibold text-neutral-700"
                     placeholder="Mobile Number"
                     placeholderTextColor={"gray"}
                     keyboardType="phone-pad"
                   />
+                  {mobile.length < 1 ? null : mobileVerify ? (
+                    <Feather name="check-circle" color="green" size={20} />
+                  ) : (
+                    <Entypo name="circle-with-cross" size={20} color="red" />
+                  )}
                 </View>
-
+                {mobile.length < 1 ? null : mobileVerify ? null : (
+                  <Text
+                    style={{
+                      marginLeft: 20,
+                      color: "red",
+                    }}
+                  >
+                    Phone number must contain 10 digit only
+                  </Text>
+                )}
                 {/* Password Input */}
                 <View
                   style={{ height: hp(7) }}
