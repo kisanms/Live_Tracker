@@ -85,7 +85,7 @@ export default function CompanyRegistration() {
           >
             <View style={{ alignItems: "center" }}>
               <Image
-                style={{ height: hp(21), resizeMode: "contain" }}
+                style={{ height: hp(25), resizeMode: "contain" }}
                 source={require("../../assets/images/comp.jpg")}
               />
             </View>
