@@ -47,13 +47,7 @@ export default function CompanyRegistration() {
   }
 
   const handleSubmit = () => {
-    if (
-      !companyNameVerify ||
-      !emailVerify ||
-      !phoneVerify ||
-      !regNumber ||
-      !address
-    ) {
+    if (!companyNameVerify || !emailVerify || !regNumber || !address) {
       alert("Please fill all fields correctly!");
       return;
     }
