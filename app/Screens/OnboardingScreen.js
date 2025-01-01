@@ -8,6 +8,7 @@ import {
   Text,
   StatusBar,
   TouchableOpacity,
+  ImageBackground,
 } from "react-native";
 import {
   widthPercentageToDP as wp,
@@ -20,26 +21,27 @@ const slides = [
   {
     id: "1",
     image: require("../../assets/images/map2.jpg"),
-    title: "Best Digital Solution",
-    subtitle: "Discover innovative ways to meet your business needs.",
+    title: "Live Tracking System",
+    subtitle:
+      "Efficiently track employee data in real-time for better management.",
   },
   {
     id: "2",
     image: require("../../assets/images/map4.jpg"),
-    title: "Achieve Your Goals",
-    subtitle: "Let’s work together to accomplish your objectives.",
+    title: "Register Your Company",
+    subtitle: "Start your journey by registering your company for the app.",
   },
   {
     id: "3",
     image: require("../../assets/images/map1.jpg"),
-    title: "Increase Your Value",
-    subtitle: "Stand out in your industry with our solutions.",
+    title: "Sign Up for the App",
+    subtitle: "Create an account to access all features and services.",
   },
   {
     id: "4",
     image: require("../../assets/images/map3.jpg"),
-    title: "Empower Your Future",
-    subtitle: "Take the next step towards growth and success.",
+    title: "Sign In to Your Account",
+    subtitle: "Log in to your app to manage your business and employees.",
   },
 ];
 
@@ -111,27 +113,35 @@ const OnboardingScreen = ({ navigation }) => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor={COLORS.primary} />
-      <FlatList
-        ref={ref}
-        onMomentumScrollEnd={updateCurrentSlideIndex}
-        horizontal
-        pagingEnabled
-        data={slides}
-        renderItem={({ item }) => <Slide item={item} />}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.flatListContainer}
-      />
-      <Footer />
-    </SafeAreaView>
+    <ImageBackground
+      source={require("../../assets/images/bg.jpg")}
+      style={styles.backgroundImage}
+    >
+      <SafeAreaView style={styles.container}>
+        <StatusBar backgroundColor={"#0067dc"} />
+        <FlatList
+          ref={ref}
+          onMomentumScrollEnd={updateCurrentSlideIndex}
+          horizontal
+          pagingEnabled
+          data={slides}
+          renderItem={({ item }) => <Slide item={item} />}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.flatListContainer}
+        />
+        <Footer />
+      </SafeAreaView>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.primary,
+  },
+  backgroundImage: {
+    flex: 1,
+    resizeMode: "cover",
   },
   slideContainer: {
     alignItems: "center",
@@ -139,20 +149,21 @@ const styles = StyleSheet.create({
   },
   image: {
     width: wp(100),
-    height: hp(50),
+    height: hp(32),
     resizeMode: "contain",
+    marginTop: hp(-0.8),
   },
   title: {
     color: COLORS.white,
-    fontSize: wp(6),
+    fontSize: wp(7),
     fontWeight: "bold",
-    marginTop: hp(2),
+    marginTop: hp(10),
     textAlign: "center",
   },
   subtitle: {
     color: COLORS.white,
     fontSize: wp(4),
-    marginTop: hp(1),
+    marginTop: hp(2),
     maxWidth: wp(80),
     textAlign: "center",
     lineHeight: hp(2.5),
