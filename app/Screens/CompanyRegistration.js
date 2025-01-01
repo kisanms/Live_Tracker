@@ -9,6 +9,7 @@ import {
   ScrollView,
   Platform,
   Image,
+  Pressable,
 } from "react-native";
 import {
   widthPercentageToDP as wp,
@@ -17,8 +18,10 @@ import {
 import { StatusBar } from "expo-status-bar";
 import Feather from "@expo/vector-icons/Feather";
 import Entypo from "@expo/vector-icons/Entypo";
+import { useNavigation } from "@react-navigation/native";
 
 export default function CompanyRegistration() {
+  const navigation = useNavigation();
   const [loading, setLoading] = useState(false);
   const [companyName, setCompanyName] = useState("");
   const [companyNameVerify, setCompanyNameVerify] = useState(false);
@@ -79,8 +82,8 @@ export default function CompanyRegistration() {
           >
             <View style={{ alignItems: "center" }}>
               <Image
-                style={{ height: hp(25), resizeMode: "contain" }}
-                source={require("../../assets/images/comp.jpg")}
+                style={{ height: hp(30), resizeMode: "contain" }}
+                source={require("../../assets/images/GPS_MAP13.jpg")}
               />
             </View>
             <Text
@@ -196,6 +199,22 @@ export default function CompanyRegistration() {
                     </Text>
                   </TouchableOpacity>
                 )}
+              </View>
+              <View className="flex-row justify-center">
+                <Text
+                  style={{ fontSize: hp(1.8) }}
+                  className="font-semibold text-neutral-500"
+                >
+                  Already have an account?{" "}
+                </Text>
+                <Pressable onPress={() => navigation.navigate("signIn")}>
+                  <Text
+                    style={{ fontSize: hp(1.8), color: "red" }}
+                    className="font-semibold"
+                  >
+                    Sign In
+                  </Text>
+                </Pressable>
               </View>
             </View>
           </View>

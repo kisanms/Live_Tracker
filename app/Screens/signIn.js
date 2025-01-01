@@ -151,6 +151,36 @@ export default function SignIn() {
                   </Pressable>
                 </View>
 
+                <View>
+                  <Text
+                    style={{
+                      fontSize: hp(1.8),
+                      paddingTop: -20,
+                      textAlign: "center",
+                    }}
+                    className="font-semibold text-neutral-500"
+                  >
+                    OR
+                  </Text>
+                </View>
+
+                <View className="flex-row justify-center">
+                  <Text
+                    style={{ fontSize: hp(1.8) }}
+                    className="font-semibold text-neutral-500"
+                  >
+                    If you are a company?{" "}
+                  </Text>
+                  <Pressable onPress={() => navigation.navigate("compReg")}>
+                    <Text
+                      style={{ fontSize: hp(1.8), color: "red" }}
+                      className="font-semibold"
+                    >
+                      Register
+                    </Text>
+                  </Pressable>
+                </View>
+
                 {/* Map Button */}
                 {/* <TouchableOpacity
                   onPress={() => navigation.navigate("maps")}
