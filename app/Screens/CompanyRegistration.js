@@ -18,6 +18,7 @@ import {
 import { StatusBar } from "expo-status-bar";
 import Feather from "@expo/vector-icons/Feather";
 import Entypo from "@expo/vector-icons/Entypo";
+import Octicons from "@expo/vector-icons/Octicons";
 import { useNavigation } from "@react-navigation/native";
 
 export default function CompanyRegistration() {
@@ -27,8 +28,9 @@ export default function CompanyRegistration() {
   const [companyNameVerify, setCompanyNameVerify] = useState(false);
   const [email, setEmail] = useState("");
   const [emailVerify, setEmailVerify] = useState(false);
-
-  const [phoneVerify, setPhoneVerify] = useState(false);
+  const [password, setPassword] = useState("");
+  const [passwordVerify, setPasswordVerify] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [regNumber, setRegNumber] = useState("");
   const [address, setAddress] = useState("");
 
@@ -59,7 +61,11 @@ export default function CompanyRegistration() {
     // Handle registration logic
     setTimeout(() => setLoading(false), 2000);
   };
-
+  function handlePassword(e) {
+    const passwordVar = e.nativeEvent.text;
+    setPassword(passwordVar);
+    setPasswordVerify(/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,}/.test(passwordVar));
+  }
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: "white" }}
@@ -80,15 +86,18 @@ export default function CompanyRegistration() {
               gap: 12,
             }}
           >
-            <View style={{ alignItems: "center" }}>
+            <View style={{ alignItems: "center", marginTop: -20 }}>
               <Image
-                style={{ height: hp(30), resizeMode: "contain" }}
+                style={{
+                  height: hp(27),
+                  resizeMode: "contain",
+                }}
                 source={require("../../assets/images/GPS_MAP13.jpg")}
               />
             </View>
             <Text
-              style={{ fontSize: hp(3), textAlign: "center" }}
-              className="font-bold text-neutral-800"
+              style={{ fontSize: hp(4) }}
+              className="font-bold tracking-wider text-center text-neutral-800"
             >
               Company Registration
             </Text>
@@ -178,6 +187,50 @@ export default function CompanyRegistration() {
                   placeholderTextColor={"gray"}
                 />
               </View>
+              {/* Password Input */}
+              <View
+                style={{ height: hp(7) }}
+                className="flex-row font-bold gap-4 px-4 bg-neutral-100 items-center rounded-xl"
+              >
+                <Octicons name="lock" size={hp(2.7)} color="gray" />
+                <TextInput
+                  onChange={(e) => handlePassword(e)}
+                  secureTextEntry={showPassword}
+                  style={{ fontSize: hp(2) }}
+                  className="flex-1 font-semibold text-neutral-700"
+                  placeholder="Password"
+                  placeholderTextColor={"gray"}
+                />
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                >
+                  {password.length < 1 ? null : !showPassword ? (
+                    <Feather
+                      name="eye-off"
+                      style={{ marginRight: -2 }}
+                      color={passwordVerify ? "green" : "red"}
+                      size={23}
+                    />
+                  ) : (
+                    <Feather
+                      name="eye"
+                      style={{ marginRight: -2 }}
+                      color={passwordVerify ? "green" : "red"}
+                      size={23}
+                    />
+                  )}
+                </TouchableOpacity>
+              </View>
+              {password.length < 1 ? null : passwordVerify ? null : (
+                <Text
+                  style={{
+                    marginLeft: 20,
+                    color: "red",
+                  }}
+                >
+                  Uppercase, Lowercase, Number and 6 or more characters.
+                </Text>
+              )}
 
               {/* Submit Button */}
               <View>
