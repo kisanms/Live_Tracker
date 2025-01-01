@@ -24,7 +24,7 @@ export default function CompanyRegistration() {
   const [companyNameVerify, setCompanyNameVerify] = useState(false);
   const [email, setEmail] = useState("");
   const [emailVerify, setEmailVerify] = useState(false);
-  const [phone, setPhone] = useState("");
+
   const [phoneVerify, setPhoneVerify] = useState(false);
   const [regNumber, setRegNumber] = useState("");
   const [address, setAddress] = useState("");
@@ -39,12 +39,6 @@ export default function CompanyRegistration() {
     const emailVar = e.nativeEvent.text;
     setEmail(emailVar);
     setEmailVerify(/^[\w.%+-]+@[\w.-]+\.[a-zA-Z]{2,}$/.test(emailVar));
-  }
-
-  function handlePhone(e) {
-    const phoneVar = e.nativeEvent.text;
-    setPhone(phoneVar);
-    setPhoneVerify(/^[6-9]{1}[0-9]{9}$/.test(phoneVar));
   }
 
   const handleSubmit = () => {
@@ -147,35 +141,6 @@ export default function CompanyRegistration() {
                 : !emailVerify && (
                     <Text style={{ marginLeft: 20, color: "red" }}>
                       Enter a valid email address.
-                    </Text>
-                  )}
-
-              {/* Phone Number Input */}
-              <View
-                style={{ height: hp(7) }}
-                className="flex-row font-bold gap-4 px-4 bg-neutral-100 items-center rounded-xl"
-              >
-                <Feather name="phone" size={hp(2.7)} color="gray" />
-                <TextInput
-                  onChange={(e) => handlePhone(e)}
-                  maxLength={10}
-                  style={{ fontSize: hp(2) }}
-                  className="flex-1 font-semibold text-neutral-700"
-                  placeholder="Company Phone"
-                  placeholderTextColor={"gray"}
-                  keyboardType="phone-pad"
-                />
-                {phone.length < 1 ? null : phoneVerify ? (
-                  <Feather name="check-circle" size={20} color="green" />
-                ) : (
-                  <Entypo name="circle-with-cross" size={20} color="red" />
-                )}
-              </View>
-              {phone.length < 1
-                ? null
-                : !phoneVerify && (
-                    <Text style={{ marginLeft: 20, color: "red" }}>
-                      Enter a valid 10-digit phone number.
                     </Text>
                   )}
 
