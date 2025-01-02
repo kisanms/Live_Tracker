@@ -20,6 +20,89 @@ import { StatusBar } from "expo-status-bar";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useNavigation } from "@react-navigation/native";
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#ffffff",
+  },
+  contentContainer: {
+    flex: 1,
+    padding: wp(5),
+  },
+  headerContainer: {
+    alignItems: "center",
+
+    paddingVertical: hp(4),
+  },
+  headerImage: {
+    height: hp(30),
+    width: wp(90),
+    resizeMode: "contain",
+  },
+  title: {
+    fontSize: hp(4),
+    fontWeight: "bold",
+    textAlign: "center",
+    color: "#333",
+    marginVertical: hp(2),
+    marginBottom: hp(-1),
+  },
+  inputContainer: {
+    backgroundColor: "white",
+    height: hp(7),
+    borderRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: wp(4),
+    marginBottom: hp(2),
+    borderWidth: 1,
+    borderColor: "#f0f0f0",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  input: {
+    flex: 1,
+    fontSize: hp(2),
+    marginLeft: wp(3),
+    color: "#333",
+  },
+  button: {
+    backgroundColor: "#ff3b30",
+    height: hp(6.5),
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#ff3b30",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
+  },
+  linkContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: hp(3),
+  },
+  linkText: {
+    fontSize: hp(1.8),
+    color: "#666",
+  },
+  linkButton: {
+    fontSize: hp(1.8),
+    color: "#ff3b30",
+    fontWeight: "bold",
+  },
+});
+
 export default function ForgotPassword() {
   const navigation = useNavigation();
   const [loading, setLoading] = useState(false);
@@ -44,17 +127,13 @@ export default function ForgotPassword() {
 
     setLoading(true);
 
-    // Simulate the reset process
     try {
-      // Add logic for email/password reset here (e.g., Firebase Auth update)
-      // Example:
-      // await auth.updatePassword(passwordRef.current);
-
+      // Add logic for password reset here
       setTimeout(() => {
         setLoading(false);
         Alert.alert(
           "Reset Successful",
-          "Your email and password have been updated successfully."
+          "Your password has been updated successfully."
         );
         navigation.navigate("signIn");
       }, 2000);
@@ -66,138 +145,90 @@ export default function ForgotPassword() {
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: "white" }}
+      style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={{ flex: 1, backgroundColor: "white" }}>
-          <StatusBar style="light" backgroundColor="red" />
-          <View
-            style={{
-              paddingTop: hp(8),
-              paddingHorizontal: wp(5),
-              flex: 1,
-              gap: 12,
-            }}
-          >
-            {/* Reset Password Image */}
-            <View style={{ alignItems: "center" }}>
-              <Image
-                style={{ height: hp(30), resizeMode: "contain" }}
-                source={require("../../assets/images/forgot.jpg")}
-              />
-            </View>
+        <View style={styles.contentContainer}>
+          <StatusBar style="dark" />
 
-            <View style={{ gap: 10 }}>
+          {/* Header Image */}
+          <View style={styles.headerContainer}>
+            <Image
+              style={styles.headerImage}
+              source={require("../../assets/images/forgot.jpg")}
+            />
+            <Text style={styles.title}>Reset Password</Text>
+          </View>
+
+          {/* Email Input */}
+          <View style={styles.inputContainer}>
+            <Octicons name="mail" size={hp(2.7)} color="#666" />
+            <TextInput
+              onChangeText={(value) => (emailRef.current = value)}
+              style={styles.input}
+              placeholder="Email address"
+              placeholderTextColor="#999"
+            />
+          </View>
+
+          {/* New Password Input */}
+          <View style={styles.inputContainer}>
+            <Octicons name="lock" size={hp(2.7)} color="#666" />
+            <TextInput
+              onChangeText={(value) => (passwordRef.current = value)}
+              style={styles.input}
+              placeholder="New Password"
+              secureTextEntry
+              placeholderTextColor="#999"
+            />
+          </View>
+
+          {/* Confirm Password Input */}
+          <View style={styles.inputContainer}>
+            <Octicons name="lock" size={hp(2.7)} color="#666" />
+            <TextInput
+              onChangeText={(value) => (confirmPasswordRef.current = value)}
+              style={styles.input}
+              placeholder="Confirm Password"
+              secureTextEntry
+              placeholderTextColor="#999"
+            />
+          </View>
+
+          {/* Submit Button */}
+          <TouchableOpacity
+            style={[styles.button, { opacity: loading ? 0.7 : 1 }]}
+            onPress={handleReset}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="white" size="large" />
+            ) : (
               <Text
-                style={{ fontSize: hp(4) }}
-                className="font-bold tracking-wider text-center text-neutral-800"
+                style={{
+                  color: "white",
+                  fontSize: hp(2.7),
+                  fontWeight: "bold",
+                }}
               >
                 Reset Password
               </Text>
+            )}
+          </TouchableOpacity>
 
-              {/* Input Fields */}
-              <View style={{ gap: hp(2) }}>
-                {/* Email Input */}
-                <View
-                  style={{ height: hp(7) }}
-                  className="flex-row font-bold gap-4 px-4 bg-neutral-100 items-center rounded-xl"
-                >
-                  <Octicons name="mail" size={hp(2.7)} color="gray" />
-                  <TextInput
-                    onChangeText={(value) => (emailRef.current = value)}
-                    style={{ fontSize: hp(2) }}
-                    className="flex-1 font-semibold text-neutral-700"
-                    placeholder="Email address"
-                    placeholderTextColor={"gray"}
-                  />
-                </View>
-
-                {/* New Password Input */}
-                <View
-                  style={{ height: hp(7) }}
-                  className="flex-row font-bold gap-4 px-4 bg-neutral-100 items-center rounded-xl"
-                >
-                  <Octicons name="lock" size={hp(2.7)} color="gray" />
-                  <TextInput
-                    onChangeText={(value) => (passwordRef.current = value)}
-                    style={{ fontSize: hp(2) }}
-                    className="flex-1 font-semibold text-neutral-700"
-                    placeholder="New Password"
-                    secureTextEntry
-                    placeholderTextColor={"gray"}
-                  />
-                </View>
-
-                {/* Confirm Password Input */}
-                <View
-                  style={{ height: hp(7) }}
-                  className="flex-row font-bold gap-4 px-4 bg-neutral-100 items-center rounded-xl"
-                >
-                  <Octicons name="lock" size={hp(2.7)} color="gray" />
-                  <TextInput
-                    onChangeText={(value) =>
-                      (confirmPasswordRef.current = value)
-                    }
-                    style={{ fontSize: hp(2) }}
-                    className="flex-1 font-semibold text-neutral-700"
-                    placeholder="Confirm Password"
-                    secureTextEntry
-                    placeholderTextColor={"gray"}
-                  />
-                </View>
-
-                {/* Submit Button */}
-                <View>
-                  {loading ? (
-                    <View className="flex-row justify-center">
-                      <ActivityIndicator size={hp(6.5)} />
-                    </View>
-                  ) : (
-                    <TouchableOpacity
-                      onPress={handleReset}
-                      style={{ backgroundColor: "red", height: hp(6.5) }}
-                      className="justify-center rounded-xl items-center"
-                    >
-                      <Text
-                        style={{ fontSize: hp(2.7) }}
-                        className="text-white font-bold tracking-wider text-center"
-                      >
-                        Reset Password
-                      </Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-
-                {/* Back to Sign In */}
-                <View className="flex-row justify-center">
-                  <Text
-                    style={{ fontSize: hp(1.8) }}
-                    className="font-semibold text-neutral-500"
-                  >
-                    Remember your credentials?{" "}
-                  </Text>
-                  <TouchableOpacity
-                    onPress={() => navigation.navigate("signIn")}
-                  >
-                    <Text
-                      style={{ fontSize: hp(1.8), color: "red" }}
-                      className="font-semibold"
-                    >
-                      Sign In
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
+          {/* Back to Sign In */}
+          <View style={styles.linkContainer}>
+            <Text style={styles.linkText}>Remember your credentials? </Text>
+            <TouchableOpacity onPress={() => navigation.navigate("signIn")}>
+              <Text style={styles.linkButton}>Sign In</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({});

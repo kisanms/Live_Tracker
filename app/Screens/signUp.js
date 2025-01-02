@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   Platform,
+  StyleSheet,
 } from "react-native";
 import {
   widthPercentageToDP as wp,
@@ -21,6 +22,115 @@ import Feather from "@expo/vector-icons/Feather";
 import Entypo from "@expo/vector-icons/Entypo";
 import { Picker } from "@react-native-picker/picker";
 import { useNavigation } from "@react-navigation/native";
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#ffffff",
+  },
+  contentContainer: {
+    flex: 1,
+    padding: wp(5),
+  },
+  headerContainer: {
+    alignItems: "center",
+    // backgroundColor: "rgba(255, 59, 48, 0.05)",
+    paddingVertical: hp(4),
+    // borderBottomLeftRadius: 30,
+    // borderBottomRightRadius: 30,
+    // marginBottom: hp(2),
+  },
+  headerImage: {
+    height: hp(25),
+    width: wp(80),
+    resizeMode: "contain",
+  },
+  title: {
+    fontSize: hp(4),
+    fontWeight: "bold",
+    textAlign: "center",
+    color: "#333",
+    // marginVertical: hp(2),
+  },
+  inputContainer: {
+    backgroundColor: "white",
+    height: hp(7),
+    borderRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: wp(4),
+    marginBottom: hp(2),
+    borderWidth: 1,
+    borderColor: "#f0f0f0",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  input: {
+    flex: 1,
+    fontSize: hp(2),
+    marginLeft: wp(3),
+    color: "#333",
+  },
+  errorText: {
+    color: "#ff3b30",
+    fontSize: hp(1.6),
+    marginLeft: wp(4),
+    marginTop: -hp(1),
+    marginBottom: hp(1),
+  },
+  button: {
+    backgroundColor: "#ff3b30",
+    height: hp(6.5),
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#ff3b30",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
+  },
+  pickerContainer: {
+    backgroundColor: "white",
+    borderRadius: 12,
+    height: hp(7),
+    justifyContent: "center",
+    marginBottom: hp(2),
+    borderWidth: 1,
+    borderColor: "#f0f0f0",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  linkContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: hp(3),
+  },
+  linkText: {
+    fontSize: hp(1.8),
+    color: "#666",
+  },
+  linkButton: {
+    fontSize: hp(1.8),
+    color: "#ff3b30",
+    fontWeight: "bold",
+  },
+});
 
 export default function SignUp() {
   const navigation = useNavigation();
@@ -34,8 +144,8 @@ export default function SignUp() {
   const [password, setPassword] = useState("");
   const [passwordVerify, setPasswordVerify] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [role, setRole] = useState(""); // Role state
-  const [adminManagerKey, setAdminManagerKey] = useState(""); // Key input for Admin/Manager
+  const [role, setRole] = useState("");
+  const [adminManagerKey, setAdminManagerKey] = useState("");
 
   function handleName(e) {
     const nameVar = e.nativeEvent.text;
@@ -63,259 +173,173 @@ export default function SignUp() {
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: "white" }}
+      style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={{ flex: 1 }}>
-          <StatusBar style="light" backgroundColor="red" />
-          <View
-            style={{
-              paddingTop: hp(7),
-              paddingHorizontal: wp(5),
-              flex: 1,
-              gap: 12,
-            }}
-          >
-            <View style={{ alignItems: "center" }}>
-              <Image
-                style={{ height: hp(21), resizeMode: "contain" }}
-                source={require("../../assets/images/signIn1.jpg")}
+        <View style={styles.contentContainer}>
+          <StatusBar style="dark" />
+
+          {/* Header Image */}
+          <View style={styles.headerContainer}>
+            <Image
+              style={styles.headerImage}
+              source={require("../../assets/images/signIn1.jpg")}
+            />
+            <Text style={styles.title}>Sign Up</Text>
+          </View>
+
+          {/* Role Picker */}
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={role}
+              onValueChange={(itemValue) => {
+                setRole(itemValue);
+                if (!["admin", "manager"].includes(itemValue)) {
+                  setAdminManagerKey("");
+                }
+              }}
+              style={{ height: hp(7), color: "#333" }}
+            >
+              <Picker.Item label="Select Your Role" value="" color="#999" />
+              <Picker.Item label="Admin" value="admin" color="#333" />
+              <Picker.Item label="Manager" value="manager" color="#333" />
+              <Picker.Item label="Employee" value="employee" color="#333" />
+            </Picker>
+          </View>
+
+          {/* Admin/Manager Key Input */}
+          {["admin", "manager"].includes(role) && (
+            <View style={styles.inputContainer}>
+              <Feather name="key" size={hp(2.7)} color="#666" />
+              <TextInput
+                onChangeText={(value) => setAdminManagerKey(value)}
+                value={adminManagerKey}
+                style={styles.input}
+                placeholder="Enter Key"
+                placeholderTextColor="#999"
+                secureTextEntry
               />
             </View>
-            <View style={{ gap: 10 }}>
+          )}
+
+          {/* Username Input */}
+          <View style={styles.inputContainer}>
+            <Feather name="user" size={hp(2.7)} color="#666" />
+            <TextInput
+              onChange={handleName}
+              style={styles.input}
+              placeholder="Username"
+              placeholderTextColor="#999"
+            />
+            {name.length > 0 &&
+              (nameVerify ? (
+                <Feather name="check-circle" size={20} color="#4CAF50" />
+              ) : (
+                <Entypo name="circle-with-cross" size={20} color="#ff3b30" />
+              ))}
+          </View>
+          {name.length > 0 && !nameVerify && (
+            <Text style={styles.errorText}>
+              Name should be more than 1 character
+            </Text>
+          )}
+
+          {/* Email Input */}
+          <View style={styles.inputContainer}>
+            <Feather name="mail" size={hp(2.7)} color="#666" />
+            <TextInput
+              onChange={handleEmail}
+              style={styles.input}
+              placeholder="Email"
+              placeholderTextColor="#999"
+            />
+            {email.length > 0 &&
+              (emailVerify ? (
+                <Feather name="check-circle" size={20} color="#4CAF50" />
+              ) : (
+                <Entypo name="circle-with-cross" size={20} color="#ff3b30" />
+              ))}
+          </View>
+          {email.length > 0 && !emailVerify && (
+            <Text style={styles.errorText}>Enter a valid email address</Text>
+          )}
+
+          {/* Mobile Input */}
+          <View style={styles.inputContainer}>
+            <Feather name="phone" size={hp(2.7)} color="#666" />
+            <TextInput
+              onChange={handleMobile}
+              style={styles.input}
+              placeholder="Mobile Number"
+              placeholderTextColor="#999"
+              keyboardType="numeric"
+            />
+            {mobile.length > 0 &&
+              (mobileVerify ? (
+                <Feather name="check-circle" size={20} color="#4CAF50" />
+              ) : (
+                <Entypo name="circle-with-cross" size={20} color="#ff3b30" />
+              ))}
+          </View>
+          {mobile.length > 0 && !mobileVerify && (
+            <Text style={styles.errorText}>Enter a valid mobile number</Text>
+          )}
+
+          {/* Password Input */}
+          <View style={styles.inputContainer}>
+            <Octicons name="lock" size={hp(2.7)} color="#666" />
+            <TextInput
+              onChange={handlePassword}
+              secureTextEntry={!showPassword}
+              style={styles.input}
+              placeholder="Password"
+              placeholderTextColor="#999"
+            />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+              <Feather
+                name={showPassword ? "eye" : "eye-off"}
+                size={23}
+                color={passwordVerify ? "#4CAF50" : "#666"}
+              />
+            </TouchableOpacity>
+          </View>
+          {password.length > 0 && !passwordVerify && (
+            <Text style={styles.errorText}>
+              Password must contain uppercase, lowercase, number and be at least
+              6 characters
+            </Text>
+          )}
+
+          {/* Submit Button */}
+          <TouchableOpacity
+            style={[styles.button, { opacity: loading ? 0.7 : 1 }]}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="white" size="large" />
+            ) : (
               <Text
-                style={{ fontSize: hp(4) }}
-                className="font-bold tracking-wider text-center text-neutral-800"
+                style={{
+                  color: "white",
+                  fontSize: hp(2.7),
+                  fontWeight: "bold",
+                }}
               >
                 Sign Up
               </Text>
-              <View style={{ gap: hp(2) }}>
-                {/* Role Dropdown (Picker) */}
-                <View
-                  style={{
-                    height: hp(7),
-                  }}
-                  className="font-bold bg-neutral-100 rounded-2xl"
-                >
-                  <Picker
-                    selectedValue={role}
-                    onValueChange={(itemValue) => {
-                      setRole(itemValue);
-                      if (!["admin", "manager"].includes(itemValue)) {
-                        setAdminManagerKey(""); // Reset key if not Admin/Manager
-                      }
-                    }}
-                    style={{
-                      height: 60,
-                      fontSize: hp(2),
-                      color: "gray",
-                    }}
-                  >
-                    <Picker.Item label="Select Your Role" value="" />
-                    <Picker.Item label="Admin" value="admin" />
-                    <Picker.Item label="Manager" value="manager" />
-                    <Picker.Item label="Employee" value="employee" />
-                  </Picker>
-                </View>
+            )}
+          </TouchableOpacity>
 
-                {/* Key Input for Admin/Manager */}
-                {["admin", "manager"].includes(role) && (
-                  <View
-                    style={{ height: hp(7) }}
-                    className="flex-row font-bold gap-4 px-4 bg-neutral-100 items-center rounded-xl"
-                  >
-                    <Feather name="key" size={hp(2.7)} color="gray" />
-                    <TextInput
-                      onChangeText={(value) => setAdminManagerKey(value)}
-                      value={adminManagerKey}
-                      style={{ fontSize: hp(2) }}
-                      className="flex-1 font-semibold text-neutral-700"
-                      placeholder="Enter Key"
-                      placeholderTextColor={"gray"}
-                    />
-                  </View>
-                )}
-
-                {/* Other Inputs (Username, Email, etc.) */}
-                {/* Username Input */}
-                <View
-                  style={{ height: hp(7) }}
-                  className="flex-row font-bold gap-4 px-4 bg-neutral-100 items-center rounded-xl"
-                >
-                  <Feather name="user" size={hp(2.7)} color="gray" />
-                  <TextInput
-                    onChange={(e) => handleName(e)}
-                    style={{ fontSize: hp(2) }}
-                    className="flex-1 font-semibold text-neutral-700"
-                    placeholder="Username"
-                    placeholderTextColor={"gray"}
-                  />
-                  {name.length < 1 ? null : nameVerify ? (
-                    <Feather name="check-circle" size={20} color="green" />
-                  ) : (
-                    <Entypo name="circle-with-cross" size={20} color="red" />
-                  )}
-                </View>
-                {name.length < 1 ? null : nameVerify ? null : (
-                  <Text
-                    style={{
-                      marginLeft: 20,
-                      color: "red",
-                    }}
-                  >
-                    Name sholud be more then 1 characters.
-                  </Text>
-                )}
-                {/* Email Input */}
-                <View
-                  style={{ height: hp(7) }}
-                  className="flex-row font-bold gap-4 px-4 bg-neutral-100 items-center rounded-xl"
-                >
-                  <Octicons name="mail" size={hp(2.7)} color="gray" />
-                  <TextInput
-                    onChange={(e) => handleEmail(e)}
-                    style={{ fontSize: hp(2) }}
-                    className="flex-1 font-semibold text-neutral-700"
-                    placeholder="Email address"
-                    placeholderTextColor={"gray"}
-                  />
-                  {email.length < 1 ? null : emailVerify ? (
-                    <Feather name="check-circle" color="green" size={20} />
-                  ) : (
-                    <Entypo name="circle-with-cross" size={20} color="red" />
-                  )}
-                </View>
-                {email.length < 1 ? null : emailVerify ? null : (
-                  <Text
-                    style={{
-                      marginLeft: 20,
-                      color: "red",
-                    }}
-                  >
-                    Enter Proper Email Address
-                  </Text>
-                )}
-
-                {/* Mobile Number Input */}
-                <View
-                  style={{ height: hp(7) }}
-                  className="flex-row font-bold gap-4 px-4 bg-neutral-100 items-center rounded-xl"
-                >
-                  <Feather name="phone" size={hp(2.7)} color="gray" />
-                  <TextInput
-                    onChange={(e) => handleMobile(e)}
-                    maxLength={10}
-                    style={{ fontSize: hp(2) }}
-                    className="flex-1 font-semibold text-neutral-700"
-                    placeholder="Mobile Number"
-                    placeholderTextColor={"gray"}
-                    keyboardType="phone-pad"
-                  />
-                  {mobile.length < 1 ? null : mobileVerify ? (
-                    <Feather name="check-circle" color="green" size={20} />
-                  ) : (
-                    <Entypo name="circle-with-cross" size={20} color="red" />
-                  )}
-                </View>
-                {mobile.length < 1 ? null : mobileVerify ? null : (
-                  <Text
-                    style={{
-                      marginLeft: 20,
-                      color: "red",
-                    }}
-                  >
-                    Phone number must contain 10 digit only
-                  </Text>
-                )}
-                {/* Password Input */}
-                <View
-                  style={{ height: hp(7) }}
-                  className="flex-row font-bold gap-4 px-4 bg-neutral-100 items-center rounded-xl"
-                >
-                  <Octicons name="lock" size={hp(2.7)} color="gray" />
-                  <TextInput
-                    onChange={(e) => handlePassword(e)}
-                    secureTextEntry={showPassword}
-                    style={{ fontSize: hp(2) }}
-                    className="flex-1 font-semibold text-neutral-700"
-                    placeholder="Password"
-                    placeholderTextColor={"gray"}
-                  />
-                  <TouchableOpacity
-                    onPress={() => setShowPassword(!showPassword)}
-                  >
-                    {password.length < 1 ? null : !showPassword ? (
-                      <Feather
-                        name="eye-off"
-                        style={{ marginRight: -2 }}
-                        color={passwordVerify ? "green" : "red"}
-                        size={23}
-                      />
-                    ) : (
-                      <Feather
-                        name="eye"
-                        style={{ marginRight: -2 }}
-                        color={passwordVerify ? "green" : "red"}
-                        size={23}
-                      />
-                    )}
-                  </TouchableOpacity>
-                </View>
-                {password.length < 1 ? null : passwordVerify ? null : (
-                  <Text
-                    style={{
-                      marginLeft: 20,
-                      color: "red",
-                    }}
-                  >
-                    Uppercase, Lowercase, Number and 6 or more characters.
-                  </Text>
-                )}
-
-                {/* Submit Button */}
-                <View>
-                  {loading ? (
-                    <View className="flex-row justify-center">
-                      <ActivityIndicator size={hp(6.5)} />
-                    </View>
-                  ) : (
-                    <TouchableOpacity
-                      style={{ backgroundColor: "red", height: hp(6.5) }}
-                      className="justify-center rounded-xl items-center"
-                    >
-                      <Text
-                        style={{ fontSize: hp(2.7) }}
-                        className="text-white font-bold tracking-wider text-center"
-                      >
-                        Sign Up
-                      </Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-
-                {/* Sign In Link */}
-                <View className="flex-row justify-center">
-                  <Text
-                    style={{ fontSize: hp(1.8) }}
-                    className="font-semibold text-neutral-500"
-                  >
-                    Already have an account?{" "}
-                  </Text>
-                  <Pressable onPress={() => navigation.navigate("signIn")}>
-                    <Text
-                      style={{ fontSize: hp(1.8), color: "red" }}
-                      className="font-semibold"
-                    >
-                      Sign In
-                    </Text>
-                  </Pressable>
-                </View>
-              </View>
-            </View>
+          {/* Sign In Link */}
+          <View style={styles.linkContainer}>
+            <Text style={styles.linkText}>Already have an account? </Text>
+            <Pressable onPress={() => navigation.navigate("signIn")}>
+              <Text style={styles.linkButton}>Sign In</Text>
+            </Pressable>
           </View>
         </View>
       </ScrollView>

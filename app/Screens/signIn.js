@@ -21,6 +21,118 @@ import { StatusBar } from "expo-status-bar";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useNavigation } from "@react-navigation/native";
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#ffffff",
+  },
+  contentContainer: {
+    flex: 1,
+    padding: wp(5),
+  },
+  headerContainer: {
+    alignItems: "center",
+    // backgroundColor: "rgba(255, 59, 48, 0.05)",
+    paddingVertical: hp(4),
+    // borderBottomLeftRadius: 30,
+    // borderBottomRightRadius: 30,
+    // marginBottom: hp(2),
+  },
+  headerImage: {
+    height: hp(25),
+    width: wp(90),
+    resizeMode: "contain",
+  },
+  title: {
+    fontSize: hp(4),
+    fontWeight: "bold",
+    textAlign: "center",
+    color: "#333",
+    // marginVertical: hp(2),
+  },
+  inputContainer: {
+    backgroundColor: "white",
+    height: hp(7),
+    borderRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: wp(4),
+    marginBottom: hp(2),
+    borderWidth: 1,
+    borderColor: "#f0f0f0",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  input: {
+    flex: 1,
+    fontSize: hp(2),
+    marginLeft: wp(3),
+    color: "#333",
+  },
+  forgotPassword: {
+    fontSize: hp(1.8),
+    color: "#666",
+    textAlign: "right",
+    marginTop: -hp(1),
+    marginBottom: hp(2),
+  },
+  button: {
+    backgroundColor: "#ff3b30",
+    height: hp(6.5),
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#ff3b30",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
+  },
+  buttonText: {
+    color: "white",
+    fontSize: hp(2.7),
+    fontWeight: "bold",
+  },
+  dividerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: hp(3),
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "#e0e0e0",
+  },
+  dividerText: {
+    color: "#666",
+    paddingHorizontal: wp(3),
+    fontSize: hp(1.8),
+  },
+  linkContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: hp(2),
+  },
+  linkText: {
+    fontSize: hp(1.8),
+    color: "#666",
+  },
+  linkButton: {
+    fontSize: hp(1.8),
+    color: "#ff3b30",
+    fontWeight: "bold",
+  },
+});
+
 export default function SignIn() {
   const navigation = useNavigation();
   const [loading, setLoading] = useState(false);
@@ -32,185 +144,97 @@ export default function SignIn() {
       Alert.alert("SignIn", "Please fill all the details!");
       return;
     }
-
     // Login Process
   };
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: "white" }}
+      style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={{ flex: 1, backgroundColor: "white" }}>
-          <StatusBar style="light" backgroundColor="red" />
-          <View
-            style={{
-              paddingTop: hp(8),
-              paddingHorizontal: wp(5),
-              flex: 1,
-              gap: 12,
-            }}
+        <View style={styles.contentContainer}>
+          <StatusBar style="dark" />
+
+          {/* Header Image */}
+          <View style={styles.headerContainer}>
+            <Image
+              style={styles.headerImage}
+              source={require("../../assets/images/signUP1.jpg")}
+            />
+            <Text style={styles.title}>Sign In</Text>
+          </View>
+
+          {/* Email Input */}
+          <View style={styles.inputContainer}>
+            <Octicons name="mail" size={hp(2.7)} color="#666" />
+            <TextInput
+              onChangeText={(value) => (emailRef.current = value)}
+              style={styles.input}
+              placeholder="Email address"
+              placeholderTextColor="#999"
+            />
+          </View>
+
+          {/* Password Input */}
+          <View style={styles.inputContainer}>
+            <Octicons name="lock" size={hp(2.7)} color="#666" />
+            <TextInput
+              onChangeText={(value) => (passwordRef.current = value)}
+              style={styles.input}
+              placeholder="Password"
+              secureTextEntry
+              placeholderTextColor="#999"
+            />
+          </View>
+
+          {/* Forgot Password */}
+          <TouchableOpacity
+            onPress={() => navigation.navigate("forgotPassword")}
           >
-            {/* signIn Image */}
-            <View style={{ alignItems: "center" }}>
-              <Image
-                style={{ height: hp(30), resizeMode: "contain" }}
-                source={require("../../assets/images/signUP1.jpg")}
-              />
-            </View>
-            <View style={{ gap: 10 }}>
-              <Text
-                style={{ fontSize: hp(4) }}
-                className="font-bold tracking-wider text-center text-neutral-800"
-              >
-                Sign In
-              </Text>
-              {/* Inputs */}
-              <View style={{ gap: hp(2) }}>
-                <View
-                  style={{ height: hp(7) }}
-                  className="flex-row font-bold gap-4 px-4 bg-neutral-100 items-center rounded-xl"
-                >
-                  <Octicons name="mail" size={hp(2.7)} color="gray" />
-                  <TextInput
-                    onChangeText={(value) => (emailRef.current = value)}
-                    style={{ fontSize: hp(2) }}
-                    className="flex-1 font-semibold text-neutral-700"
-                    placeholder="Email address"
-                    placeholderTextColor={"gray"}
-                  />
-                </View>
-                <View className="gap-3">
-                  <View
-                    style={{ height: hp(7) }}
-                    className="flex-row font-bold gap-4 px-4 bg-neutral-100 items-center rounded-xl"
-                  >
-                    <Octicons name="lock" size={hp(2.7)} color="gray" />
-                    <TextInput
-                      onChangeText={(value) => (passwordRef.current = value)}
-                      style={{ fontSize: hp(2) }}
-                      className="flex-1 font-semibold text-neutral-700"
-                      placeholder="Password"
-                      secureTextEntry
-                      placeholderTextColor={"gray"}
-                    />
-                  </View>
-                  <TouchableOpacity
-                    onPress={() => navigation.navigate("forgotPassword")}
-                  >
-                    <Text
-                      style={{ fontSize: hp(1.8) }}
-                      className="font-semibold text-right text-neutral-500"
-                    >
-                      Forgot Password ?
-                    </Text>
-                  </TouchableOpacity>
-                </View>
+            <Text style={styles.forgotPassword}>Forgot Password?</Text>
+          </TouchableOpacity>
 
-                {/* Submit Button */}
-                <View>
-                  {loading ? (
-                    <View className="flex-row justify-center">
-                      <ActivityIndicator size={hp(6.5)} />
-                    </View>
-                  ) : (
-                    <TouchableOpacity
-                      onPress={handleLogin}
-                      style={{ backgroundColor: "red", height: hp(6.5) }}
-                      className="justify-center rounded-xl items-center"
-                    >
-                      <Text
-                        style={{ fontSize: hp(2.7) }}
-                        className="text-white font-bold tracking-wider text-center"
-                      >
-                        Sign In
-                      </Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
+          {/* Submit Button */}
+          <TouchableOpacity
+            style={[styles.button, { opacity: loading ? 0.7 : 1 }]}
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="white" size="large" />
+            ) : (
+              <Text style={styles.buttonText}>Sign In</Text>
+            )}
+          </TouchableOpacity>
 
-                {/* SignUp Text */}
-                <View className="flex-row justify-center">
-                  <Text
-                    style={{ fontSize: hp(1.8) }}
-                    className="font-semibold text-neutral-500"
-                  >
-                    Don't have an account?{" "}
-                  </Text>
-                  <Pressable onPress={() => navigation.navigate("signUp")}>
-                    <Text
-                      style={{ fontSize: hp(1.8), color: "red" }}
-                      className="font-semibold"
-                    >
-                      Sign Up
-                    </Text>
-                  </Pressable>
-                </View>
+          {/* Sign Up Link */}
+          <View style={styles.linkContainer}>
+            <Text style={styles.linkText}>Don't have an account? </Text>
+            <Pressable onPress={() => navigation.navigate("signUp")}>
+              <Text style={styles.linkButton}>Sign Up</Text>
+            </Pressable>
+          </View>
 
-                <View>
-                  <Text
-                    style={{
-                      fontSize: hp(1.8),
-                      paddingTop: -20,
-                      textAlign: "center",
-                    }}
-                    className="font-semibold text-neutral-500"
-                  >
-                    OR
-                  </Text>
-                </View>
+          {/* Divider */}
+          <View style={styles.dividerContainer}>
+            <View style={styles.divider} />
+            <Text style={styles.dividerText}>OR</Text>
+            <View style={styles.divider} />
+          </View>
 
-                <View className="flex-row justify-center">
-                  <Text
-                    style={{ fontSize: hp(1.8) }}
-                    className="font-semibold text-neutral-500"
-                  >
-                    If you are a company?{" "}
-                  </Text>
-                  <Pressable onPress={() => navigation.navigate("compReg")}>
-                    <Text
-                      style={{ fontSize: hp(1.8), color: "red" }}
-                      className="font-semibold"
-                    >
-                      Register
-                    </Text>
-                  </Pressable>
-                </View>
-
-                {/* Map Button */}
-                {/* <TouchableOpacity
-                  onPress={() => navigation.navigate("maps")}
-                  style={{
-                    marginTop: hp(3),
-                    backgroundColor: "#4CAF50", // Green color
-                    height: hp(6.5),
-                    justifyContent: "center",
-                    alignItems: "center",
-                    borderRadius: hp(1),
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 3,
-                  }}
-                >
-                  <Text
-                    style={{ fontSize: hp(2.5), color: "white" }}
-                    className="font-bold tracking-wider text-center"
-                  >
-                    Open Map
-                  </Text>
-                </TouchableOpacity> */}
-              </View>
-            </View>
+          {/* Company Registration Link */}
+          <View style={styles.linkContainer}>
+            <Text style={styles.linkText}>If you are a company? </Text>
+            <Pressable onPress={() => navigation.navigate("compReg")}>
+              <Text style={styles.linkButton}>Register</Text>
+            </Pressable>
           </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({});

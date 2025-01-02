@@ -28,7 +28,7 @@ const Stack = createNativeStackNavigator();
 const RootLayout = () => {
   return (
     <Stack.Navigator
-      initialRouteName="employeeProfile"
+      initialRouteName="signIn"
       screenOptions={{ headerShown: false }}
     >
       {/* Auth Screens */}
