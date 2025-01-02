@@ -59,8 +59,8 @@ const RootLayout = () => {
       />
 
       {/* Employee Portal Screens */}
-      {/* <Stack.Screen name="employeeDashboard" component={EmployeeDashboard} />
-      <Stack.Screen name="employeeProfile" component={EmployeeProfile} /> */}
+      <Stack.Screen name="employeeDashboard" component={EmployeeDashboard} />
+      <Stack.Screen name="employeeProfile" component={EmployeeProfile} />
     </Stack.Navigator>
   );
 };
