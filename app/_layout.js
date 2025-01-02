@@ -48,7 +48,7 @@ const RootLayout = () => {
       />
 
       {/* Manager Portal Screens */}
-      {/* <Stack.Screen name="managerDashboard" component={ManagerDashboard} />
+      <Stack.Screen name="managerDashboard" component={ManagerDashboard} />
       <Stack.Screen
         name="managerEmployeeList"
         component={ManagerEmployeeList}
@@ -56,7 +56,7 @@ const RootLayout = () => {
       <Stack.Screen
         name="managerLocationTracking"
         component={ManagerLocationTracking}
-      /> */}
+      />
 
       {/* Employee Portal Screens */}
       {/* <Stack.Screen name="employeeDashboard" component={EmployeeDashboard} />
