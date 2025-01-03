@@ -94,7 +94,7 @@ const OnboardingScreen = ({ navigation }) => {
         {currentSlideIndex === slides.length - 1 ? (
           <TouchableOpacity
             style={styles.getStartedButton}
-            onPress={() => navigation.replace("compReg")}
+            onPress={() => navigation.replace("signIn")}
           >
             <Text style={styles.getStartedText}>GET STARTED</Text>
           </TouchableOpacity>

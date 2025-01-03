@@ -1,165 +1,183 @@
-import React, { useState, useEffect, useRef } from "react";
-import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
-import * as Location from "expo-location";
-import {
-  StyleSheet,
-  View,
-  Text,
-  TouchableOpacity,
-  Alert,
-  Linking,
-} from "react-native";
-import { StatusBar } from "expo-status-bar";
-import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+// import React, { useState, useEffect, useRef } from "react";
+// import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+// import * as Location from "expo-location";
+// import {
+//   StyleSheet,
+//   View,
+//   Text,
+//   TouchableOpacity,
+//   Alert,
+//   SafeAreaView,
+//   ActivityIndicator,
+// } from "react-native";
+// import {
+//   widthPercentageToDP as wp,
+//   heightPercentageToDP as hp,
+// } from "react-native-responsive-screen";
+// import { StatusBar } from "expo-status-bar";
+// import { Ionicons } from "@expo/vector-icons";
+// import { auth } from "../firebase";
+// import { doc, setDoc, getDoc } from "firebase/firestore";
+// import { db } from "../firebase"; // Ensure you import your Firestore instance
 
-export default function Maps() {
-  const [mapRegion, setMapRegion] = useState(null);
-  const [isLocationFetched, setIsLocationFetched] = useState(false);
-  const mapRef = useRef(null);
+// const Maps = ({ route, navigation }) => {
+//   const { userRole, userData } = route.params; // Get user role and user data from route params
+//   const [mapRegion, setMapRegion] = useState(null);
+//   const [markerLocation, setMarkerLocation] = useState(null);
+//   const [isLocationFetched, setIsLocationFetched] = useState(false);
+//   const mapRef = useRef(null);
 
-  // Load saved location from AsyncStorage
-  const loadSavedLocation = async () => {
-    try {
-      const savedLocation = await AsyncStorage.getItem("userLocation");
-      if (savedLocation) {
-        const parsedLocation = JSON.parse(savedLocation);
-        setMapRegion(parsedLocation);
-      } else {
-        // Default fallback region
-        setMapRegion({
-          latitude: 37.78825,
-          longitude: -122.4324,
-          latitudeDelta: 0.015,
-          longitudeDelta: 0.015,
-        });
-      }
-    } catch (error) {
-      console.error("Error loading saved location:", error);
-    }
-  };
+//   useEffect(() => {
+//     const fetchLocation = async () => {
+//       const { status } = await Location.requestForegroundPermissionsAsync();
+//       if (status !== "granted") {
+//         Alert.alert("Permission to access location was denied");
+//         return;
+//       }
 
-  // Request location permission and navigate to current location
-  const handleLocationPermissionAndNavigate = async () => {
-    try {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert(
-          "Permission Denied",
-          "Location permissions are required to access your current location."
-        );
-        return;
-      }
+//       const location = await Location.getCurrentPositionAsync({});
+//       const { latitude, longitude } = location.coords;
+//       setMapRegion({
+//         latitude,
+//         longitude,
+//         latitudeDelta: 0.0922,
+//         longitudeDelta: 0.0421,
+//       });
+//       setMarkerLocation({ latitude, longitude });
+//       setIsLocationFetched(true);
+//     };
 
-      let location = await Location.getCurrentPositionAsync({
-        enableHighAccuracy: true,
-      });
+//     fetchLocation();
+//   }, []);
 
-      const { latitude, longitude } = location.coords;
+//   const handleMyLocation = async () => {
+//     if (!markerLocation) {
+//       Alert.alert("Error", "Location not available.");
+//       return;
+//     }
 
-      const updatedRegion = {
-        latitude,
-        longitude,
-        latitudeDelta: 0.0015,
-        longitudeDelta: 0.0015,
-      };
+//     const { latitude, longitude } = markerLocation;
 
-      await AsyncStorage.setItem("userLocation", JSON.stringify(updatedRegion));
+//     // Check if we have valid userData
+//     if (!userData?.name || !userData?.email) {
+//       Alert.alert("Error", "User data is not complete.");
+//       return;
+//     }
 
-      setMapRegion(updatedRegion);
-      setIsLocationFetched(true);
+//     let collectionName;
+//     if (userRole === "manager") {
+//       collectionName = "managerCoordinates";
+//     } else if (userRole === "admin") {
+//       collectionName = "adminCoordinates";
+//     } else {
+//       collectionName = "employeeCoordinates";
+//     }
 
-      console.log("Latitude:", latitude, "Longitude:", longitude);
-      mapRef.current.animateToRegion(updatedRegion, 1000);
-    } catch (error) {
-      Alert.alert("Error", "An error occurred while fetching location.");
-      console.error(error);
-    }
-  };
+//     const locationData = {
+//       latitude,
+//       longitude,
+//       name: userData.name,
+//       email: userData.email,
+//       role: userRole,
+//       timestamp: new Date(),
+//     };
 
-  // Open current location in Google Maps
-  const handleOpenInGoogleMaps = () => {
-    if (mapRegion) {
-      const { latitude, longitude } = mapRegion;
-      const googleMapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
-      Linking.openURL(googleMapsUrl).catch((err) =>
-        Alert.alert("Error", "Unable to open Google Maps.")
-      );
-    } else {
-      Alert.alert("Location Not Found", "No location data available.");
-    }
-  };
+//     // Log the data being saved (for debugging)
+//     console.log("Saving location data:", locationData);
 
-  useEffect(() => {
-    loadSavedLocation();
-  }, []);
+//     try {
+//       await setDoc(
+//         doc(db, collectionName, auth.currentUser.uid),
+//         locationData,
+//         { merge: true }
+//       );
+//       Alert.alert("Success", "Location data saved successfully.");
+//     } catch (error) {
+//       console.error("Error saving location data:", error);
+//       Alert.alert("Error", `Failed to save location data: ${error.message}`);
+//     }
+//   };
 
-  return (
-    <View style={styles.container}>
-      <StatusBar style="light" backgroundColor="#89b4f8" />
-      {mapRegion && (
-        <MapView
-          provider={PROVIDER_GOOGLE}
-          ref={mapRef}
-          style={styles.map}
-          region={mapRegion}
-          showsUserLocation={true}
-          followsUserLocation={true}
-        >
-          {isLocationFetched && mapRegion && (
-            <Marker
-              coordinate={{
-                latitude: mapRegion.latitude,
-                longitude: mapRegion.longitude,
-              }}
-              title="Your Location"
-              pinColor="red"
-            />
-          )}
-        </MapView>
-      )}
-      {/* My Location Button */}
-      <TouchableOpacity
-        style={[styles.locationButton, { bottom: 20, left: 20 }]}
-        onPress={handleLocationPermissionAndNavigate}
-      >
-        <Ionicons name="locate" size={20} color="white" />
-        <Text style={styles.buttonText}>My Location</Text>
-      </TouchableOpacity>
-      {/* Get Location Button */}
-      <TouchableOpacity
-        style={[styles.locationButton, { bottom: 80, left: 20 }]}
-        onPress={handleOpenInGoogleMaps}
-      >
-        <Ionicons name="map" size={20} color="white" />
-        <Text style={styles.buttonText}>Get Location</Text>
-      </TouchableOpacity>
-    </View>
-  );
-}
+//   return (
+//     <SafeAreaView style={styles.container}>
+//       <StatusBar style="light" backgroundColor="#4A90E2" />
+//       <View style={styles.header}>
+//         <TouchableOpacity
+//           onPress={() => navigation.goBack()}
+//           style={styles.backButton}
+//         >
+//           <Ionicons name="arrow-back" size={24} color="#fff" />
+//         </TouchableOpacity>
+//         <Text style={styles.headerTitle}>Location Tracking</Text>
+//         <TouchableOpacity
+//           onPress={handleMyLocation}
+//           style={styles.myLocationButton}
+//         >
+//           <Ionicons name="location" size={24} color="#fff" />
+//         </TouchableOpacity>
+//       </View>
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  map: {
-    width: "100%",
-    height: "100%",
-  },
-  locationButton: {
-    position: "absolute",
-    backgroundColor: "#4285F4",
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 25,
-    flexDirection: "row",
-    alignItems: "center",
-    elevation: 5,
-  },
-  buttonText: {
-    color: "white",
-    fontSize: 14,
-    marginLeft: 8,
-    fontWeight: "bold",
-  },
-});
+//       {isLocationFetched ? (
+//         <MapView
+//           provider={PROVIDER_GOOGLE}
+//           ref={mapRef}
+//           style={styles.map}
+//           region={mapRegion}
+//           showsUserLocation={true}
+//           showsMyLocationButton={false}
+//           showsCompass={true}
+//         >
+//           {markerLocation && (
+//             <Marker
+//               coordinate={markerLocation}
+//               title={userData?.name || "User"}
+//               description={userRole}
+//               pinColor="#4A90E2" // Custom marker color
+//             />
+//           )}
+//         </MapView>
+//       ) : (
+//         <View style={styles.loadingContainer}>
+//           <ActivityIndicator size="large" color="#4A90E2" />
+//         </View>
+//       )}
+//     </SafeAreaView>
+//   );
+// };
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     backgroundColor: "#F5F7FA",
+//   },
+//   header: {
+//     flexDirection: "row",
+//     justifyContent: "space-between",
+//     alignItems: "center",
+//     padding: hp("3%"),
+//     marginTop: hp("2%"),
+//     backgroundColor: "#4A90E2",
+//   },
+//   backButton: {
+//     padding: hp("0.1%"),
+//   },
+//   headerTitle: {
+//     fontSize: 20,
+//     color: "#fff",
+//   },
+//   myLocationButton: {
+//     backgroundColor: "#4CAF50",
+//     padding: 10,
+//     borderRadius: 20,
+//   },
+//   map: {
+//     flex: 1,
+//   },
+//   loadingContainer: {
+//     flex: 1,
+//     justifyContent: "center",
+//     alignItems: "center",
+//   },
+// });
+
+// export default Maps;
