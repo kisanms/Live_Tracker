@@ -58,20 +58,18 @@ const Maps = ({ route, navigation }) => {
 
     const { latitude, longitude } = markerLocation;
 
-    // Check if we have valid userData
     if (!userData?.name || !userData?.email) {
       Alert.alert("Error", "User data is not complete.");
       return;
     }
 
-    let collectionName;
-    if (userRole === "manager") {
-      collectionName = "managerCoordinates";
-    } else if (userRole === "admin") {
-      collectionName = "adminCoordinates";
-    } else {
-      collectionName = "employeeCoordinates";
-    }
+    // Determine the collection based on user role
+    const collectionName =
+      userRole === "manager"
+        ? "managerLocations"
+        : userRole === "admin"
+        ? "adminLocations"
+        : "employeeLocations";
 
     const locationData = {
       latitude,
@@ -79,22 +77,25 @@ const Maps = ({ route, navigation }) => {
       name: userData.name,
       email: userData.email,
       role: userRole,
-      timestamp: new Date(),
+      timestamp: new Date().toISOString(),
+      userId: auth.currentUser.uid,
     };
 
-    // Log the data being saved (for debugging)
-    console.log("Saving location data:", locationData);
-
     try {
+      // Store in user-specific collection
+      await setDoc(doc(db, collectionName, auth.currentUser.uid), locationData);
+
+      // Also update the user's document with latest location
       await setDoc(
-        doc(db, collectionName, auth.currentUser.uid),
-        locationData,
+        doc(db, "users", auth.currentUser.uid),
+        { lastLocation: locationData },
         { merge: true }
       );
-      Alert.alert("Success", "Location data saved successfully.");
+
+      Alert.alert("Success", "Location updated successfully");
     } catch (error) {
-      console.error("Error saving location data:", error);
-      Alert.alert("Error", `Failed to save location data: ${error.message}`);
+      console.error("Error saving location:", error);
+      Alert.alert("Error", "Failed to update location");
     }
   };
 

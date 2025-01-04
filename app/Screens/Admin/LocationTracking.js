@@ -1,163 +1,227 @@
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Dimensions,
-} from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+// import React, { useEffect, useState } from "react";
+// import {
+//   View,
+//   Text,
+//   StyleSheet,
+//   TouchableOpacity,
+//   Alert,
+//   ActivityIndicator,
+// } from "react-native";
+// import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+// import { Ionicons } from "@expo/vector-icons";
+// import * as Linking from "expo-linking";
 
-const LocationTracking = ({ navigation }) => {
-  const [selectedUser, setSelectedUser] = useState({
-    id: "1",
-    name: "John Doe",
-    role: "Sales Manager",
-    location: {
-      latitude: 37.78825,
-      longitude: -122.4324,
-      timestamp: new Date(),
-    },
-  });
+// const AdminLocationTracking = ({ route, navigation }) => {
+//   // Get parameters from route
+//   const { employeeName, employeeEmail, latitude, longitude } = route.params;
+//   const [mapRegion, setMapRegion] = useState(null);
+//   const [markerLocation, setMarkerLocation] = useState(null);
+//   const [loading, setLoading] = useState(true);
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Location Tracking</Text>
-        <TouchableOpacity>
-          <Ionicons name="refresh" size={24} color="#4A90E2" />
-        </TouchableOpacity>
-      </View>
+//   useEffect(() => {
+//     // Set up map region and marker using the passed coordinates
+//     if (latitude && longitude) {
+//       const region = {
+//         latitude: parseFloat(latitude),
+//         longitude: parseFloat(longitude),
+//         latitudeDelta: 0.005,
+//         longitudeDelta: 0.005,
+//       };
 
-      <MapView
-        provider={PROVIDER_GOOGLE}
-        style={styles.map}
-        initialRegion={{
-          latitude: selectedUser.location.latitude,
-          longitude: selectedUser.location.longitude,
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421,
-        }}
-      >
-        <Marker
-          coordinate={{
-            latitude: selectedUser.location.latitude,
-            longitude: selectedUser.location.longitude,
-          }}
-          title={selectedUser.name}
-          description={selectedUser.role}
-        >
-          <View style={styles.markerContainer}>
-            <View style={styles.markerDot} />
-          </View>
-        </Marker>
-      </MapView>
+//       setMapRegion(region);
+//       setMarkerLocation({
+//         latitude: parseFloat(latitude),
+//         longitude: parseFloat(longitude),
+//       });
+//     }
+//     setLoading(false);
+//   }, [latitude, longitude]);
 
-      <View style={styles.bottomSheet}>
-        <View style={styles.userInfo}>
-          <Text style={styles.userName}>{selectedUser.name}</Text>
-          <Text style={styles.userRole}>{selectedUser.role}</Text>
-          <Text style={styles.timestamp}>
-            Last updated: {selectedUser.location.timestamp.toLocaleTimeString()}
-          </Text>
-        </View>
+//   const openGoogleMaps = () => {
+//     if (markerLocation) {
+//       const { latitude, longitude } = markerLocation;
+//       const url = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
+//       Linking.openURL(url);
+//     } else {
+//       Alert.alert("Error", "Location data is not available.");
+//     }
+//   };
 
-        <View style={styles.actions}>
-          <TouchableOpacity style={styles.actionButton}>
-            <Ionicons name="call" size={20} color="#fff" />
-            <Text style={styles.actionText}>Call</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.actionButton, styles.messageButton]}>
-            <Ionicons name="mail" size={20} color="#fff" />
-            <Text style={styles.actionText}>Message</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
-  );
-};
+//   if (loading) {
+//     return (
+//       <View style={styles.loadingContainer}>
+//         <ActivityIndicator size="large" color="#4A90E2" />
+//         <Text style={styles.loadingText}>Loading location...</Text>
+//       </View>
+//     );
+//   }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F5F7FA",
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 20,
-    backgroundColor: "#fff",
-    elevation: 2,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  map: {
-    flex: 1,
-  },
-  markerContainer: {
-    backgroundColor: "rgba(74, 144, 226, 0.2)",
-    borderRadius: 20,
-    padding: 8,
-  },
-  markerDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: "#4A90E2",
-  },
-  bottomSheet: {
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
-    elevation: 10,
-  },
-  userInfo: {
-    marginBottom: 20,
-  },
-  userName: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#1A1A1A",
-  },
-  userRole: {
-    fontSize: 14,
-    color: "#666",
-    marginTop: 4,
-  },
-  timestamp: {
-    fontSize: 12,
-    color: "#999",
-    marginTop: 8,
-  },
-  actions: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  actionButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#4CAF50",
-    borderRadius: 12,
-    padding: 12,
-    flex: 0.48,
-  },
-  messageButton: {
-    backgroundColor: "#4A90E2",
-  },
-  actionText: {
-    color: "#fff",
-    marginLeft: 8,
-    fontWeight: "500",
-  },
-});
+//   return (
+//     <View style={styles.container}>
+//       <View style={styles.header}>
+//         <TouchableOpacity
+//           style={styles.backButton}
+//           onPress={() => navigation.goBack()}
+//         >
+//           <Ionicons name="arrow-back" size={24} color="white" />
+//         </TouchableOpacity>
+//         <Text style={styles.headerTitle}>Location of {employeeName}</Text>
+//         <View style={styles.headerRight} />
+//       </View>
 
-export default LocationTracking;
+//       {mapRegion ? (
+//         <View style={styles.mapContainer}>
+//           <MapView
+//             provider={PROVIDER_GOOGLE}
+//             style={styles.map}
+//             region={mapRegion}
+//             showsUserLocation={true}
+//             showsCompass={true}
+//           >
+//             {markerLocation && (
+//               <Marker
+//                 coordinate={markerLocation}
+//                 title={employeeName}
+//                 description={employeeEmail}
+//                 pinColor="#4A90E2"
+//               />
+//             )}
+//           </MapView>
+
+//           <View style={styles.infoCard}>
+//             <Text style={styles.employeeName}>{employeeName}</Text>
+//             <Text style={styles.employeeEmail}>{employeeEmail}</Text>
+//             <Text style={styles.coordinatesText}>
+//               Lat: {latitude.toFixed(6)}, Long: {longitude.toFixed(6)}
+//             </Text>
+//           </View>
+
+//           <TouchableOpacity
+//             style={styles.seeLocationButton}
+//             onPress={openGoogleMaps}
+//           >
+//             <Ionicons name="location-outline" size={28} color="#fff" />
+//             <Text style={styles.seeLocationButtonText}>
+//               Open in Google Maps
+//             </Text>
+//           </TouchableOpacity>
+//         </View>
+//       ) : (
+//         <View style={styles.errorContainer}>
+//           <Text style={styles.errorText}>Location data is not available.</Text>
+//         </View>
+//       )}
+//     </View>
+//   );
+// };
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     backgroundColor: "#F5F7FA",
+//   },
+//   header: {
+//     flexDirection: "row",
+//     alignItems: "center",
+//     justifyContent: "space-between",
+//     padding: 16,
+//     backgroundColor: "#4A90E2",
+//     elevation: 4,
+//   },
+//   backButton: {
+//     padding: 8,
+//   },
+//   headerTitle: {
+//     flex: 1,
+//     textAlign: "center",
+//     fontSize: 20,
+//     fontWeight: "bold",
+//     color: "#fff",
+//     marginLeft: 8,
+//   },
+//   headerRight: {
+//     width: 40,
+//   },
+//   mapContainer: {
+//     flex: 1,
+//     position: "relative",
+//   },
+//   map: {
+//     flex: 1,
+//   },
+//   infoCard: {
+//     position: "absolute",
+//     top: 16,
+//     left: 16,
+//     right: 16,
+//     backgroundColor: "white",
+//     borderRadius: 8,
+//     padding: 16,
+//     elevation: 4,
+//     shadowColor: "#000",
+//     shadowOffset: { width: 0, height: 2 },
+//     shadowOpacity: 0.25,
+//     shadowRadius: 3.84,
+//   },
+//   employeeName: {
+//     fontSize: 18,
+//     fontWeight: "bold",
+//     color: "#333",
+//   },
+//   employeeEmail: {
+//     fontSize: 14,
+//     color: "#666",
+//     marginTop: 4,
+//   },
+//   coordinatesText: {
+//     fontSize: 12,
+//     color: "#888",
+//     marginTop: 8,
+//   },
+//   loadingContainer: {
+//     flex: 1,
+//     justifyContent: "center",
+//     alignItems: "center",
+//     backgroundColor: "#F5F7FA",
+//   },
+//   loadingText: {
+//     marginTop: 16,
+//     fontSize: 16,
+//     color: "#4A90E2",
+//   },
+//   errorContainer: {
+//     flex: 1,
+//     justifyContent: "center",
+//     alignItems: "center",
+//   },
+//   errorText: {
+//     fontSize: 16,
+//     color: "red",
+//     textAlign: "center",
+//     padding: 16,
+//   },
+//   seeLocationButton: {
+//     position: "absolute",
+//     bottom: 24,
+//     alignSelf: "center",
+//     flexDirection: "row",
+//     alignItems: "center",
+//     backgroundColor: "#4A90E2",
+//     borderRadius: 30,
+//     paddingVertical: 12,
+//     paddingHorizontal: 24,
+//     elevation: 5,
+//     shadowColor: "#000",
+//     shadowOffset: { width: 0, height: 2 },
+//     shadowOpacity: 0.3,
+//     shadowRadius: 4,
+//   },
+//   seeLocationButtonText: {
+//     color: "#fff",
+//     fontWeight: "bold",
+//     marginLeft: 8,
+//     fontSize: 16,
+//   },
+// });
+
+// export default AdminLocationTracking;
