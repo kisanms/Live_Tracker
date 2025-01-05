@@ -72,8 +72,8 @@ as the api is not working learned about diff dependencies which can work.
 finally after finding the issues and searching in StackOverFlow and Github detected the issue and start building the expo build but failed beacuse of android folder
 #
 30/12/2024
-Finally after removing the android folder and put the google map api key in the expo app.json file , after the build successfull the apk is showing the map. 
-Also Know about Google Play console and App store subscription
+-Finally after removing the android folder and put the google map api key in the expo app.json file , after the build successfull the apk is showing the map. 
+-Also Know about Google Play console and App store subscription
 
 #
 31/12/2024
@@ -91,8 +91,9 @@ In App subs Revenue Cat , can be only done after the application deployed in pla
 
 #
 3/1/25
-Created an apk where manager can see the employee Location 
+-Created an apk where manager can see the employee Location 
+-Error in the first apk issue after creating admin panel were admin can see Both manager and employee location
 
 #
 4/1/25
-Error in the first apk issue after creating admin panel were admin can see Both manager and employee location
+-Solved the error and its working Properly (https://expo.dev/accounts/deepkm/projects/Live_Tracker/builds/796e6d8a-0f8d-491a-b746-b439c55b56fe)
