@@ -74,3 +74,7 @@ finally after finding the issues and searching in StackOverFlow and Github detec
 30/12/2024
 Finally after removing the android folder and put the google map api key in the expo app.json file , after the build successfull the apk is showing the map. 
 Also Know about Google Play console and App store subscription
+
+#
+31/12/2024
+Created a Company Register Page
