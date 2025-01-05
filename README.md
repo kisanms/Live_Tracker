@@ -84,3 +84,7 @@ Created a Company Register Page
 1/1/25
 Also learned about Payment gateway (In-App Subscription) 
 Onboarding Slider
+
+#
+2/1/25
+In App subs Revenue Cat , can be only done after the application deployed in playstore/appstore
