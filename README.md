@@ -92,3 +92,7 @@ In App subs Revenue Cat , can be only done after the application deployed in pla
 #
 3/1/25
 Created an apk where manager can see the employee Location 
+
+#
+4/1/25
+Error in the first apk issue after creating admin panel were admin can see Both manager and employee location
