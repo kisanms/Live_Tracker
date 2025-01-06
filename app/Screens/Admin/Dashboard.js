@@ -24,9 +24,9 @@ import {
   serverTimestamp,
   doc,
   getDoc,
-  getDocs,
   query,
   where,
+  getDocs,
 } from "firebase/firestore";
 import { db } from "../../firebase";
 
@@ -36,14 +36,10 @@ const AdminDashboard = ({ navigation }) => {
   const [generatedKey, setGeneratedKey] = useState("");
   const [adminData, setAdminData] = useState(null);
   const [totalManagers, setTotalManagers] = useState(0);
+  const [totalEmployees, setTotalEmployees] = useState(0);
 
   useEffect(() => {
     const fetchAdminData = async () => {
-      if (!auth.currentUser) {
-        // console.log("User is not logged in.");
-        return;
-      }
-
       try {
         const userDoc = await getDoc(
           doc(db, "companies", auth.currentUser.uid)
@@ -74,12 +70,28 @@ const AdminDashboard = ({ navigation }) => {
       }
     };
 
+    const fetchTotalEmployees = async () => {
+      if (!adminData) return;
+      try {
+        const employeesQuery = query(
+          collection(db, "users"),
+          where("companyName", "==", adminData.companyName),
+          where("role", "==", "employee")
+        );
+        const employeesSnapshot = await getDocs(employeesQuery);
+        setTotalEmployees(employeesSnapshot.size);
+      } catch (error) {
+        console.error("Error fetching total employees:", error);
+      }
+    };
+
     fetchAdminData();
     fetchTotalManagers();
+    fetchTotalEmployees();
   }, [adminData]);
 
   const stats = [
-    { title: "Total Employees", count: 45, icon: "people" },
+    { title: "Total Employees", count: totalEmployees, icon: "people" },
     { title: "Total Managers", count: totalManagers, icon: "briefcase" },
     { title: "Active Now", count: 32, icon: "radio-button-on" },
   ];
