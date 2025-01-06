@@ -221,16 +221,39 @@ export default function SignUp() {
     }
   };
 
+  const verifyCompanyName = async (name) => {
+    try {
+      const q = query(
+        collection(db, "companies"),
+        where("companyName", "==", name)
+      );
+      const querySnapshot = await getDocs(q);
+      return !querySnapshot.empty;
+    } catch (error) {
+      console.error("Error verifying company name:", error);
+      return false;
+    }
+  };
+
   const handleSignUp = async () => {
     if (
       !nameVerify ||
       !emailVerify ||
       !mobileVerify ||
       !passwordVerify ||
-      !role
+      !role ||
+      !companyNameVerify
     ) {
       Alert.alert("Error", "Please fill all fields correctly!");
       return;
+    }
+
+    if (role === "manager" || role === "employee") {
+      const isCompanyValid = await verifyCompanyName(companyName);
+      if (!isCompanyValid) {
+        Alert.alert("Error", "Company name does not exist.");
+        return;
+      }
     }
 
     setLoading(true);
