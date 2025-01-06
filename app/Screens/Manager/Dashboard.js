@@ -136,7 +136,13 @@ const ManagerDashboard = ({ navigation }) => {
       <View style={styles.header}>
         <View>
           <Text style={styles.dateText}>{currentDate}</Text>
-          <Text style={styles.welcomeText}>Welcome back,</Text>
+          <Text style={styles.welcomeText}>
+            Welcome back{" "}
+            <Text style={{ fontWeight: "bold", color: "#4A90E2" }}>
+              Manager
+            </Text>
+            ,
+          </Text>
           <Text style={styles.managerName}>{managerData.name}</Text>
         </View>
         <View style={styles.headerRight}>
