@@ -179,7 +179,11 @@ export default function SignUp() {
   function handleMobile(e) {
     const mobileVar = e.nativeEvent.text;
     setMobile(mobileVar);
-    setMobileVerify(/^[6-9]{1}[0-9]{9}$/.test(mobileVar));
+    setMobileVerify(
+      mobileVar.length > 0 &&
+        mobileVar.length <= 10 &&
+        /^[6-9]{1}[0-9]{9}$/.test(mobileVar)
+    );
   }
 
   function handlePassword(e) {
@@ -279,6 +283,7 @@ export default function SignUp() {
         email,
         mobile,
         role,
+        companyName,
         createdAt: serverTimestamp(),
       });
 
