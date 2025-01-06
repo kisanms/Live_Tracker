@@ -21,6 +21,7 @@ import { StatusBar } from "expo-status-bar";
 import Octicons from "@expo/vector-icons/Octicons";
 import Feather from "@expo/vector-icons/Feather";
 import Entypo from "@expo/vector-icons/Entypo";
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import { Picker } from "@react-native-picker/picker";
 import { useNavigation } from "@react-navigation/native";
 import {
@@ -55,7 +56,7 @@ const styles = StyleSheet.create({
     // marginBottom: hp(2),
   },
   headerImage: {
-    height: hp(25),
+    height: hp(21),
     width: wp(80),
     resizeMode: "contain",
   },
@@ -64,7 +65,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "center",
     color: "#333",
-    // marginVertical: hp(2),
+    marginVertical: hp(-2),
   },
   inputContainer: {
     backgroundColor: "white",
@@ -160,6 +161,8 @@ export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState("");
   const [adminManagerKey, setAdminManagerKey] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [companyNameVerify, setCompanyNameVerify] = useState(false);
 
   function handleName(e) {
     const nameVar = e.nativeEvent.text;
@@ -183,6 +186,12 @@ export default function SignUp() {
     const passwordVar = e.nativeEvent.text;
     setPassword(passwordVar);
     setPasswordVerify(/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,}/.test(passwordVar));
+  }
+
+  function handleCompanyName(e) {
+    const companyNameVar = e.nativeEvent.text;
+    setCompanyName(companyNameVar);
+    setCompanyNameVerify(companyNameVar.length > 1);
   }
 
   const verifyManagerKey = async (key) => {
@@ -392,6 +401,28 @@ export default function SignUp() {
           </View>
           {mobile.length > 0 && !mobileVerify && (
             <Text style={styles.errorText}>Enter a valid mobile number</Text>
+          )}
+
+          {/* Company Name Input */}
+          <View style={styles.inputContainer}>
+            <FontAwesome5 name="building" size={hp(2.7)} color="#666" />
+            <TextInput
+              onChange={handleCompanyName}
+              style={styles.input}
+              placeholder="Company Name"
+              placeholderTextColor="#999"
+            />
+            {companyName.length > 0 &&
+              (companyNameVerify ? (
+                <Feather name="check-circle" size={20} color="#4CAF50" />
+              ) : (
+                <Entypo name="circle-with-cross" size={20} color="#ff3b30" />
+              ))}
+          </View>
+          {companyName.length > 0 && !companyNameVerify && (
+            <Text style={styles.errorText}>
+              Company name should be more than 1 character
+            </Text>
           )}
 
           {/* Password Input */}
