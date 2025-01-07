@@ -182,8 +182,10 @@ export default function SignIn() {
         await auth.signOut();
       }
     } catch (error) {
-      console.error("Login error:", error);
-      Alert.alert("Error", error.message || "Failed to sign in");
+      let msg = error.message;
+      if (msg.includes("(auth/invalid-credential)")) msg = "User not found";
+      if (msg.includes("(auth/invalid-email)")) msg = "Invalid email address";
+      Alert.alert("SignIn", msg || "Failed to sign in");
     } finally {
       setLoading(false);
     }
