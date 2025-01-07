@@ -50,7 +50,7 @@ const Maps = ({ route, navigation }) => {
     fetchLocation();
   }, []);
 
-  const handleMyLocation = async () => {
+  const handleMyLocation = async (isAutoUpdate = false) => {
     if (!markerLocation) {
       Alert.alert("Error", "Location not available.");
       return;
@@ -92,12 +92,23 @@ const Maps = ({ route, navigation }) => {
         { merge: true }
       );
 
-      Alert.alert("Success", "Location updated successfully");
+      // Show success alert only for manual updates
+      if (!isAutoUpdate) {
+        Alert.alert("Success", "Location updated successfully");
+      }
     } catch (error) {
       console.error("Error saving location:", error);
       Alert.alert("Error", "Failed to update location");
     }
   };
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      handleMyLocation(true); // Pass true to indicate auto update
+    }, 30 * 1000); // 30 seconds in milliseconds
+
+    return () => clearInterval(intervalId); // Cleanup on unmount
+  }, [markerLocation, userData]); // Dependencies to ensure it runs when these change
 
   return (
     <SafeAreaView style={styles.container}>
