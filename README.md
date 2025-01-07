@@ -100,3 +100,7 @@ In App subs Revenue Cat , can be only done after the application deployed in pla
 #
 5/1/12 (Sunday)
 Checking all the things
+#
+6/1/25
+-Namaste Js concepts of JS
+-Admin dashboard now admin can see how many emp and managaer are there in his/her under.
