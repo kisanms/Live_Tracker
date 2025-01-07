@@ -97,3 +97,6 @@ In App subs Revenue Cat , can be only done after the application deployed in pla
 #
 4/1/25
 -Solved the error and its working Properly (https://expo.dev/accounts/deepkm/projects/Live_Tracker/builds/796e6d8a-0f8d-491a-b746-b439c55b56fe)
+#
+5/1/12 (Sunday)
+Checking all the things
