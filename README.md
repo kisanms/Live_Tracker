@@ -107,3 +107,4 @@ Checking all the things
 #
 7/1/25
 -Async storage stored the session response but didn't work
+-React-native foreground and background.Try to build but not working.
