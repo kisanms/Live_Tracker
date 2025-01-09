@@ -109,3 +109,12 @@ Checking all the things
 -Async storage stored the session response but didn't work
 -React-native foreground and background.Try to build but not working.
 -SetInterval time is working 5min without any problem location will be share .
+#
+8/1/25
+-SetInterval time is working
+-Location Service page which will work in the background
+#
+9/1/25
+-Refresh the map so current location changes
+
+
