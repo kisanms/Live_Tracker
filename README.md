@@ -113,3 +113,8 @@ Checking all the things
 8/1/25
 -SetInterval time is working
 -Location Service page which will work in the background
+#
+9/1/25
+-Refresh the map so current location changes
+
+
