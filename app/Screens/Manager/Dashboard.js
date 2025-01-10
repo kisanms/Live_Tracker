@@ -18,9 +18,11 @@ import { signOut } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 import * as Location from "expo-location";
+import { collection, query, where, getDocs } from "firebase/firestore";
 
 const ManagerDashboard = ({ navigation }) => {
   const [managerData, setManagerData] = useState(null);
+  const [teamCount, setTeamCount] = useState(0);
   const currentDate = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
@@ -34,6 +36,19 @@ const ManagerDashboard = ({ navigation }) => {
         const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
         if (userDoc.exists()) {
           setManagerData(userDoc.data());
+
+          const relationshipsRef = collection(
+            db,
+            "managerEmployeeRelationships"
+          );
+          const activeTeamQuery = query(
+            relationshipsRef,
+            where("managerId", "==", auth.currentUser.uid),
+            where("status", "==", "active")
+          );
+
+          const teamSnapshot = await getDocs(activeTeamQuery);
+          setTeamCount(teamSnapshot.size);
         } else {
           console.log("No such document!");
         }
@@ -47,7 +62,7 @@ const ManagerDashboard = ({ navigation }) => {
   }, []);
 
   const teamStats = [
-    { title: "Team Members", count: 12, icon: "people" },
+    { title: "Team Members", count: teamCount, icon: "people" },
     { title: "Active Now", count: 8, icon: "radio-button-on" },
     { title: "On Leave", count: 2, icon: "calendar" },
   ];
