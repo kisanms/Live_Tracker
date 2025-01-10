@@ -116,5 +116,8 @@ Checking all the things
 #
 9/1/25
 -Refresh the map so current location changes
+#
+10/1/25
+-company data now storing in users db
 
 
