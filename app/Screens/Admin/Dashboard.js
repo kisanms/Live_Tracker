@@ -40,6 +40,8 @@ const AdminDashboard = ({ navigation }) => {
 
   useEffect(() => {
     const fetchAdminData = async () => {
+      if (!auth.currentUser) return;
+
       try {
         const userDoc = await getDoc(
           doc(db, "companies", auth.currentUser.uid)
@@ -56,7 +58,7 @@ const AdminDashboard = ({ navigation }) => {
     };
 
     const fetchTotalManagers = async () => {
-      if (!adminData) return;
+      if (!adminData || !auth.currentUser) return;
       try {
         const managersQuery = query(
           collection(db, "users"),
@@ -71,7 +73,7 @@ const AdminDashboard = ({ navigation }) => {
     };
 
     const fetchTotalEmployees = async () => {
-      if (!adminData) return;
+      if (!adminData || !auth.currentUser) return;
       try {
         const employeesQuery = query(
           collection(db, "users"),
@@ -85,9 +87,11 @@ const AdminDashboard = ({ navigation }) => {
       }
     };
 
-    fetchAdminData();
-    fetchTotalManagers();
-    fetchTotalEmployees();
+    if (auth.currentUser) {
+      fetchAdminData();
+      fetchTotalManagers();
+      fetchTotalEmployees();
+    }
   }, [adminData]);
 
   const stats = [
