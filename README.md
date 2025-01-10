@@ -120,4 +120,5 @@ Checking all the things
 10/1/25
 -company data now storing in users db
 -admin data is getting now on notification
+-manager can see the number of emp under him/her
 
