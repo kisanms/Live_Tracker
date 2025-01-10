@@ -9,8 +9,15 @@ import {
   Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { db } from "../../firebase"; // Ensure you import your Firestore instance
-import { collection, getDocs, doc, getDoc } from "firebase/firestore";
+import { db, auth } from "../../firebase";
+import {
+  collection,
+  getDocs,
+  doc,
+  getDoc,
+  query,
+  where,
+} from "firebase/firestore";
 
 const ManagerEmployeeList = ({ navigation }) => {
   const [employees, setEmployees] = useState([]);
@@ -18,10 +25,37 @@ const ManagerEmployeeList = ({ navigation }) => {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const employeesSnapshot = await getDocs(collection(db, "users"));
+        // First get all active relationships for this manager
+        const relationshipsRef = collection(db, "managerEmployeeRelationships");
+        const relationshipsQuery = query(
+          relationshipsRef,
+          where("managerId", "==", auth.currentUser.uid),
+          where("status", "==", "active")
+        );
+
+        const relationshipsSnapshot = await getDocs(relationshipsQuery);
+
+        // Extract employee IDs from relationships
+        const employeeIds = relationshipsSnapshot.docs.map(
+          (doc) => doc.data().employeeId
+        );
+
+        if (employeeIds.length === 0) {
+          setEmployees([]);
+          return;
+        }
+
+        // Get employee details from users collection
+        const employeesRef = collection(db, "users");
+        const employeesSnapshot = await getDocs(employeesRef);
+
         const employeeList = employeesSnapshot.docs
-          .map((doc) => ({ id: doc.id, ...doc.data() }))
-          .filter((user) => user.role === "employee");
+          .filter((doc) => employeeIds.includes(doc.id))
+          .map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+
         setEmployees(employeeList);
       } catch (error) {
         console.error("Error fetching employees:", error);
@@ -34,7 +68,6 @@ const ManagerEmployeeList = ({ navigation }) => {
 
   const handleLocationPress = async (employee) => {
     try {
-      // First check the employeeLocations collection
       const locationDoc = await getDoc(
         doc(db, "employeeLocations", employee.id)
       );
@@ -48,7 +81,6 @@ const ManagerEmployeeList = ({ navigation }) => {
           longitude: locationData.longitude,
         });
       } else {
-        // If no location found in employeeLocations, check user's document
         const userDoc = await getDoc(doc(db, "users", employee.id));
         if (userDoc.exists() && userDoc.data().lastLocation) {
           const { lastLocation } = userDoc.data();
@@ -72,14 +104,13 @@ const ManagerEmployeeList = ({ navigation }) => {
   };
 
   const handleCallPress = (employee) => {
-    // Placeholder for call functionality
     Alert.alert("Call", `Calling ${employee.name}...`);
   };
 
   const renderEmployeeItem = ({ item }) => (
     <View style={styles.employeeCard}>
       <Image
-        source={{ uri: "https://randomuser.me/api/portraits/men/41.jpg" }} // Placeholder image
+        source={{ uri: "https://randomuser.me/api/portraits/men/41.jpg" }}
         style={styles.profileImage}
       />
       <View style={styles.employeeInfo}>
@@ -89,13 +120,13 @@ const ManagerEmployeeList = ({ navigation }) => {
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={styles.circleButton}
-          onPress={() => handleLocationPress(item)} // Call the function to fetch coordinates
+          onPress={() => handleLocationPress(item)}
         >
           <Ionicons name="location" size={20} color="#fff" />
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.circleButton}
-          onPress={() => handleCallPress(item)} // Call functionality
+          onPress={() => handleCallPress(item)}
         >
           <Ionicons name="call" size={20} color="#fff" />
         </TouchableOpacity>
