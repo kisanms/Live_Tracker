@@ -103,7 +103,7 @@ Checking all the things
 #
 6/1/25
 -Namaste Js concepts of JS
--Admin dashboard now admin can see how many emp and managaer are there in his/her under.
+-Admin dashboard now admin can see how many emp and manager are there in his/her under.
 #
 7/1/25
 -Async storage stored the session response but didn't work
