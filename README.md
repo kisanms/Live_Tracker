@@ -121,4 +121,7 @@ Checking all the things
 -company data now storing in users db
 -admin data is getting now on notification
 -manager can see the number of emp under him/her
+#
+11/1/25
+-Manager dash a new action all emp location
 
