@@ -124,4 +124,5 @@ Checking all the things
 #
 11/1/25
 -Manager dash a new action all emp location
+-A new page AllEMpLoc which show all emp location of that manager's under only
 
