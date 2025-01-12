@@ -125,4 +125,7 @@ Checking all the things
 11/1/25
 -Manager dash a new action all emp location
 -A new page AllEMpLoc which show all emp location of that manager's under only
+#
+12/1/25
+-Admin can see the manager list of managers under that company only
 
