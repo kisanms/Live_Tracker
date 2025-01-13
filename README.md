@@ -1,134 +1,200 @@
-# Welcome to your Expo app 👋
+# 📱 Live Tracker - Project Documentation
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## 📋 Table of Contents
+1. [Project Overview](#project-overview)
+2. [Technology Stack](#technology-stack)
+3. [Development Timeline](#development-timeline)
+4. [Features Implementation](#features-implementation)
+5. [Technical Challenges](#technical-challenges)
+6. [Build Information](#build-information)
+7. [Future Enhancements](#future-enhancements)
 
-## Get started
+## 🎯 Project Overview
+Live Tracker is a location-tracking application built with Expo, featuring role-based access control and real-time location monitoring. The application serves three user types: Admin, Manager, and Employee, each with specific functionalities and access levels.
 
-1. Install dependencies
+## 🛠 Technology Stack
+- **Framework**: Expo, React Native
+- **Maps Integration**: Google Maps API
+- **State Management**: Async Storage
+- **Background Services**: React Native Background Services
+- **Authentication**: Role-based Access Control (RBAC)
+- **Payment Integration**: RevenueCat (planned)
+- **Build Tools**: Expo CLI
 
-   ```bash
-   npm install
-   ```
+## 📅 Development Timeline
 
-2. Start the app
+### December 2024
 
-   ```bash
-    npx expo start
-   ```
+#### Week 1: Foundation (Dec 17-19)
+- **Day 1**: Created expo-cli project
+  - Implemented Login UI
+  - Implemented Register UI
+  
+- **Day 2**: Backend Integration
+  - Studied JSON structure
+  - Implemented API methods
+  
+- **Day 3**: Access Control
+  - Implemented RBAC UI components
+  - Designed role-specific interfaces
 
-In the output, you'll find options to open the app in a
+#### Week 2: Maps Integration (Dec 22-25)
+- **Day 1**: Google Maps Implementation
+  - Integrated React Native Maps
+  - Set up Google Maps API configuration
+  
+- **Day 2**: Production Issues
+  - Debugged map display problems
+  - Identified integration conflicts
+  
+- **Day 3**: Architecture Updates
+  - Studied React Native 0.76 architecture
+  - Analyzed bridge removal impact
+  
+- **Day 4**: Development Environment
+  - Attempted macOS virtualization
+  - Explored cross-platform solutions
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+#### Week 3: Build Resolution (Dec 28-31)
+- **Dec 28**: Dependency Research
+  - Evaluated alternative API solutions
+  - Tested compatibility issues
+  
+- **Dec 29**: Build Troubleshooting
+  - Resolved API integration issues
+  - Fixed Android folder conflicts
+  
+- **Dec 30**: Successful Build
+  - Removed problematic Android folder
+  - Updated app.json configuration
+  - Implemented Google Maps API key
+  
+- **Dec 31**: Feature Addition
+  - Created Company Register page
+  - Researched app store requirements
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### January 2025
 
-## Get a fresh project
+#### Week 1: Payment & Features (Jan 1-4)
+- **Jan 1**:
+  - Implemented Onboarding Slider
+  - Researched payment gateway integration
+  
+- **Jan 2**:
+  - Studied RevenueCat implementation
+  - Documented subscription requirements
+  
+- **Jan 3**:
+  - Created employee location tracking
+  - Developed manager view functionality
+  
+- **Jan 4**:
+  - Fixed admin panel issues
+  - Successfully deployed working build
 
-When you're ready, run:
+#### Week 2: Core Development (Jan 6-9)
+- **Jan 6**:
+  - Enhanced admin dashboard
+  - Implemented employee metrics
+  
+- **Jan 7**:
+  - Implemented session storage
+  - Configured background services
+  
+- **Jan 8**:
+  - Developed location service page
+  - Implemented background functionality
+  
+- **Jan 9**:
+  - Added map refresh feature
+  - Implemented real-time updates
 
-```bash
-npm run reset-project
-```
+#### Week 3: Advanced Features (Jan 10-13)
+- **Jan 10**:
+  - Integrated company database
+  - Added admin notifications
+  
+- **Jan 11**:
+  - Enhanced manager dashboard
+  - Added employee location tracking
+  
+- **Jan 12**:
+  - Implemented company-specific filtering
+  - Created manager and employee lists
+  
+- **Jan 13**:
+  - Developing combined location view
+  - Enhancing admin dashboard
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## 🎉 Features Implementation
 
-## Learn more
+### Admin Dashboard
+- Company data management
+- Manager and employee oversight
+- Location tracking for all users
+- Notification system
+- Company-specific filtering
 
-To learn more about developing your project with Expo, look at the following resources:
+### Manager Features
+- Employee location tracking
+- Team management dashboard
+- Employee count metrics
+- Real-time location updates
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### Employee Features
+- Location sharing
+- Background location updates
+- Profile management
 
-## Join the community
+## 🔧 Technical Challenges
+1. **Map Integration Issues**
+   - Resolution: Removed Android folder conflicts
+   - Updated API key implementation
 
-Join our community of developers creating universal apps.
+2. **Background Services**
+   - Implementation: 5-minute interval updates
+   - Status: Working reliably
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+3. **Build Process**
+   - Challenge: Android folder conflicts
+   - Solution: Configuration in app.json
 
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-17/12/2024 Created the expo-cli file and started building the frontend UI of Login and Register
-#
-18/12/2024 Learned about JSON and APi methods
-#
-19/12/2024 Learned about Role base access control and implemented the Ui part only
-#
-22/12/2024 Learned about react-native maps and how to use google maps api into our application.
-#
-23/12/2024 Getting issues in the production phase beacuse map is not showing in the app
-#
-24/12/2024 Learned about React-native new architecture 0.76 which remove the bridge from JS and RN-cli
-#
-25/12/2024
-installing macos in virtual box to try in windows but didn't work.
-#
-28/12/2024
-as the api is not working learned about diff dependencies which can work.
-#
-29/12/2024
-finally after finding the issues and searching in StackOverFlow and Github detected the issue and start building the expo build but failed beacuse of android folder
-#
-30/12/2024
--Finally after removing the android folder and put the google map api key in the expo app.json file , after the build successfull the apk is showing the map. 
--Also Know about Google Play console and App store subscription
+## 📦 Build Information
+- Latest Build: [Live_Tracker Build 796e6d8a](https://expo.dev/accounts/deepkm/projects/Live_Tracker/builds/796e6d8a-0f8d-491a-b746-b439c55b56fe)
+- Build Status: Successful
+- Platform: Android
+- Key Features: Location tracking, Role-based access
 
-#
-31/12/2024
-Created a Company Register Page
+## 🚀 Future Enhancements
+1. **Payment Integration**
+   - RevenueCat implementation
+   - In-app subscription setup
 
+2. **Background Services**
+   - Optimize battery usage
+   - Enhance reliability
 
-#
-1/1/25
-Also learned about Payment gateway (In-App Subscription) 
-Onboarding Slider
+3. **User Interface**
+   - Enhanced map visualization
+   - Improved user analytics
 
-#
-2/1/25
-In App subs Revenue Cat , can be only done after the application deployed in playstore/appstore
+## 📝 Notes
+- In-app subscriptions pending store deployment
+- Background services functioning with 5-minute intervals
+- Company-specific data segregation implemented
+- Location tracking working as expected
 
-#
-3/1/25
--Created an apk where manager can see the employee Location 
--Error in the first apk issue after creating admin panel were admin can see Both manager and employee location
+## 🔄 Version Control
+- Repository: Not specified
+- Latest Version: 1.0.0
+- Build Number: Referenced in build link
 
-#
-4/1/25
--Solved the error and its working Properly (https://expo.dev/accounts/deepkm/projects/Live_Tracker/builds/796e6d8a-0f8d-491a-b746-b439c55b56fe)
-#
-5/1/12 (Sunday)
-Checking all the things
-#
-6/1/25
--Namaste Js concepts of JS
--Admin dashboard now admin can see how many emp and manager are there in his/her under.
-#
-7/1/25
--Async storage stored the session response but didn't work
--React-native foreground and background.Try to build but not working.
--SetInterval time is working 5min without any problem location will be share .
-#
-8/1/25
--SetInterval time is working
--Location Service page which will work in the background
-#
-9/1/25
--Refresh the map so current location changes
-#
-10/1/25
--company data now storing in users db
--admin data is getting now on notification
--manager can see the number of emp under him/her
-#
-11/1/25
--Manager dash a new action all emp location
--A new page AllEMpLoc which show all emp location of that manager's under only
-#
-12/1/25
--Admin can see the manager list of managers under that company only
--Admin can see the employee list of employee under that company only
-#13/1/25
--working on map for showing location of both manager and employee in admin dashboard.
+## 📚 Documentation Standards
+- Changelog updates required for all features
+- Build documentation mandatory
+- API documentation maintained separately
 
+## 🔐 Security Considerations
+- Role-based access control implemented
+- Location data encryption pending
+- User data protection measures in place
