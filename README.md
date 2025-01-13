@@ -129,4 +129,6 @@ Checking all the things
 12/1/25
 -Admin can see the manager list of managers under that company only
 -Admin can see the employee list of employee under that company only
+#13/1/25
+-working on map for showing location of both manager and employee in admin dashboard.
 
