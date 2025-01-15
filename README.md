@@ -126,8 +126,11 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
   - Developing combined location view
   - Enhancing admin dashboard
 - **Jan 14**:
-  - have to Learn about firebase notification
+  - have to Learn about Firebase notification
   - react-native push notifications
+- **Jan 15**:
+  - https://youtu.be/sioEY4tWmLI?embeds_referring_euri=https%3A%2F%2Fconsole.firebase.google.com%2F&source_ve_path=Mjg2NjQsMTY0NTAz (Firebase Cloud Messaging) 
+ 
 
 ## 🎉 Features Implementation
 
