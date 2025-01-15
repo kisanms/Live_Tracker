@@ -215,7 +215,7 @@ const AdminDashboard = ({ navigation }) => {
             onPress={handleShareLocation}
           >
             <Ionicons name="location" size={24} color={COLORS.primary} />
-            <Text style={styles.actionText}>Share Location</Text>
+            <Text style={styles.actionText}>My Location</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.actionCard}
