@@ -128,6 +128,8 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
 - **Jan 14**:
   - have to Learn about Firebase notification
   - react-native push notifications
+- **Jan 15**:
+ 
 
 ## 🎉 Features Implementation
 
