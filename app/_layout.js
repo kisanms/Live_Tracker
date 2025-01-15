@@ -19,12 +19,12 @@ import AllEmpLocs from "./Screens/Admin/AllEmpLoc";
 import ManagerDashboard from "./Screens/Manager/Dashboard";
 import ManagerEmployeeList from "./Screens/Manager/EmployeeList";
 import ManagerLocationTracking from "./Screens/Manager/LocationTracking";
+import AllEmpLoc from "./Screens/Manager/AllEmpLoc";
 
 // Employee Screens
 import EmployeeDashboard from "./Screens/Employee/Dashboard";
 import EmployeeProfile from "./Screens/Employee/Profile";
 import Maps from "./Screens/Maps";
-import AllEmpLoc from "./Screens/Manager/AllEmpLoc";
 
 const Stack = createNativeStackNavigator();
 

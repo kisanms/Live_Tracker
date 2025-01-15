@@ -159,7 +159,11 @@ const ManagerList = ({ navigation }) => {
       <View style={styles.cardFooter}>
         <View style={styles.statsContainer}>
           <Ionicons name="people" size={20} color="#666" />
-          <Text style={styles.statsText}>{item.employeesCount} Employees</Text>
+          <TouchableOpacity onPress={() => navigation.navigate("employeeList")}>
+            <Text style={styles.statsText}>
+              {item.employeesCount} Employees
+            </Text>
+          </TouchableOpacity>
         </View>
         <View style={styles.actions}>
           <TouchableOpacity
