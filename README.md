@@ -134,6 +134,7 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
 - **Jan 16**:
   - OnAuthChanged from firebase is working , means when user is login his/her session stored and if remove the app from recent it will not navigate to signIn page ever.
   - Admin dashboard -> Manager -> employee -> managerUnderEmp
+  - both expo and google SHA key should be same or else the map will not show
  
  
 
