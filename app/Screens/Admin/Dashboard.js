@@ -38,16 +38,16 @@ const AdminDashboard = ({ navigation }) => {
   const [totalManagers, setTotalManagers] = useState(0);
   const [totalEmployees, setTotalEmployees] = useState(0);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        navigation.replace("signIn");
-      }
-    });
+  // useEffect(() => {
+  //   const unsubscribe = onAuthStateChanged(auth, (user) => {
+  //     if (!user) {
+  //       navigation.replace("signIn");
+  //     }
+  //   });
 
-    // Cleanup subscription on unmount
-    return () => unsubscribe();
-  }, []);
+  //   // Cleanup subscription on unmount
+  //   return () => unsubscribe();
+  // }, []);
 
   useEffect(() => {
     const fetchAdminData = async () => {
