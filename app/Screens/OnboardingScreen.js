@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   SafeAreaView,
   Image,
@@ -14,6 +14,9 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "../firebase";
 
 const COLORS = { primary: "#0170db", white: "#fff", grey: "#d3d3d3" };
 
@@ -54,8 +57,39 @@ const Slide = ({ item }) => (
 );
 
 const OnboardingScreen = ({ navigation }) => {
-  const [currentSlideIndex, setCurrentSlideIndex] = React.useState(0);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const ref = React.useRef();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // Check user role in Firestore
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        const companyDoc = await getDoc(doc(db, "companies", user.uid));
+
+        if (companyDoc.exists() && companyDoc.data().role === "admin") {
+          navigation.replace("adminDashboard");
+        } else if (userDoc.exists()) {
+          switch (userDoc.data().role) {
+            case "manager":
+              navigation.replace("managerDashboard");
+              break;
+            case "employee":
+              navigation.replace("employeeDashboard");
+              break;
+            default:
+              Alert.alert("Error", "Invalid user role");
+              await auth.signOut();
+          }
+        } else {
+          Alert.alert("Error", "User data not found");
+          await auth.signOut();
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const updateCurrentSlideIndex = (e) => {
     const contentOffsetX = e.nativeEvent.contentOffset.x;

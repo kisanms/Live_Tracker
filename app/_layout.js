@@ -31,7 +31,7 @@ const Stack = createNativeStackNavigator();
 const RootLayout = ({ initialUser }) => {
   // Determine initial route based on user state
   const getInitialRoute = () => {
-    if (!initialUser) return "signIn";
+    if (!initialUser) return "slider";
 
     // Check user role and return appropriate dashboard
     switch (initialUser.role) {
