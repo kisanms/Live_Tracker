@@ -120,6 +120,10 @@ const ManagerList = ({ navigation }) => {
     }
   };
 
+  const handleEmployeeListPress = (managerId) => {
+    navigation.navigate("managerUnderEmp", { managerId });
+  };
+
   const renderManager = ({ item }) => (
     <TouchableOpacity style={styles.managerCard}>
       <View style={styles.cardHeader}>
@@ -159,7 +163,7 @@ const ManagerList = ({ navigation }) => {
       <View style={styles.cardFooter}>
         <View style={styles.statsContainer}>
           <Ionicons name="people" size={20} color="#666" />
-          <TouchableOpacity onPress={() => navigation.navigate("employeeList")}>
+          <TouchableOpacity onPress={() => handleEmployeeListPress(item.id)}>
             <Text style={styles.statsText}>
               {item.employeesCount} Employees
             </Text>
