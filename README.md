@@ -132,7 +132,8 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
   - https://youtu.be/sioEY4tWmLI?embeds_referring_euri=https%3A%2F%2Fconsole.firebase.google.com%2F&source_ve_path=Mjg2NjQsMTY0NTAz (Firebase Cloud Messaging) 
  
 - **Jan 16**:
-  - OnAuthChanged from firebase is working , means when user is login his/her session stored and if remove the app from recent it will not navigate to signIn page ever. 
+  - OnAuthChanged from firebase is working , means when user is login his/her session stored and if remove the app from recent it will not navigate to signIn page ever.
+  - Admin dashboard -> Manager -> employee -> managerUnderEmp
  
  
 
