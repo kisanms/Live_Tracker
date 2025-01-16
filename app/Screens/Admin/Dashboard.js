@@ -17,7 +17,7 @@ import {
 import { COLORS, SHADOWS } from "../../constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { auth } from "../../firebase";
-import { signOut } from "firebase/auth";
+import { signOut, onAuthStateChanged } from "firebase/auth";
 import {
   collection,
   addDoc,
@@ -37,6 +37,17 @@ const AdminDashboard = ({ navigation }) => {
   const [adminData, setAdminData] = useState(null);
   const [totalManagers, setTotalManagers] = useState(0);
   const [totalEmployees, setTotalEmployees] = useState(0);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        navigation.replace("signIn");
+      }
+    });
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const fetchAdminData = async () => {

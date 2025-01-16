@@ -1,3 +1,4 @@
+import React, { useRef, useState, useEffect } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -12,7 +13,6 @@ import {
   ScrollView,
   Platform,
 } from "react-native";
-import React, { useRef, useState } from "react";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -20,7 +20,7 @@ import {
 import { StatusBar } from "expo-status-bar";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useNavigation } from "@react-navigation/native";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
 
@@ -141,6 +141,37 @@ export default function SignIn() {
   const [loading, setLoading] = useState(false);
   const emailRef = useRef("");
   const passwordRef = useRef("");
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // Check user role in Firestore
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        const companyDoc = await getDoc(doc(db, "companies", user.uid));
+
+        if (companyDoc.exists() && companyDoc.data().role === "admin") {
+          navigation.replace("adminDashboard");
+        } else if (userDoc.exists()) {
+          switch (userDoc.data().role) {
+            case "manager":
+              navigation.replace("managerDashboard");
+              break;
+            case "employee":
+              navigation.replace("employeeDashboard");
+              break;
+            default:
+              Alert.alert("Error", "Invalid user role");
+              await auth.signOut();
+          }
+        } else {
+          Alert.alert("Error", "User data not found");
+          await auth.signOut();
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const handleLogin = async () => {
     if (!emailRef.current || !passwordRef.current) {
