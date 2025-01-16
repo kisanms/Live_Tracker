@@ -24,7 +24,7 @@ const slides = [
   {
     id: "1",
     image: require("../../assets/images/map2.jpg"),
-    title: "Live Tracking System",
+    title: "Welcome To Live Tracking System",
     subtitle:
       "Efficiently track employee data in real-time for better management.",
   },
