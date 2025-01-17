@@ -32,24 +32,47 @@ const AllEmpLoc = ({ navigation }) => {
     latitudeDelta: 20,
     longitudeDelta: 20,
   });
+  const [managerCount, setManagerCount] = useState(0);
+  const [employeeCount, setEmployeeCount] = useState(0);
 
-  // Fetch admin data
+  // Fetch admin data and counts
   useEffect(() => {
-    const fetchAdminData = async () => {
+    const fetchData = async () => {
       if (!auth.currentUser) return;
       try {
+        // Fetch admin data
         const userDoc = await getDoc(
           doc(db, "companies", auth.currentUser.uid)
         );
         if (userDoc.exists()) {
-          setAdminData(userDoc.data());
+          const adminDataTemp = userDoc.data();
+          setAdminData(adminDataTemp);
+
+          // Fetch manager count
+          const managersQuery = query(
+            collection(db, "users"),
+            where("role", "==", "manager"),
+            where("companyName", "==", adminDataTemp.companyName)
+          );
+          const managerSnapshot = await getDocs(managersQuery);
+          setManagerCount(managerSnapshot.size);
+
+          // Fetch employee count
+          const employeesQuery = query(
+            collection(db, "users"),
+            where("role", "==", "employee"),
+            where("companyName", "==", adminDataTemp.companyName)
+          );
+          const employeeSnapshot = await getDocs(employeesQuery);
+          setEmployeeCount(employeeSnapshot.size);
         }
       } catch (error) {
-        console.error("Error fetching admin data:", error);
-        Alert.alert("Error", "Failed to load admin data");
+        console.error("Error fetching data:", error);
+        Alert.alert("Error", "Failed to load data");
       }
     };
-    fetchAdminData();
+
+    fetchData();
   }, []);
 
   // Fetch locations based on selected tab
@@ -127,6 +150,18 @@ const AllEmpLoc = ({ navigation }) => {
         <View style={{ width: 24 }} />
       </View>
 
+      <View style={styles.statsContainer}>
+        <View style={styles.statCard}>
+          <Ionicons name="people" size={20} color="#4A90E2" />
+          <Text style={styles.statCount}>{managerCount}</Text>
+          <Text style={styles.statLabel}>Managers</Text>
+        </View>
+        <View style={styles.statCard}>
+          <Ionicons name="person" size={20} color="#4CAF50" />
+          <Text style={styles.statCount}>{employeeCount}</Text>
+          <Text style={styles.statLabel}>Employees</Text>
+        </View>
+      </View>
       <View style={styles.tabContainer}>
         <TouchableOpacity
           style={[styles.tab, selectedTab === "managers" && styles.activeTab]}
@@ -302,6 +337,30 @@ const styles = StyleSheet.create({
   },
   employeeArrow: {
     borderColor: "#FF9800",
+  },
+  statsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    padding: 3,
+    backgroundColor: "#fff",
+    elevation: 2,
+  },
+  statCard: {
+    alignItems: "center",
+    backgroundColor: "#F5F7FA",
+    padding: 5,
+    borderRadius: 8,
+    width: "40%",
+  },
+  statCount: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#1A1A1A",
+    marginVertical: 4,
+  },
+  statLabel: {
+    fontSize: 14,
+    color: "#666",
   },
 });
 
