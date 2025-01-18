@@ -139,6 +139,7 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
 - **Jan 17**:
  -Admin all staff loc shows the number of manager and employees 
  -static notification working from FCM
+ - delay of 2mins cloud messaging.
  
 
 ## 🎉 Features Implementation
