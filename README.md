@@ -137,6 +137,7 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
   - both expo and google SHA key should be same or else the map will not show
 
 - **Jan 17**:
+ -Admin all staff loc shows the number of manager and employees 
 
  
 
