@@ -9,7 +9,7 @@ import {
   StatusBar,
   TouchableOpacity,
   ImageBackground,
-  Alert,
+  ActivityIndicator, // For smooth loading
 } from "react-native";
 import {
   widthPercentageToDP as wp,
@@ -17,12 +17,13 @@ import {
 } from "react-native-responsive-screen";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { auth, db } from "../firebase";
 
 const COLORS = { primary: "#0170db", white: "#fff", grey: "#d3d3d3" };
 
 const slides = [
+  // Slides data
   {
     id: "1",
     image: require("../../assets/images/map2.jpg"),
@@ -50,28 +51,27 @@ const slides = [
   },
 ];
 
-const Slide = ({ item }) => (
-  <View style={styles.slideContainer}>
-    <Image source={item.image} style={styles.image} />
-    <Text style={styles.title}>{item.title}</Text>
-    <Text style={styles.subtitle}>{item.subtitle}</Text>
-  </View>
-);
-
 const OnboardingScreen = ({ navigation }) => {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(true); // Loading state
   const ref = React.useRef();
 
   useEffect(() => {
-    const checkOnboarding = async () => {
+    const initialize = async () => {
+      // Add a delay to show the loader
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       const hasSeenOnboarding = await AsyncStorage.getItem("hasSeenOnboarding");
       if (hasSeenOnboarding) {
-        navigation.replace("signIn"); // Skip onboarding if already completed
+        navigation.replace("signIn");
+      } else {
+        setIsLoading(false); // Stop loading when onboarding should show
       }
     };
 
-    checkOnboarding();
+    initialize();
 
+    // Auth state listener
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         const userDoc = await getDoc(doc(db, "users", user.uid));
@@ -106,12 +106,6 @@ const OnboardingScreen = ({ navigation }) => {
     navigation.replace("signIn");
   };
 
-  const updateCurrentSlideIndex = (e) => {
-    const contentOffsetX = e.nativeEvent.contentOffset.x;
-    const currentIndex = Math.round(contentOffsetX / wp(100));
-    setCurrentSlideIndex(currentIndex);
-  };
-
   const goToNextSlide = () => {
     const nextSlideIndex = currentSlideIndex + 1;
     if (nextSlideIndex < slides.length) {
@@ -126,40 +120,13 @@ const OnboardingScreen = ({ navigation }) => {
     setCurrentSlideIndex(lastSlideIndex);
   };
 
-  const Footer = () => (
-    <View style={styles.footer}>
-      <View style={styles.indicatorContainer}>
-        {slides.map((_, index) => (
-          <View
-            key={index}
-            style={[
-              styles.indicator,
-              currentSlideIndex === index && styles.activeIndicator,
-            ]}
-          />
-        ))}
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
       </View>
-      <View style={styles.buttonContainer}>
-        {currentSlideIndex === slides.length - 1 ? (
-          <TouchableOpacity
-            style={styles.getStartedButton}
-            onPress={markOnboardingComplete}
-          >
-            <Text style={styles.getStartedText}>GET STARTED</Text>
-          </TouchableOpacity>
-        ) : (
-          <View style={styles.buttonRow}>
-            <TouchableOpacity style={styles.skipButton} onPress={skip}>
-              <Text style={styles.skipText}>SKIP</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.nextButton} onPress={goToNextSlide}>
-              <Text style={styles.nextText}>NEXT</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
-    </View>
-  );
+    );
+  }
 
   return (
     <ImageBackground
@@ -170,15 +137,58 @@ const OnboardingScreen = ({ navigation }) => {
         <StatusBar style="light" backgroundColor="#0067dc" />
         <FlatList
           ref={ref}
-          onMomentumScrollEnd={updateCurrentSlideIndex}
           horizontal
           pagingEnabled
           data={slides}
-          renderItem={({ item }) => <Slide item={item} />}
+          renderItem={({ item }) => (
+            <View style={styles.slideContainer}>
+              <Image source={item.image} style={styles.image} />
+              <Text style={styles.title}>{item.title}</Text>
+              <Text style={styles.subtitle}>{item.subtitle}</Text>
+            </View>
+          )}
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.flatListContainer}
+          onMomentumScrollEnd={(e) => {
+            const contentOffsetX = e.nativeEvent.contentOffset.x;
+            const currentIndex = Math.round(contentOffsetX / wp(100));
+            setCurrentSlideIndex(currentIndex);
+          }}
         />
-        <Footer />
+        <View style={styles.footer}>
+          <View style={styles.indicatorContainer}>
+            {slides.map((_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.indicator,
+                  currentSlideIndex === index && styles.activeIndicator,
+                ]}
+              />
+            ))}
+          </View>
+          <View style={styles.buttonContainer}>
+            {currentSlideIndex === slides.length - 1 ? (
+              <TouchableOpacity
+                style={styles.getStartedButton}
+                onPress={markOnboardingComplete}
+              >
+                <Text style={styles.getStartedText}>GET STARTED</Text>
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.buttonRow}>
+                <TouchableOpacity style={styles.skipButton} onPress={skip}>
+                  <Text style={styles.skipText}>SKIP</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.nextButton}
+                  onPress={goToNextSlide}
+                >
+                  <Text style={styles.nextText}>NEXT</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        </View>
       </SafeAreaView>
     </ImageBackground>
   );
@@ -191,6 +201,12 @@ const styles = StyleSheet.create({
   backgroundImage: {
     flex: 1,
     resizeMode: "cover",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: COLORS.white,
   },
   slideContainer: {
     alignItems: "center",
@@ -284,9 +300,6 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     fontSize: wp(4.5),
     fontWeight: "bold",
-  },
-  flatListContainer: {
-    height: hp(75),
   },
 });
 
