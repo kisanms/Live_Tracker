@@ -141,6 +141,7 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
  -static notification working from FCM
  - delay of 2mins cloud messaging.
 - **Jan 18**:
+  -onboard slider transition 
  
  
 
