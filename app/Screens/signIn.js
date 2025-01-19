@@ -29,17 +29,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#ffffff",
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#ffffff",
+  },
   contentContainer: {
     flex: 1,
     padding: wp(5),
   },
   headerContainer: {
     alignItems: "center",
-    // backgroundColor: "rgba(255, 59, 48, 0.05)",
     paddingVertical: hp(4),
-    // borderBottomLeftRadius: 30,
-    // borderBottomRightRadius: 30,
-    // marginBottom: hp(2),
   },
   headerImage: {
     height: hp(25),
@@ -51,7 +53,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "center",
     color: "#333",
-    // marginVertical: hp(2),
   },
   inputContainer: {
     backgroundColor: "white",
@@ -139,35 +140,42 @@ const styles = StyleSheet.create({
 export default function SignIn() {
   const navigation = useNavigation();
   const [loading, setLoading] = useState(false);
+  const [initializing, setInitializing] = useState(true);
   const emailRef = useRef("");
   const passwordRef = useRef("");
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // Check user role in Firestore
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        const companyDoc = await getDoc(doc(db, "companies", user.uid));
+        try {
+          const userDoc = await getDoc(doc(db, "users", user.uid));
+          const companyDoc = await getDoc(doc(db, "companies", user.uid));
 
-        if (companyDoc.exists() && companyDoc.data().role === "admin") {
-          navigation.replace("adminDashboard");
-        } else if (userDoc.exists()) {
-          switch (userDoc.data().role) {
-            case "manager":
-              navigation.replace("managerDashboard");
-              break;
-            case "employee":
-              navigation.replace("employeeDashboard");
-              break;
-            default:
-              Alert.alert("Error", "Invalid user role");
-              await auth.signOut();
+          if (companyDoc.exists() && companyDoc.data().role === "admin") {
+            navigation.replace("adminDashboard");
+          } else if (userDoc.exists()) {
+            switch (userDoc.data().role) {
+              case "manager":
+                navigation.replace("managerDashboard");
+                break;
+              case "employee":
+                navigation.replace("employeeDashboard");
+                break;
+              default:
+                Alert.alert("Error", "Invalid user role");
+                await auth.signOut();
+            }
+          } else {
+            Alert.alert("Error", "User data not found");
+            await auth.signOut();
           }
-        } else {
-          Alert.alert("Error", "User data not found");
+        } catch (error) {
+          console.error("Error checking user role:", error);
+          Alert.alert("Error", "Failed to verify user role");
           await auth.signOut();
         }
       }
+      setInitializing(false);
     });
 
     return () => unsubscribe();
@@ -181,14 +189,12 @@ export default function SignIn() {
 
     setLoading(true);
     try {
-      // Sign in user
       const userCredential = await signInWithEmailAndPassword(
         auth,
         emailRef.current,
         passwordRef.current
       );
 
-      // Check user role in Firestore
       const userDoc = await getDoc(doc(db, "users", userCredential.user.uid));
       const companyDoc = await getDoc(
         doc(db, "companies", userCredential.user.uid)
@@ -221,6 +227,14 @@ export default function SignIn() {
       setLoading(false);
     }
   };
+
+  if (initializing) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#ff3b30" />
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView
