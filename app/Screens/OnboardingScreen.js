@@ -9,6 +9,7 @@ import {
   StatusBar,
   TouchableOpacity,
   ImageBackground,
+  Alert,
 } from "react-native";
 import {
   widthPercentageToDP as wp,
@@ -16,6 +17,7 @@ import {
 } from "react-native-responsive-screen";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
+import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage
 import { auth, db } from "../firebase";
 
 const COLORS = { primary: "#0170db", white: "#fff", grey: "#d3d3d3" };
@@ -61,9 +63,17 @@ const OnboardingScreen = ({ navigation }) => {
   const ref = React.useRef();
 
   useEffect(() => {
+    const checkOnboarding = async () => {
+      const hasSeenOnboarding = await AsyncStorage.getItem("hasSeenOnboarding");
+      if (hasSeenOnboarding) {
+        navigation.replace("signIn"); // Skip onboarding if already completed
+      }
+    };
+
+    checkOnboarding();
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // Check user role in Firestore
         const userDoc = await getDoc(doc(db, "users", user.uid));
         const companyDoc = await getDoc(doc(db, "companies", user.uid));
 
@@ -90,6 +100,11 @@ const OnboardingScreen = ({ navigation }) => {
 
     return () => unsubscribe();
   }, []);
+
+  const markOnboardingComplete = async () => {
+    await AsyncStorage.setItem("hasSeenOnboarding", "true");
+    navigation.replace("signIn");
+  };
 
   const updateCurrentSlideIndex = (e) => {
     const contentOffsetX = e.nativeEvent.contentOffset.x;
@@ -128,7 +143,7 @@ const OnboardingScreen = ({ navigation }) => {
         {currentSlideIndex === slides.length - 1 ? (
           <TouchableOpacity
             style={styles.getStartedButton}
-            onPress={() => navigation.replace("signIn")}
+            onPress={markOnboardingComplete}
           >
             <Text style={styles.getStartedText}>GET STARTED</Text>
           </TouchableOpacity>
