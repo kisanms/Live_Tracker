@@ -103,7 +103,7 @@ export const startLocationTracking = async () => {
     // Start background location updates
     await Location.startLocationUpdatesAsync("LOCATION_TRACKING", {
       accuracy: Location.Accuracy.Balanced,
-      timeInterval: 10000, // Changed to 20 seconds
+      timeInterval: 600000, // Changed to 20 seconds
       distanceInterval: 0,
       foregroundService: {
         notificationTitle: "Location Tracking",

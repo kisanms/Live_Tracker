@@ -109,7 +109,7 @@ const Maps = ({ route, navigation }) => {
   useEffect(() => {
     const intervalId = setInterval(() => {
       handleMyLocation(true); // Pass true to indicate auto update
-    }, 20 * 1000); // 180 seconds in milliseconds
+    }, 300 * 1000); // 5 mins in milliseconds
 
     return () => clearInterval(intervalId); // Cleanup on unmount
   }, [markerLocation, userData]); // Dependencies to ensure it runs when these change
