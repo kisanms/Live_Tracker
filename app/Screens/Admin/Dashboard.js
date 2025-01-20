@@ -448,6 +448,11 @@ const styles = StyleSheet.create({
     fontSize: hp(2),
     fontWeight: "bold",
   },
+  notificationButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: "#F5F7FA",
+  },
 });
 
 export default AdminDashboard;
