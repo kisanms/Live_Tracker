@@ -9,40 +9,59 @@ import {
 import React, { useEffect, useState, useCallback, memo } from "react";
 import { db } from "../../firebase";
 import { collection, getDocs, orderBy, query, limit } from "firebase/firestore";
+import { Ionicons } from "@expo/vector-icons";
 
 const windowHeight = Dimensions.get("window").height;
 
 // Memoized location item component
-const LocationItem = memo(({ name, latitude, longitude, timestamp }) => (
-  <View style={styles.locationItem}>
-    <View style={styles.locationHeader}>
-      <Text style={styles.nameText} numberOfLines={1}>
-        {name}
-      </Text>
-      <Text style={styles.timestampText} numberOfLines={1}>
-        {typeof timestamp === "string"
-          ? timestamp
-          : new Date(timestamp).toLocaleString()}
-      </Text>
-    </View>
-    <View style={styles.coordinatesContainer}>
-      <View style={styles.coordinateItem}>
-        <Text style={styles.coordinateLabel}>Latitude</Text>
-        <Text style={styles.coordinateValue} numberOfLines={1}>
-          {latitude}
+const LocationItem = memo(
+  ({ name, latitude, longitude, timestamp, userName, userRole }) => (
+    <View style={styles.locationItem}>
+      <View style={styles.locationHeader}>
+        <View style={styles.userInfo}>
+          <View style={styles.nameContainer}>
+            <Ionicons
+              name={userRole === "manager" ? "briefcase" : "person"}
+              size={20}
+              color={userRole === "manager" ? "#4A90E2" : "#FF9800"}
+              style={styles.roleIcon}
+            />
+            <View>
+              <Text style={styles.nameText} numberOfLines={1}>
+                {userName || "Unknown User"}
+              </Text>
+              <Text style={styles.roleText} numberOfLines={1}>
+                {userRole
+                  ? userRole.charAt(0).toUpperCase() + userRole.slice(1)
+                  : "Unknown Role"}
+              </Text>
+            </View>
+          </View>
+        </View>
+        <Text style={styles.timestampText} numberOfLines={1}>
+          {typeof timestamp === "string"
+            ? timestamp
+            : new Date(timestamp).toLocaleString()}
         </Text>
       </View>
-      <View style={styles.coordinateItem}>
-        <Text style={styles.coordinateLabel}>Longitude</Text>
-        <Text style={styles.coordinateValue} numberOfLines={1}>
-          {longitude}
-        </Text>
+      <View style={styles.coordinatesContainer}>
+        <View style={styles.coordinateItem}>
+          <Text style={styles.coordinateLabel}>Latitude</Text>
+          <Text style={styles.coordinateValue} numberOfLines={1}>
+            {latitude}
+          </Text>
+        </View>
+        <View style={styles.coordinateItem}>
+          <Text style={styles.coordinateLabel}>Longitude</Text>
+          <Text style={styles.coordinateValue} numberOfLines={1}>
+            {longitude}
+          </Text>
+        </View>
       </View>
     </View>
-  </View>
-));
+  )
+);
 
-// Separator component
 const ItemSeparator = memo(() => <View style={styles.separator} />);
 
 export default function EmployeeLocNoti() {
@@ -53,11 +72,7 @@ export default function EmployeeLocNoti() {
   const fetchLocations = async () => {
     try {
       const locationsRef = collection(db, "CurrentlocationsIntervals");
-      const q = query(
-        locationsRef,
-        orderBy("timestamp", "desc"),
-        limit(50) // Limit initial load
-      );
+      const q = query(locationsRef, orderBy("timestamp", "desc"), limit(50));
       const snapshot = await getDocs(q);
 
       const locationsData = snapshot.docs.map((doc) => ({
@@ -88,6 +103,8 @@ export default function EmployeeLocNoti() {
         latitude={item.latitude}
         longitude={item.longitude}
         timestamp={item.formattedTime}
+        userName={item.userName}
+        userRole={item.userRole}
       />
     ),
     []
@@ -102,8 +119,8 @@ export default function EmployeeLocNoti() {
 
   const getItemLayout = useCallback(
     (data, index) => ({
-      length: 120, // Fixed height for each item
-      offset: 120 * index,
+      length: 140, // Adjusted height for added content
+      offset: 140 * index,
       index,
     }),
     []
@@ -160,13 +177,13 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     paddingBottom: 20,
-    minHeight: windowHeight - 150, // Ensure pull-to-refresh has space
+    minHeight: windowHeight - 150,
   },
   locationItem: {
     backgroundColor: "#fff",
     borderRadius: 12,
     padding: 16,
-    height: 120, // Fixed height for better performance
+    height: 140, // Increased height for new content
     elevation: 2,
     shadowColor: "#000",
     shadowOffset: {
@@ -179,23 +196,36 @@ const styles = StyleSheet.create({
   locationHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
     marginBottom: 12,
     paddingBottom: 8,
     borderBottomWidth: 1,
     borderBottomColor: "#F0F0F0",
   },
+  userInfo: {
+    flex: 1,
+    marginRight: 8,
+  },
+  nameContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  roleIcon: {
+    marginRight: 8,
+  },
   nameText: {
     fontSize: 18,
     fontWeight: "600",
     color: "#1A1A1A",
-    flex: 1,
-    marginRight: 8,
+  },
+  roleText: {
+    fontSize: 14,
+    color: "#666",
+    marginTop: 2,
   },
   timestampText: {
     fontSize: 12,
     color: "#666",
-    flex: 1,
     textAlign: "right",
   },
   coordinatesContainer: {
