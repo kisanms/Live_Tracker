@@ -5,15 +5,22 @@ import {
   FlatList,
   ActivityIndicator,
   Dimensions,
+  Alert,
 } from "react-native";
 import React, { useEffect, useState, useCallback, memo } from "react";
-import { db } from "../../firebase";
-import { collection, getDocs, orderBy, query, limit } from "firebase/firestore";
+import { db, auth } from "../../firebase";
+import {
+  collection,
+  getDocs,
+  orderBy,
+  query,
+  limit,
+  where,
+} from "firebase/firestore";
 import { Ionicons } from "@expo/vector-icons";
 
 const windowHeight = Dimensions.get("window").height;
 
-// Memoized location item component
 const LocationItem = memo(
   ({ name, latitude, longitude, timestamp, userName, userRole }) => (
     <View style={styles.locationItem}>
@@ -68,24 +75,56 @@ export default function EmployeeLocNoti() {
   const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [managedEmployees, setManagedEmployees] = useState([]);
 
-  const fetchLocations = async () => {
+  const fetchManagedEmployees = async () => {
+    try {
+      const relationshipsRef = collection(db, "managerEmployeeRelationships");
+      const relationshipsQuery = query(
+        relationshipsRef,
+        where("managerId", "==", auth.currentUser.uid),
+        where("status", "==", "active")
+      );
+
+      const relationshipsSnapshot = await getDocs(relationshipsQuery);
+      const employeeData = relationshipsSnapshot.docs.map((doc) => ({
+        employeeId: doc.data().employeeId,
+        employeeName: doc.data().employeeName,
+      }));
+
+      setManagedEmployees(employeeData);
+      return employeeData;
+    } catch (error) {
+      console.error("Error fetching managed employees:", error);
+      Alert.alert("Error", "Failed to load employee relationships");
+      return [];
+    }
+  };
+
+  const fetchLocations = async (employees) => {
     try {
       const locationsRef = collection(db, "CurrentlocationsIntervals");
       const q = query(locationsRef, orderBy("timestamp", "desc"), limit(50));
       const snapshot = await getDocs(q);
 
-      const locationsData = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        formattedTime: doc.data().timestamp?.toDate?.()
-          ? doc.data().timestamp.toDate().toLocaleString()
-          : doc.data().timestamp,
-      }));
+      const locationsData = snapshot.docs
+        .map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+          formattedTime: doc.data().timestamp?.toDate?.()
+            ? doc.data().timestamp.toDate().toLocaleString()
+            : doc.data().timestamp,
+        }))
+        .filter((location) =>
+          employees.some(
+            (employee) => employee.employeeName === location.userName
+          )
+        );
 
       setLocations(locationsData);
     } catch (error) {
       console.error("Error fetching locations:", error);
+      Alert.alert("Error", "Failed to load location data");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -93,7 +132,11 @@ export default function EmployeeLocNoti() {
   };
 
   useEffect(() => {
-    fetchLocations();
+    const loadData = async () => {
+      const employees = await fetchManagedEmployees();
+      await fetchLocations(employees);
+    };
+    loadData();
   }, []);
 
   const renderItem = useCallback(
@@ -112,14 +155,15 @@ export default function EmployeeLocNoti() {
 
   const keyExtractor = useCallback((item) => item.id, []);
 
-  const onRefresh = useCallback(() => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    fetchLocations();
+    const employees = await fetchManagedEmployees();
+    await fetchLocations(employees);
   }, []);
 
   const getItemLayout = useCallback(
     (data, index) => ({
-      length: 140, // Adjusted height for added content
+      length: 140,
       offset: 140 * index,
       index,
     }),
@@ -136,7 +180,7 @@ export default function EmployeeLocNoti() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Current Locations</Text>
+      <Text style={styles.title}>Employee Locations</Text>
       <FlatList
         data={locations}
         renderItem={renderItem}
@@ -151,7 +195,7 @@ export default function EmployeeLocNoti() {
         onRefresh={onRefresh}
         contentContainerStyle={styles.listContainer}
         ListEmptyComponent={
-          <Text style={styles.emptyText}>No locations found</Text>
+          <Text style={styles.emptyText}>No employee locations found</Text>
         }
       />
     </View>
@@ -183,7 +227,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 12,
     padding: 16,
-    height: 140, // Increased height for new content
+    height: 140,
     elevation: 2,
     shadowColor: "#000",
     shadowOffset: {
