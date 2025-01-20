@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   Dimensions,
   Alert,
+  TouchableOpacity,
 } from "react-native";
 import React, { useEffect, useState, useCallback, memo } from "react";
 import { db, auth } from "../../firebase";
@@ -18,11 +19,40 @@ import {
   where,
 } from "firebase/firestore";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 
 const windowHeight = Dimensions.get("window").height;
 
+const formatTimestamp = (timestamp) => {
+  if (!timestamp) return "Unknown";
+
+  const date = typeof timestamp === "string" ? new Date(timestamp) : timestamp;
+
+  // Format date as DD-MM-YYYY
+  const day = date.getDate().toString().padStart(2, "0");
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const year = date.getFullYear();
+
+  // Format time in 12-hour format with AM/PM
+  let hours = date.getHours();
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+  const ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12;
+  hours = hours ? hours : 12; // Convert 0 to 12
+
+  return `${day}-${month}-${year} ${hours}:${minutes} ${ampm}`;
+};
+
 const LocationItem = memo(
-  ({ name, latitude, longitude, timestamp, userName, userRole }) => (
+  ({
+    name,
+    latitude,
+    longitude,
+    timestamp,
+    userName,
+    userRole,
+    locationName,
+  }) => (
     <View style={styles.locationItem}>
       <View style={styles.locationHeader}>
         <View style={styles.userInfo}>
@@ -37,6 +67,9 @@ const LocationItem = memo(
               <Text style={styles.nameText} numberOfLines={1}>
                 {userName || "Unknown User"}
               </Text>
+              <Text style={styles.locationName} numberOfLines={1}>
+                {locationName || "Unknown Location"}
+              </Text>
               <Text style={styles.roleText} numberOfLines={1}>
                 {userRole
                   ? userRole.charAt(0).toUpperCase() + userRole.slice(1)
@@ -46,23 +79,15 @@ const LocationItem = memo(
           </View>
         </View>
         <Text style={styles.timestampText} numberOfLines={1}>
-          {typeof timestamp === "string"
-            ? timestamp
-            : new Date(timestamp).toLocaleString()}
+          {formatTimestamp(timestamp)}
         </Text>
       </View>
       <View style={styles.coordinatesContainer}>
         <View style={styles.coordinateItem}>
-          <Text style={styles.coordinateLabel}>Latitude</Text>
-          <Text style={styles.coordinateValue} numberOfLines={1}>
-            {latitude}
-          </Text>
+          <Text style={styles.coordinateLabel}>Lat: {latitude}</Text>
         </View>
         <View style={styles.coordinateItem}>
-          <Text style={styles.coordinateLabel}>Longitude</Text>
-          <Text style={styles.coordinateValue} numberOfLines={1}>
-            {longitude}
-          </Text>
+          <Text style={styles.coordinateLabel}>Long: {longitude}</Text>
         </View>
       </View>
     </View>
@@ -72,6 +97,7 @@ const LocationItem = memo(
 const ItemSeparator = memo(() => <View style={styles.separator} />);
 
 export default function EmployeeLocNoti() {
+  const navigation = useNavigation();
   const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -112,8 +138,8 @@ export default function EmployeeLocNoti() {
           id: doc.id,
           ...doc.data(),
           formattedTime: doc.data().timestamp?.toDate?.()
-            ? doc.data().timestamp.toDate().toLocaleString()
-            : doc.data().timestamp,
+            ? doc.data().timestamp.toDate()
+            : new Date(doc.data().timestamp),
         }))
         .filter((location) =>
           employees.some(
@@ -148,6 +174,7 @@ export default function EmployeeLocNoti() {
         timestamp={item.formattedTime}
         userName={item.userName}
         userRole={item.userRole}
+        locationName={item.locationName}
       />
     ),
     []
@@ -180,7 +207,15 @@ export default function EmployeeLocNoti() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Employee Locations</Text>
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        >
+          <Ionicons name="arrow-back" size={24} color="#1A1A1A" />
+        </TouchableOpacity>
+        <Text style={styles.title}>Employee Locations</Text>
+      </View>
       <FlatList
         data={locations}
         renderItem={renderItem}
@@ -206,13 +241,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F5F7FA",
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
     padding: 20,
+    backgroundColor: "#F5F7FA",
+  },
+  backButton: {
+    padding: 8,
+    marginRight: 16,
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
     color: "#1A1A1A",
-    marginBottom: 20,
+    flex: 1,
   },
   loadingContainer: {
     flex: 1,
@@ -220,6 +264,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   listContainer: {
+    paddingHorizontal: 20,
     paddingBottom: 20,
     minHeight: windowHeight - 150,
   },
@@ -268,7 +313,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   timestampText: {
-    fontSize: 12,
+    fontSize: 11,
     color: "#666",
     textAlign: "right",
   },
@@ -298,5 +343,74 @@ const styles = StyleSheet.create({
     color: "#666",
     fontSize: 16,
     marginTop: 20,
+  },
+  locationItem: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    height: 140,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  locationHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 8,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F0F0F0",
+  },
+  userInfo: {
+    flex: 1,
+    marginRight: 8,
+  },
+  nameContainer: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+  },
+  roleIcon: {
+    marginRight: 8,
+    marginTop: 2,
+  },
+  nameText: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#1A1A1A",
+    marginBottom: 2,
+  },
+  locationName: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#4A90E2",
+    marginBottom: 2,
+  },
+  roleText: {
+    fontSize: 13,
+    color: "#666",
+  },
+  timestampText: {
+    fontSize: 12,
+    color: "#666",
+    textAlign: "right",
+  },
+  coordinatesContainer: {
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    marginTop: 4,
+  },
+  coordinateItem: {
+    marginRight: 16,
+  },
+  coordinateLabel: {
+    fontSize: 12,
+    color: "#999",
+    fontFamily: "monospace",
   },
 });
