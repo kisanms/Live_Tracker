@@ -111,6 +111,7 @@ const LocationItem = memo(
             onPress={handleGetDirections}
           >
             <Ionicons name="navigate" size={24} color="#fff" />
+            <Text style={styles.getDirectionsText}>Get Directions</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -339,18 +340,16 @@ const styles = StyleSheet.create({
   timestampText: {
     fontSize: 11,
     color: "#666",
-    textAlign: "right",
+    fontStyle: "italic",
   },
   coordinatesContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 8,
+    marginBottom: 12,
   },
   coordinateItem: {
-    width: "48%",
-    padding: 8,
-    backgroundColor: "#F0F0F0",
-    borderRadius: 8,
+    flexDirection: "row",
+    justifyContent: "center",
     alignItems: "center",
   },
   coordinateLabel: {
@@ -370,11 +369,25 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   getDirectionsButton: {
-    backgroundColor: "#4A90E2",
-    padding: 10,
-    borderRadius: 50,
-    justifyContent: "center",
+    flexDirection: "row",
     alignItems: "center",
+    backgroundColor: "#4A90E2",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 50,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  getDirectionsText: {
+    color: "#fff",
+    fontSize: 14,
+    marginLeft: 8,
   },
   separator: {
     height: 12,
