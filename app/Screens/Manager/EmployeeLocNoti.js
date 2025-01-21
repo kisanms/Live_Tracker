@@ -102,17 +102,17 @@ const LocationItem = memo(
           </View>
         </View>
 
-        <Text style={styles.locationName}>
-          {locationName || "Unknown Location"}
-        </Text>
-
-        <TouchableOpacity
-          style={styles.getDirectionsButton}
-          onPress={handleGetDirections}
-        >
-          <Ionicons name="navigate" size={24} color="#fff" />
-          <Text style={styles.getDirectionsText}>Get Directions</Text>
-        </TouchableOpacity>
+        <View style={styles.locationRow}>
+          <Text style={styles.locationName}>
+            {locationName || "Unknown Location"}
+          </Text>
+          <TouchableOpacity
+            style={styles.getDirectionsButton}
+            onPress={handleGetDirections}
+          >
+            <Ionicons name="navigate" size={24} color="#fff" />
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
@@ -354,27 +354,27 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   coordinateLabel: {
-    fontSize: 14,
-    color: "#4A90E2",
+    fontSize: 12,
+    color: "#666", // Reduced emphasis
+  },
+  locationRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
   },
   locationName: {
+    flex: 1,
     fontSize: 16,
     fontWeight: "500",
     color: "#333",
-    marginBottom: 12,
   },
   getDirectionsButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
     backgroundColor: "#4A90E2",
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  getDirectionsText: {
-    fontSize: 16,
-    color: "#fff",
-    marginLeft: 8,
+    padding: 10,
+    borderRadius: 50,
+    justifyContent: "center",
+    alignItems: "center",
   },
   separator: {
     height: 12,
