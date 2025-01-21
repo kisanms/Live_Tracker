@@ -7,7 +7,12 @@ import {
   Dimensions,
   Alert,
   TouchableOpacity,
+  Linking,
 } from "react-native";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 import React, { useEffect, useState, useCallback, memo } from "react";
 import { db, auth } from "../../firebase";
 import {
@@ -52,46 +57,65 @@ const LocationItem = memo(
     userName,
     userRole,
     locationName,
-  }) => (
-    <View style={styles.locationItem}>
-      <View style={styles.locationHeader}>
-        <View style={styles.userInfo}>
-          <View style={styles.nameContainer}>
-            <Ionicons
-              name={userRole === "manager" ? "briefcase" : "person"}
-              size={20}
-              color={userRole === "manager" ? "#4A90E2" : "#FF9800"}
-              style={styles.roleIcon}
-            />
-            <View>
-              <Text style={styles.nameText} numberOfLines={1}>
-                {userName || "Unknown User"}
-              </Text>
-              <Text style={styles.locationName} numberOfLines={1}>
-                {locationName || "Unknown Location"}
-              </Text>
-              <Text style={styles.roleText} numberOfLines={1}>
-                {userRole
-                  ? userRole.charAt(0).toUpperCase() + userRole.slice(1)
-                  : "Unknown Role"}
-              </Text>
+  }) => {
+    const handleGetDirections = () => {
+      const url = `https://www.google.com/maps?q=${latitude},${longitude}`;
+      Linking.openURL(url).catch((err) =>
+        Alert.alert("Error", "Unable to open Google Maps")
+      );
+    };
+
+    return (
+      <View style={styles.locationItem}>
+        <View style={styles.locationHeader}>
+          <View style={styles.userInfo}>
+            <View style={styles.nameContainer}>
+              <Ionicons
+                name={userRole === "manager" ? "briefcase" : "person"}
+                size={20}
+                color={userRole === "manager" ? "#4A90E2" : "#FF9800"}
+                style={styles.roleIcon}
+              />
+              <View>
+                <Text style={styles.nameText} numberOfLines={1}>
+                  {userName || "Unknown User"}
+                </Text>
+                <Text style={styles.roleText} numberOfLines={1}>
+                  {userRole
+                    ? userRole.charAt(0).toUpperCase() + userRole.slice(1)
+                    : "Unknown Role"}
+                </Text>
+              </View>
             </View>
           </View>
+          <Text style={styles.timestampText} numberOfLines={1}>
+            {formatTimestamp(timestamp)}
+          </Text>
         </View>
-        <Text style={styles.timestampText} numberOfLines={1}>
-          {formatTimestamp(timestamp)}
+
+        <View style={styles.coordinatesContainer}>
+          <View style={styles.coordinateItem}>
+            <Text style={styles.coordinateLabel}>Lat: {latitude}</Text>
+          </View>
+          <View style={styles.coordinateItem}>
+            <Text style={styles.coordinateLabel}>Long: {longitude}</Text>
+          </View>
+        </View>
+
+        <Text style={styles.locationName}>
+          {locationName || "Unknown Location"}
         </Text>
+
+        <TouchableOpacity
+          style={styles.getDirectionsButton}
+          onPress={handleGetDirections}
+        >
+          <Ionicons name="navigate" size={24} color="#fff" />
+          <Text style={styles.getDirectionsText}>Get Directions</Text>
+        </TouchableOpacity>
       </View>
-      <View style={styles.coordinatesContainer}>
-        <View style={styles.coordinateItem}>
-          <Text style={styles.coordinateLabel}>Lat: {latitude}</Text>
-        </View>
-        <View style={styles.coordinateItem}>
-          <Text style={styles.coordinateLabel}>Long: {longitude}</Text>
-        </View>
-      </View>
-    </View>
-  )
+    );
+  }
 );
 
 const ItemSeparator = memo(() => <View style={styles.separator} />);
@@ -190,8 +214,8 @@ export default function EmployeeLocNoti() {
 
   const getItemLayout = useCallback(
     (data, index) => ({
-      length: 140,
-      offset: 140 * index,
+      length: 180,
+      offset: 180 * index,
       index,
     }),
     []
@@ -272,7 +296,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 12,
     padding: 16,
-    height: 140,
+    height: 180,
     elevation: 2,
     shadowColor: "#000",
     shadowOffset: {
@@ -320,97 +344,45 @@ const styles = StyleSheet.create({
   coordinatesContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 4,
+    marginBottom: 8,
   },
   coordinateItem: {
-    flex: 1,
+    width: "48%",
+    padding: 8,
+    backgroundColor: "#F0F0F0",
+    borderRadius: 8,
+    alignItems: "center",
   },
   coordinateLabel: {
     fontSize: 14,
-    color: "#666",
-    marginBottom: 4,
+    color: "#4A90E2",
   },
-  coordinateValue: {
+  locationName: {
     fontSize: 16,
-    color: "#1A1A1A",
     fontWeight: "500",
+    color: "#333",
+    marginBottom: 12,
+  },
+  getDirectionsButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#4A90E2",
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  getDirectionsText: {
+    fontSize: 16,
+    color: "#fff",
+    marginLeft: 8,
   },
   separator: {
     height: 12,
   },
   emptyText: {
+    fontSize: 16,
     textAlign: "center",
-    color: "#666",
-    fontSize: 16,
     marginTop: 20,
-  },
-  locationItem: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
-    height: 140,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-  },
-  locationHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 8,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
-  },
-  userInfo: {
-    flex: 1,
-    marginRight: 8,
-  },
-  nameContainer: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-  },
-  roleIcon: {
-    marginRight: 8,
-    marginTop: 2,
-  },
-  nameText: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#1A1A1A",
-    marginBottom: 2,
-  },
-  locationName: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#4A90E2",
-    marginBottom: 2,
-  },
-  roleText: {
-    fontSize: 12,
     color: "#666",
-  },
-  timestampText: {
-    fontSize: 12,
-    color: "#666",
-    textAlign: "right",
-  },
-  coordinatesContainer: {
-    flexDirection: "row",
-    justifyContent: "flex-start",
-    marginTop: 4,
-  },
-  coordinateItem: {
-    marginRight: 16,
-  },
-  coordinateLabel: {
-    fontSize: 12,
-    color: "#999",
-    fontFamily: "monospace",
   },
 });
