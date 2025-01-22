@@ -147,7 +147,7 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
 - **Jan 20**:
   - manager can see the intervals location data of emp
   - Current location area name and date time with proper format  
-  
+- **Jan 21**
  
 
 ## 🎉 Features Implementation
