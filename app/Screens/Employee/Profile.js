@@ -6,42 +6,117 @@ import {
   Image,
   TouchableOpacity,
   ScrollView,
+  Modal,
+  TextInput,
+  ActivityIndicator,
+  Platform,
+  SafeAreaView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
-import { auth } from "../../firebase";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "../../firebase"; // Ensure you import your Firestore instance
+import * as ImagePicker from "expo-image-picker";
+import { auth, db } from "../../firebase";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const EmployeeProfile = ({ navigation }) => {
   const [employeeData, setEmployeeData] = useState(null);
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [editedData, setEditedData] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    const fetchEmployeeData = async () => {
-      try {
-        const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
-        if (userDoc.exists()) {
-          setEmployeeData(userDoc.data()); // Assuming the document contains all necessary fields
-        } else {
-          console.log("No such document!");
-        }
-      } catch (error) {
-        console.error("Error fetching employee data:", error);
-      }
-    };
-
     fetchEmployeeData();
   }, []);
+
+  const fetchEmployeeData = async () => {
+    try {
+      const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+      if (userDoc.exists()) {
+        const data = userDoc.data();
+        setEmployeeData(data);
+        setEditedData(data);
+      }
+    } catch (error) {
+      console.error("Error fetching employee data:", error);
+    }
+  };
+
+  const pickImage = async () => {
+    try {
+      // Request permission
+      const permissionResult =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
+        alert("You need to enable permission to access the photo library");
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.5,
+        base64: true, // Enable base64 encoding
+      });
+
+      if (!result.canceled) {
+        setUploading(true);
+        // Create data URL from base64
+        const imageUrl = `data:image/jpeg;base64,${result.assets[0].base64}`;
+
+        // Update editedData with the image URL
+        setEditedData((prevData) => ({
+          ...prevData,
+          profileImage: imageUrl,
+        }));
+
+        // You can directly save this to Firebase if needed
+        await updateDoc(doc(db, "users", auth.currentUser.uid), {
+          profileImage: imageUrl,
+        });
+
+        setUploading(false);
+        alert("Profile picture updated successfully!");
+      }
+    } catch (error) {
+      console.error("Error picking image:", error);
+      alert("Error updating profile picture. Please try again.");
+      setUploading(false);
+    }
+  };
+
+  const handleSaveChanges = async () => {
+    try {
+      setUploading(true);
+
+      // Update user document with all edited data including the image URL
+      await updateDoc(doc(db, "users", auth.currentUser.uid), {
+        ...editedData,
+        updatedAt: new Date().toISOString(),
+      });
+
+      // Update local state
+      setEmployeeData(editedData);
+      setModalVisible(false);
+      alert("Profile updated successfully!");
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      alert("Failed to update profile. Please try again.");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const renderInfoItem = (icon, label, value) => (
     <View style={styles.infoItem}>
       <Ionicons name={icon} size={20} color="#4A90E2" style={styles.infoIcon} />
       <View style={styles.infoContent}>
         <Text style={styles.infoLabel}>{label}</Text>
-        <Text style={styles.infoValue}>{value}</Text>
+        <Text style={styles.infoValue}>{value || "Not set"}</Text>
       </View>
     </View>
   );
@@ -49,7 +124,7 @@ const EmployeeProfile = ({ navigation }) => {
   if (!employeeData) {
     return (
       <View style={styles.loadingContainer}>
-        <Text>Loading...</Text>
+        <ActivityIndicator size="large" color="#4A90E2" />
       </View>
     );
   }
@@ -61,14 +136,18 @@ const EmployeeProfile = ({ navigation }) => {
           <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Profile</Text>
-        <TouchableOpacity>
-          <Ionicons name="settings-outline" size={24} color="#4A90E2" />
+        <TouchableOpacity onPress={() => setModalVisible(true)}>
+          <Ionicons name="create-outline" size={24} color="#4A90E2" />
         </TouchableOpacity>
       </View>
 
       <View style={styles.profileSection}>
         <Image
-          source={{ uri: "https://randomuser.me/api/portraits/men/41.jpg" }} // You can replace this with a dynamic image URL if available
+          source={{
+            uri:
+              employeeData?.profileImage ||
+              "https://randomuser.me/api/portraits/men/41.jpg",
+          }}
           style={styles.profileImage}
         />
         <Text style={styles.name}>{employeeData.name}</Text>
@@ -82,7 +161,7 @@ const EmployeeProfile = ({ navigation }) => {
       <View style={styles.infoSection}>
         <Text style={styles.sectionTitle}>Personal Information</Text>
         {renderInfoItem("mail", "Email", employeeData.email)}
-        {renderInfoItem("call", "Phone", employeeData.phone)}
+        {renderInfoItem("call", "Phone", employeeData.mobile)}
         {renderInfoItem("location", "Address", employeeData.address)}
       </View>
 
@@ -93,18 +172,155 @@ const EmployeeProfile = ({ navigation }) => {
         {renderInfoItem("calendar", "Join Date", employeeData.joinDate)}
       </View>
 
-      <View style={styles.actionButtons}>
-        <TouchableOpacity style={[styles.button, styles.primaryButton]}>
-          <Ionicons name="document-text" size={20} color="#fff" />
-          <Text style={styles.buttonText}>View Documents</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.button, styles.secondaryButton]}>
-          <Ionicons name="help-circle" size={20} color="#4A90E2" />
-          <Text style={[styles.buttonText, styles.secondaryButtonText]}>
-            Get Help
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <Modal
+        visible={isModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <SafeAreaView style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setModalVisible(false)}
+              >
+                <Ionicons name="close" size={24} color="#333" />
+              </TouchableOpacity>
+              <Text style={styles.modalTitle}>Edit Profile</Text>
+              <View style={styles.closeButton} />
+            </View>
+
+            <ScrollView style={styles.modalScroll}>
+              <TouchableOpacity
+                style={styles.imagePickerContainer}
+                onPress={pickImage}
+                disabled={uploading}
+              >
+                <Image
+                  source={{
+                    uri:
+                      editedData?.profileImage ||
+                      "https://randomuser.me/api/portraits/men/41.jpg",
+                  }}
+                  style={styles.modalImage}
+                />
+                <View style={styles.editImageButton}>
+                  <Ionicons name="camera" size={20} color="#FFF" />
+                </View>
+                {uploading && (
+                  <View style={styles.uploadingOverlay}>
+                    <ActivityIndicator color="#4A90E2" size="large" />
+                  </View>
+                )}
+              </TouchableOpacity>
+
+              <View style={styles.inputSection}>
+                <Text style={styles.sectionTitle}>Personal Information</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Full Name"
+                  value={editedData?.name}
+                  onChangeText={(text) =>
+                    setEditedData({ ...editedData, name: text })
+                  }
+                  placeholderTextColor="#999"
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Position"
+                  value={editedData?.position}
+                  onChangeText={(text) =>
+                    setEditedData({ ...editedData, position: text })
+                  }
+                  placeholderTextColor="#999"
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Email"
+                  value={editedData?.email}
+                  onChangeText={(text) =>
+                    setEditedData({ ...editedData, email: text })
+                  }
+                  keyboardType="email-address"
+                  placeholderTextColor="#999"
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Phone"
+                  value={editedData?.mobile}
+                  onChangeText={(text) =>
+                    setEditedData({ ...editedData, mobile: text })
+                  }
+                  keyboardType="phone-pad"
+                  placeholderTextColor="#999"
+                />
+                <TextInput
+                  style={[styles.input, styles.multilineInput]}
+                  placeholder="Address"
+                  value={editedData?.address}
+                  onChangeText={(text) =>
+                    setEditedData({ ...editedData, address: text })
+                  }
+                  multiline
+                  placeholderTextColor="#999"
+                />
+              </View>
+
+              <View style={styles.inputSection}>
+                <Text style={styles.sectionTitle}>Work Information</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Department"
+                  value={editedData?.department}
+                  onChangeText={(text) =>
+                    setEditedData({ ...editedData, department: text })
+                  }
+                  placeholderTextColor="#999"
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Manager"
+                  value={editedData?.manager}
+                  onChangeText={(text) =>
+                    setEditedData({ ...editedData, manager: text })
+                  }
+                  placeholderTextColor="#999"
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Join Date"
+                  value={editedData?.joinDate}
+                  onChangeText={(text) =>
+                    setEditedData({ ...editedData, joinDate: text })
+                  }
+                  placeholderTextColor="#999"
+                />
+              </View>
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.saveButton]}
+                onPress={handleSaveChanges}
+                disabled={uploading}
+              >
+                {uploading ? (
+                  <ActivityIndicator color="#FFF" />
+                ) : (
+                  <Text style={styles.saveButtonText}>Save Changes</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </SafeAreaView>
+      </Modal>
     </ScrollView>
   );
 };
@@ -177,7 +393,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   infoSection: {
-    margin: 20,
+    margin: 15,
     backgroundColor: "#fff",
     borderRadius: 15,
     padding: 15,
@@ -237,6 +453,109 @@ const styles = StyleSheet.create({
   },
   secondaryButtonText: {
     color: "#4A90E2",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  modalContent: {
+    flex: 1,
+    backgroundColor: "#FFF",
+    marginTop: 50,
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: wp("5%"),
+    borderBottomWidth: 1,
+    borderBottomColor: "#EFEFEF",
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalTitle: {
+    fontSize: wp("5%"),
+    fontWeight: "bold",
+    color: "#333",
+    textAlign: "center",
+  },
+  modalScroll: {
+    flex: 1,
+    padding: wp("5%"),
+  },
+  imagePickerContainer: {
+    alignItems: "center",
+    marginVertical: hp("2%"),
+  },
+  modalImage: {
+    width: wp("30%"),
+    height: wp("30%"),
+    borderRadius: wp("15%"),
+  },
+  editImageButton: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    backgroundColor: "#4A90E2",
+    padding: wp("2%"),
+    borderRadius: wp("5%"),
+  },
+  uploadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(255,255,255,0.8)",
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: wp("15%"),
+  },
+  input: {
+    backgroundColor: "#F5F7FA",
+    borderRadius: 12,
+    padding: wp("4%"),
+    marginBottom: hp("2%"),
+    fontSize: wp("4%"),
+    borderWidth: 1,
+    borderColor: "#EFEFEF",
+    color: "#333",
+  },
+  multilineInput: {
+    height: hp("15%"),
+    textAlignVertical: "top",
+  },
+  modalFooter: {
+    flexDirection: "row",
+    padding: wp("5%"),
+    borderTopWidth: 1,
+    borderTopColor: "#EFEFEF",
+    backgroundColor: "#FFF",
+  },
+  modalButton: {
+    flex: 1,
+    padding: hp("2%"),
+    borderRadius: 12,
+    alignItems: "center",
+    marginHorizontal: wp("2%"),
+  },
+  cancelButton: {
+    backgroundColor: "#F5F7FA",
+  },
+  saveButton: {
+    backgroundColor: "#4A90E2",
+  },
+  cancelButtonText: {
+    color: "#666",
+    fontWeight: "bold",
+    fontSize: wp("4%"),
+  },
+  saveButtonText: {
+    color: "#FFF",
+    fontWeight: "bold",
+    fontSize: wp("4%"),
   },
 });
 

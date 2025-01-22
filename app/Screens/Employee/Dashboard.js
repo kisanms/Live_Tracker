@@ -39,6 +39,7 @@ const EmployeeDashboard = ({ navigation }) => {
   const [newManagerEmail, setNewManagerEmail] = useState("");
   const [showChangeManager, setShowChangeManager] = useState(false);
   const [isChangingManager, setIsChangingManager] = useState(false);
+  const [profileImage, setProfileImage] = useState(null);
 
   const currentDate = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -73,6 +74,7 @@ const EmployeeDashboard = ({ navigation }) => {
           setEmployeeName(userData.name);
           setEmployeeEmail(userData.email);
           setCompanyName(userData.companyName);
+          setProfileImage(userData.profileImage);
 
           // Check if employee already has a verified manager
           const relationshipsRef = collection(
@@ -416,7 +418,11 @@ const EmployeeDashboard = ({ navigation }) => {
             onPress={() => navigation.navigate("employeeProfile")}
           >
             <Image
-              source={{ uri: "https://randomuser.me/api/portraits/men/41.jpg" }}
+              source={{
+                uri:
+                  profileImage ||
+                  "https://randomuser.me/api/portraits/men/41.jpg",
+              }}
               style={styles.profileImage}
             />
           </TouchableOpacity>
@@ -516,6 +522,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
+    backgroundColor: "#f0f0f0",
   },
   clockCard: {
     margin: 20,
