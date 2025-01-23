@@ -83,6 +83,7 @@ export const startLocationTracking = async () => {
     // Get user data once before starting tracking
     let userName = "User";
     let userRole = "Unknown";
+    let companyName = "Unknown";
     const currentUser = auth.currentUser;
 
     if (currentUser) {
@@ -92,6 +93,7 @@ export const startLocationTracking = async () => {
           const userData = userDoc.data();
           userName = userData.name || "User";
           userRole = userData.role || "Unknown";
+          companyName = userData.companyName || "Unknown";
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -123,7 +125,7 @@ export const startLocationTracking = async () => {
               }`.trim() || "Unknown location"
             : "Unknown location";
 
-          // Save location to Firebase with locationName
+          // Save location to Firebase with locationName and companyName
           await addDoc(collection(db, "CurrentlocationsIntervals"), {
             latitude: lat,
             longitude: lng,
@@ -131,11 +133,11 @@ export const startLocationTracking = async () => {
             userName,
             userRole,
             locationName,
+            companyName,
           });
 
-          // Only send notification if conditions are met
+          // Only send notification if conditions are met (without companyName)
           if (shouldSendNotification(lat, lng)) {
-            // Show notification with location name
             await Notifications.scheduleNotificationAsync({
               content: {
                 title: `Location Updated - ${userName}`,
