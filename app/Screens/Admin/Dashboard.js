@@ -201,7 +201,7 @@ const AdminDashboard = ({ navigation }) => {
             onPress={() => navigation.navigate("AllStaffLocNoti")}
           >
             <Ionicons
-              name="notifications-outline"
+              name="location-outline"
               size={24}
               color={COLORS.primary}
             />

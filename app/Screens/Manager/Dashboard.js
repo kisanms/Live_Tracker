@@ -176,7 +176,7 @@ const ManagerDashboard = ({ navigation }) => {
             style={styles.notificationButton}
             onPress={() => navigation.navigate("EmpLocNoti")}
           >
-            <Ionicons name="notifications" size={24} color="#4A90E2" />
+            <Ionicons name="location-outline" size={24} color="#4A90E2" />
           </TouchableOpacity>
         </View>
       </View>
