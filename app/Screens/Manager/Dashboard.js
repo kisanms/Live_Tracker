@@ -168,7 +168,11 @@ const ManagerDashboard = ({ navigation }) => {
             onPress={() => navigation.navigate("managerProfile")}
           >
             <Image
-              source={{ uri: "https://randomuser.me/api/portraits/men/32.jpg" }}
+              source={{
+                uri:
+                  managerData?.profileImage ||
+                  "https://randomuser.me/api/portraits/men/32.jpg",
+              }}
               style={styles.profileImage}
             />
           </TouchableOpacity>
