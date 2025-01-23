@@ -43,24 +43,25 @@ const AdminDashboard = ({ navigation }) => {
       if (!auth.currentUser) return;
 
       try {
-        // Fetch admin data from users collection
-        const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
-        if (userDoc.exists()) {
-          setAdminData(userDoc.data());
-        } else {
-          console.log("No such document in users collection!");
-        }
-
-        // Fetch company data
-        const companyDoc = await getDoc(
+        // Get admin data from companies collection
+        const userDoc = await getDoc(
           doc(db, "companies", auth.currentUser.uid)
         );
-        if (companyDoc.exists()) {
-          const companyData = companyDoc.data();
-          setAdminData((prevData) => ({
-            ...prevData,
-            ...companyData,
-          }));
+
+        // Get profile image from users collection
+        const userProfileDoc = await getDoc(
+          doc(db, "users", auth.currentUser.uid)
+        );
+
+        if (userDoc.exists()) {
+          setAdminData({
+            ...userDoc.data(),
+            profileImage: userProfileDoc.exists()
+              ? userProfileDoc.data().profileImage
+              : null,
+          });
+        } else {
+          console.log("No such document in companies collection!");
         }
       } catch (error) {
         console.error("Error fetching admin data:", error);
@@ -103,7 +104,7 @@ const AdminDashboard = ({ navigation }) => {
       fetchTotalManagers();
       fetchTotalEmployees();
     }
-  }, []);
+  }, [adminData]);
 
   const stats = [
     { title: "Total Employees", count: totalEmployees, icon: "people" },
