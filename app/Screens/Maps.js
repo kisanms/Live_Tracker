@@ -25,11 +25,30 @@ import {
 } from "../services/LocationService";
 
 const Maps = ({ route, navigation }) => {
-  const { userRole, userData } = route.params; // Get user role and user data from route params
+  const { userRole } = route.params;
+  const [userData, setUserData] = useState(null);
   const [mapRegion, setMapRegion] = useState(null);
   const [markerLocation, setMarkerLocation] = useState(null);
   const [isLocationFetched, setIsLocationFetched] = useState(false);
   const mapRef = useRef(null);
+
+  // Add useEffect to fetch user data from Firestore
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+        if (userDoc.exists()) {
+          setUserData(userDoc.data());
+        } else {
+          console.log("No user data found!");
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   useEffect(() => {
     const fetchLocation = async () => {
@@ -60,12 +79,12 @@ const Maps = ({ route, navigation }) => {
       return;
     }
 
-    const { latitude, longitude } = markerLocation;
-
-    if (!userData?.name || !userData?.email) {
-      Alert.alert("Error", "User data is not complete.");
+    if (!userData) {
+      Alert.alert("Error", "User data not loaded yet.");
       return;
     }
+
+    const { latitude, longitude } = markerLocation;
 
     // Determine the collection based on user role
     const collectionName =
@@ -81,6 +100,7 @@ const Maps = ({ route, navigation }) => {
       name: userData.name,
       email: userData.email,
       role: userRole,
+      companyName: userData.companyName,
       timestamp: new Date().toISOString(),
       userId: auth.currentUser.uid,
     };
