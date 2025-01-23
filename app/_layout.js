@@ -29,6 +29,7 @@ import Maps from "./Screens/Maps";
 import ManagerUnderEmp from "./Screens/Admin/ManagerUnderEmp";
 import EmployeeLocNoti from "./Screens/Manager/EmployeeLocNoti";
 import ManagerProfile from "./Screens/Manager/Profile";
+import AdminProfile from "./Screens/Admin/Profile";
 
 const Stack = createNativeStackNavigator();
 
@@ -70,6 +71,7 @@ const RootLayout = ({ initialUser }) => {
         options={{ gestureEnabled: false }} // Prevent swipe back
       />
       <Stack.Screen name="employeeList" component={EmployeeList} />
+      <Stack.Screen name="adminProfile" component={AdminProfile} />
       <Stack.Screen name="managerList" component={ManagerList} />
       <Stack.Screen
         name="adminLocationTracking"

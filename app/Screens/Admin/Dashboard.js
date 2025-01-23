@@ -38,29 +38,29 @@ const AdminDashboard = ({ navigation }) => {
   const [totalManagers, setTotalManagers] = useState(0);
   const [totalEmployees, setTotalEmployees] = useState(0);
 
-  // useEffect(() => {
-  //   const unsubscribe = onAuthStateChanged(auth, (user) => {
-  //     if (!user) {
-  //       navigation.replace("signIn");
-  //     }
-  //   });
-
-  //   // Cleanup subscription on unmount
-  //   return () => unsubscribe();
-  // }, []);
-
   useEffect(() => {
     const fetchAdminData = async () => {
       if (!auth.currentUser) return;
 
       try {
-        const userDoc = await getDoc(
-          doc(db, "companies", auth.currentUser.uid)
-        );
+        // Fetch admin data from users collection
+        const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
         if (userDoc.exists()) {
           setAdminData(userDoc.data());
         } else {
-          console.log("No such document in companies collection!");
+          console.log("No such document in users collection!");
+        }
+
+        // Fetch company data
+        const companyDoc = await getDoc(
+          doc(db, "companies", auth.currentUser.uid)
+        );
+        if (companyDoc.exists()) {
+          const companyData = companyDoc.data();
+          setAdminData((prevData) => ({
+            ...prevData,
+            ...companyData,
+          }));
         }
       } catch (error) {
         console.error("Error fetching admin data:", error);
@@ -103,7 +103,7 @@ const AdminDashboard = ({ navigation }) => {
       fetchTotalManagers();
       fetchTotalEmployees();
     }
-  }, [adminData]);
+  }, []);
 
   const stats = [
     { title: "Total Employees", count: totalEmployees, icon: "people" },
@@ -209,9 +209,16 @@ const AdminDashboard = ({ navigation }) => {
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Ionicons name="log-out-outline" size={24} color={COLORS.primary} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.profileButton}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("adminProfile")}
+            style={styles.profileButton}
+          >
             <Image
-              source={{ uri: "https://randomuser.me/api/portraits/men/1.jpg" }}
+              source={{
+                uri:
+                  adminData?.profileImage ||
+                  "https://randomuser.me/api/portraits/men/1.jpg",
+              }}
               style={styles.profileImage}
             />
           </TouchableOpacity>
