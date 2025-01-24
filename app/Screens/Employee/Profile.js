@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Platform,
   SafeAreaView,
+  RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -43,6 +44,11 @@ const EmployeeProfile = ({ navigation }) => {
     } catch (error) {
       console.error("Error fetching employee data:", error);
     }
+  };
+
+  // Add a refresh function
+  const onRefresh = async () => {
+    await fetchEmployeeData();
   };
 
   const pickImage = async () => {
@@ -129,8 +135,32 @@ const EmployeeProfile = ({ navigation }) => {
     );
   }
 
+  // Render the status based on currentStatus
+  const renderStatus = () => {
+    if (employeeData?.currentStatus === "Active") {
+      return (
+        <View style={styles.statusBadge}>
+          <View style={styles.statusDot} />
+          <Text style={styles.statusText}>Active</Text>
+        </View>
+      );
+    } else {
+      return (
+        <View style={{ ...styles.statusBadge, backgroundColor: "#FFB3B2" }}>
+          <View style={{ ...styles.statusDot, backgroundColor: "#FF5252" }} />
+          <Text style={{ ...styles.statusText, color: "red" }}>Inactive</Text>
+        </View>
+      );
+    }
+  };
+
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      refreshControl={
+        <RefreshControl refreshing={uploading} onRefresh={onRefresh} />
+      }
+    >
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="#000" />
@@ -152,10 +182,7 @@ const EmployeeProfile = ({ navigation }) => {
         />
         <Text style={styles.name}>{employeeData.name}</Text>
         <Text style={styles.position}>{employeeData.position}</Text>
-        <View style={styles.statusBadge}>
-          <View style={styles.statusDot} />
-          <Text style={styles.statusText}>Active</Text>
-        </View>
+        {renderStatus()}
       </View>
 
       <View style={styles.infoSection}>

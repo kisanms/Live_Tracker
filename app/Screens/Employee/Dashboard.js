@@ -47,18 +47,24 @@ const EmployeeDashboard = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = useCallback(async () => {
+    console.log("Refresh started");
     setRefreshing(true);
     try {
       const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+      console.log("User doc fetched:", userDoc.exists());
+
       if (userDoc.exists()) {
         const userData = userDoc.data();
+        console.log("User data:", userData);
 
         // Update clock status
         if (userData.currentStatus === "Clocked In" && userData.clockInTime) {
+          console.log("Setting clocked in");
           setIsClockedIn(true);
           setClockInTime(userData.clockInTime.toDate());
           setClockOutTime(null);
         } else if (userData.currentStatus === "Clocked Out") {
+          console.log("Setting clocked out");
           setIsClockedIn(false);
           if (userData.clockInTime)
             setClockInTime(userData.clockInTime.toDate());
@@ -71,6 +77,7 @@ const EmployeeDashboard = ({ navigation }) => {
       Alert.alert("Error", "Failed to refresh data");
     } finally {
       setRefreshing(false);
+      console.log("Refresh completed");
     }
   }, []);
 
@@ -331,7 +338,7 @@ const EmployeeDashboard = ({ navigation }) => {
         // Clock In
         await updateDoc(userDocRef, {
           clockInTime: currentTime,
-          currentStatus: "Clocked In",
+          currentStatus: "Active", // Set status to Active
           clockOutTime: null,
         });
         setClockInTime(currentTime);
@@ -345,14 +352,7 @@ const EmployeeDashboard = ({ navigation }) => {
         }
         const workDuration = (currentTime - clockInTime) / (1000 * 60 * 60); // hours
 
-        await updateDoc(userDocRef, {
-          clockOutTime: currentTime,
-          currentStatus: "Clocked Out",
-          lastShiftDuration: workDuration,
-          clockInTime: null,
-        });
-
-        // Optional: Store work hour history
+        // Store work hour history before updating user document
         await addDoc(collection(db, "workHours"), {
           employeeId: auth.currentUser.uid,
           employeeName: employeeName,
@@ -362,6 +362,15 @@ const EmployeeDashboard = ({ navigation }) => {
           duration: workDuration,
           date: serverTimestamp(),
         });
+
+        // Now update the user document
+        await updateDoc(userDocRef, {
+          clockOutTime: currentTime,
+          currentStatus: "Inactive", // Set status to Inactive
+          lastShiftDuration: workDuration,
+          clockInTime: null,
+        });
+
         setIsClockedIn(false);
         setClockOutTime(currentTime);
       }
@@ -370,7 +379,6 @@ const EmployeeDashboard = ({ navigation }) => {
       Alert.alert("Error", "Failed to update clock status");
     }
   };
-
   //handle clock in and out data clean
   const handleDataCleanup = async () => {
     try {
