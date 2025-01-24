@@ -46,41 +46,6 @@ const EmployeeDashboard = ({ navigation }) => {
   const [isClockedIn, setIsClockedIn] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  const onRefresh = useCallback(async () => {
-    console.log("Refresh started");
-    setRefreshing(true);
-    try {
-      const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
-      console.log("User doc fetched:", userDoc.exists());
-
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        console.log("User data:", userData);
-
-        // Update clock status
-        if (userData.currentStatus === "Clocked In" && userData.clockInTime) {
-          console.log("Setting clocked in");
-          setIsClockedIn(true);
-          setClockInTime(userData.clockInTime.toDate());
-          setClockOutTime(null);
-        } else if (userData.currentStatus === "Clocked Out") {
-          console.log("Setting clocked out");
-          setIsClockedIn(false);
-          if (userData.clockInTime)
-            setClockInTime(userData.clockInTime.toDate());
-          if (userData.clockOutTime)
-            setClockOutTime(userData.clockOutTime.toDate());
-        }
-      }
-    } catch (error) {
-      console.error("Refresh error:", error);
-      Alert.alert("Error", "Failed to refresh data");
-    } finally {
-      setRefreshing(false);
-      console.log("Refresh completed");
-    }
-  }, []);
-
   const currentDate = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
@@ -507,7 +472,6 @@ const EmployeeDashboard = ({ navigation }) => {
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
-          onRefresh={onRefresh}
           colors={["#4A90E2"]}
           tintColor="#4A90E2"
         />

@@ -25,7 +25,6 @@ const ManagerEmployeeList = ({ navigation }) => {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        // First get all active relationships for this manager
         const relationshipsRef = collection(db, "managerEmployeeRelationships");
         const relationshipsQuery = query(
           relationshipsRef,
@@ -34,8 +33,6 @@ const ManagerEmployeeList = ({ navigation }) => {
         );
 
         const relationshipsSnapshot = await getDocs(relationshipsQuery);
-
-        // Extract employee IDs from relationships
         const employeeIds = relationshipsSnapshot.docs.map(
           (doc) => doc.data().employeeId
         );
@@ -45,7 +42,6 @@ const ManagerEmployeeList = ({ navigation }) => {
           return;
         }
 
-        // Get employee details from users collection
         const employeesRef = collection(db, "users");
         const employeesSnapshot = await getDocs(employeesRef);
 
@@ -110,7 +106,7 @@ const ManagerEmployeeList = ({ navigation }) => {
   const renderEmployeeItem = ({ item }) => (
     <View style={styles.employeeCard}>
       <Image
-        source={{ uri: "https://randomuser.me/api/portraits/men/41.jpg" }}
+        source={{ uri: item.profileImage }} // Use the profile image from Firebase
         style={styles.profileImage}
       />
       <View style={styles.employeeInfo}>
@@ -161,42 +157,45 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     justifyContent: "flex-start",
-    gap: 10,
     alignItems: "center",
     padding: 20,
     backgroundColor: "#4A90E2",
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "bold",
     color: "#fff",
+    marginLeft: 10,
   },
   employeeCard: {
     backgroundColor: "#fff",
     borderRadius: 12,
-    padding: 10,
-    marginBottom: 10,
-    elevation: 2,
+    padding: 15,
+    marginBottom: 15,
+    elevation: 3,
     flexDirection: "row",
     alignItems: "center",
-    maxHeight: 70, // Make the card smaller
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   profileImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 10,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 15,
   },
   employeeInfo: {
     flex: 1,
   },
   employeeName: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "bold",
     color: "#1A1A1A",
   },
   employeeEmail: {
-    fontSize: 14,
+    fontSize: 15,
     color: "#666",
   },
   buttonContainer: {
@@ -210,6 +209,7 @@ const styles = StyleSheet.create({
     marginLeft: 5,
     alignItems: "center",
     justifyContent: "center",
+    elevation: 2,
   },
 });
 
