@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   Image,
   Alert,
   TextInput,
+  RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -26,8 +27,8 @@ import {
   setDoc,
   addDoc,
   serverTimestamp,
+  updateDoc,
 } from "firebase/firestore";
-import * as Location from "expo-location";
 
 const EmployeeDashboard = ({ navigation }) => {
   const [employeeName, setEmployeeName] = useState("");
@@ -40,6 +41,38 @@ const EmployeeDashboard = ({ navigation }) => {
   const [showChangeManager, setShowChangeManager] = useState(false);
   const [isChangingManager, setIsChangingManager] = useState(false);
   const [profileImage, setProfileImage] = useState(null);
+  const [clockInTime, setClockInTime] = useState(null);
+  const [clockOutTime, setClockOutTime] = useState(null);
+  const [isClockedIn, setIsClockedIn] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+
+        // Update clock status
+        if (userData.currentStatus === "Clocked In" && userData.clockInTime) {
+          setIsClockedIn(true);
+          setClockInTime(userData.clockInTime.toDate());
+          setClockOutTime(null);
+        } else if (userData.currentStatus === "Clocked Out") {
+          setIsClockedIn(false);
+          if (userData.clockInTime)
+            setClockInTime(userData.clockInTime.toDate());
+          if (userData.clockOutTime)
+            setClockOutTime(userData.clockOutTime.toDate());
+        }
+      }
+    } catch (error) {
+      console.error("Refresh error:", error);
+      Alert.alert("Error", "Failed to refresh data");
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
 
   const currentDate = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -48,22 +81,20 @@ const EmployeeDashboard = ({ navigation }) => {
     day: "numeric",
   });
 
-  const workStats = {
-    hoursToday: "6h 30m",
-    breaksToday: "45m",
-    tasksCompleted: 8,
-  };
+  // const workStats = {
+  //   hoursToday: "6h 30m",
+  //   breaksToday: "45m",
+  // };
 
-  const upcomingShifts = [
-    { day: "Tomorrow", time: "9:00 AM - 5:00 PM" },
-    { day: "Thursday", time: "9:00 AM - 5:00 PM" },
-    { day: "Friday", time: "10:00 AM - 6:00 PM" },
-  ];
-
+  // const upcomingShifts = [
+  //   { day: "Tomorrow", time: "9:00 AM - 5:00 PM" },
+  //   { day: "Thursday", time: "9:00 AM - 5:00 PM" },
+  //   { day: "Friday", time: "10:00 AM - 6:00 PM" },
+  // ];
   useEffect(() => {
-    console.log("isManagerVerified:", isManagerVerified);
-    console.log("showChangeManager:", showChangeManager);
-  }, [isManagerVerified, showChangeManager]);
+    // Run cleanup check
+    handleDataCleanup();
+  }, []);
 
   useEffect(() => {
     const fetchEmployeeData = async () => {
@@ -76,7 +107,13 @@ const EmployeeDashboard = ({ navigation }) => {
           setCompanyName(userData.companyName);
           setProfileImage(userData.profileImage);
 
-          // Check if employee already has a verified manager
+          // Check clock-in status
+          if (userData.currentStatus === "Clocked In" && userData.clockInTime) {
+            setIsClockedIn(true);
+            setClockInTime(userData.clockInTime.toDate());
+          }
+
+          // Existing manager verification code remains the same
           const relationshipsRef = collection(
             db,
             "managerEmployeeRelationships"
@@ -208,35 +245,6 @@ const EmployeeDashboard = ({ navigation }) => {
     });
   };
 
-  const handleMyLocation = async () => {
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert("Permission to access location was denied");
-      return;
-    }
-
-    const location = await Location.getCurrentPositionAsync({});
-    const { latitude, longitude } = location.coords;
-
-    try {
-      await setDoc(
-        doc(db, "users", auth.currentUser.uid),
-        {
-          latitude,
-          longitude,
-          name: employeeName,
-          email: employeeEmail,
-          lastLocationUpdate: serverTimestamp(),
-        },
-        { merge: true }
-      );
-      Alert.alert("Success", "Location data saved successfully.");
-    } catch (error) {
-      console.error("Error saving location data:", error);
-      Alert.alert("Error", "Failed to save location data.");
-    }
-  };
-
   const handleChangeManager = async () => {
     if (!newManagerEmail.trim()) {
       Alert.alert("Error", "Please enter new manager's email");
@@ -310,6 +318,89 @@ const EmployeeDashboard = ({ navigation }) => {
       Alert.alert("Error", "Failed to change manager.");
     } finally {
       setIsChangingManager(false);
+    }
+  };
+
+  //Clock in and out
+  const handleClockInOut = async () => {
+    try {
+      const currentTime = new Date();
+      const userDocRef = doc(db, "users", auth.currentUser.uid);
+
+      if (!isClockedIn) {
+        // Clock In
+        await updateDoc(userDocRef, {
+          clockInTime: currentTime,
+          currentStatus: "Clocked In",
+          clockOutTime: null,
+        });
+        setClockInTime(currentTime);
+        setClockOutTime(null);
+        setIsClockedIn(true);
+      } else {
+        // Clock Out
+        if (!clockInTime) {
+          Alert.alert("Error", "No clock-in time found");
+          return;
+        }
+        const workDuration = (currentTime - clockInTime) / (1000 * 60 * 60); // hours
+
+        await updateDoc(userDocRef, {
+          clockOutTime: currentTime,
+          currentStatus: "Clocked Out",
+          lastShiftDuration: workDuration,
+          clockInTime: null,
+        });
+
+        // Optional: Store work hour history
+        await addDoc(collection(db, "workHours"), {
+          employeeId: auth.currentUser.uid,
+          employeeName: employeeName,
+          employeeEmail: employeeEmail,
+          clockInTime: clockInTime,
+          clockOutTime: currentTime,
+          duration: workDuration,
+          date: serverTimestamp(),
+        });
+        setIsClockedIn(false);
+        setClockOutTime(currentTime);
+      }
+    } catch (error) {
+      console.error("Clock in/out error:", error);
+      Alert.alert("Error", "Failed to update clock status");
+    }
+  };
+
+  //handle clock in and out data clean
+  const handleDataCleanup = async () => {
+    try {
+      const userDocRef = doc(db, "users", auth.currentUser.uid);
+      const currentTime = new Date();
+      const midnight = new Date(
+        currentTime.getFullYear(),
+        currentTime.getMonth(),
+        currentTime.getDate() + 1,
+        0,
+        0,
+        0
+      );
+
+      // Check if current time is past midnight
+      if (currentTime >= midnight) {
+        await updateDoc(userDocRef, {
+          clockInTime: null,
+          clockOutTime: null,
+          currentStatus: "Not Clocked In",
+          lastShiftDuration: null,
+        });
+
+        // Reset local state
+        setClockInTime(null);
+        setClockOutTime(null);
+        setIsClockedIn(false);
+      }
+    } catch (error) {
+      console.error("Data cleanup error:", error);
     }
   };
 
@@ -403,7 +494,17 @@ const EmployeeDashboard = ({ navigation }) => {
   );
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={["#4A90E2"]}
+          tintColor="#4A90E2"
+        />
+      }
+    >
       <View style={styles.header}>
         <View>
           <Text style={styles.dateText}>{currentDate}</Text>
@@ -432,39 +533,66 @@ const EmployeeDashboard = ({ navigation }) => {
       <View style={styles.clockCard}>
         <View style={styles.clockInfo}>
           <Text style={styles.clockTitle}>Current Status</Text>
-          <Text style={styles.clockStatus}>Clocked In</Text>
-          <Text style={styles.clockTime}>Since 9:00 AM</Text>
+          <Text style={styles.clockStatus}>
+            {isClockedIn ? "Clocked In" : "Clocked Out"}
+          </Text>
+          {isClockedIn && clockInTime && (
+            <Text style={styles.clockTime}>
+              Since {clockInTime.toLocaleTimeString()}
+            </Text>
+          )}
         </View>
-        <TouchableOpacity style={styles.clockButton}>
-          <Text style={styles.clockButtonText}>Clock Out</Text>
+        <TouchableOpacity style={styles.clockButton} onPress={handleClockInOut}>
+          <Text style={styles.clockButtonText}>
+            {isClockedIn ? "Clock Out" : "Clock In"}
+          </Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
-          <Ionicons name="time" size={24} color="#4A90E2" />
-          <Text style={styles.statValue}>{workStats.hoursToday}</Text>
-          <Text style={styles.statLabel}>Hours Today</Text>
+          <View style={styles.statIconContainer}>
+            <Ionicons name="time" size={24} color="#4A90E2" />
+          </View>
+          <Text style={styles.statValue}>
+            {clockInTime
+              ? clockInTime.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : "No Clock In"}
+          </Text>
+          <Text style={styles.statLabel}>Clock In Time</Text>
         </View>
         <View style={styles.statCard}>
-          <Ionicons name="cafe" size={24} color="#FF9800" />
-          <Text style={styles.statValue}>{workStats.breaksToday}</Text>
-          <Text style={styles.statLabel}>Break Time</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
-          <Text style={styles.statValue}>{workStats.tasksCompleted}</Text>
-          <Text style={styles.statLabel}>Tasks Done</Text>
+          <View style={styles.statIconContainer}>
+            <Ionicons name="log-out" size={24} color="#FF6347" />
+          </View>
+          <Text style={styles.statValue}>
+            {clockOutTime
+              ? clockOutTime.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : "No Clock Out"}
+          </Text>
+          <Text style={styles.statLabel}>Clock Out Time</Text>
         </View>
       </View>
 
       {!isManagerVerified ? (
         renderManagerVerification()
       ) : (
-        <>{showChangeManager ? renderChangeManager() : renderQuickActions()}</>
+        <>
+          {showChangeManager
+            ? renderChangeManager()
+            : isClockedIn
+            ? renderQuickActions()
+            : null}
+        </>
       )}
 
-      <View style={styles.section}>
+      {/*<View style={styles.section}>
         <Text style={styles.sectionTitle}>Upcoming Shifts</Text>
         {upcomingShifts.map((shift, index) => (
           <View key={index} style={styles.shiftCard}>
@@ -475,7 +603,7 @@ const EmployeeDashboard = ({ navigation }) => {
             <Ionicons name="chevron-forward" size={20} color="#666" />
           </View>
         ))}
-      </View>
+      </View>*/}
     </ScrollView>
   );
 };
@@ -563,27 +691,45 @@ const styles = StyleSheet.create({
   statsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    padding: 20,
+    paddingHorizontal: 20,
+    marginTop: 10,
   },
   statCard: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 15,
     padding: 15,
+    width: "48%",
     alignItems: "center",
-    width: "31%",
-    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: "rgba(74, 144, 226, 0.1)",
+  },
+  statIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "rgba(74, 144, 226, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 10,
   },
   statValue: {
-    fontSize: 18,
-    fontWeight: "bold",
+    fontSize: 16,
+    fontWeight: "600",
     color: "#1A1A1A",
-    marginTop: 8,
+    marginTop: 5,
+    textAlign: "center",
   },
   statLabel: {
     fontSize: 12,
     color: "#666",
-    marginTop: 4,
+    marginTop: 5,
   },
+
   verificationContainer: {
     margin: 20,
     padding: 20,
