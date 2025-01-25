@@ -156,6 +156,7 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
   -Created Admin and manager profile page
 -**Jan 24**
   -add clock in and out feature
+  -added profile images inside manager's employee list
  
 
 ## 🎉 Features Implementation
