@@ -122,10 +122,10 @@ const EmployeeList = ({ navigation }) => {
 
   const renderEmployee = ({ item }) => (
     <TouchableOpacity style={styles.employeeCard}>
-      <Image source={{ uri: item.image }} style={styles.employeeImage} />
+      <Image source={{ uri: item.profileImage }} style={styles.employeeImage} />
       <View style={styles.employeeInfo}>
         <Text style={styles.employeeName}>{item.name}</Text>
-        <Text style={styles.employeeRole}>{item.role}</Text>
+        <Text style={styles.employeeRole}>{item.department}</Text>
         <View style={styles.statusContainer}>
           <View
             style={[
