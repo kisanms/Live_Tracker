@@ -105,7 +105,12 @@ const ManagerEmployeeList = ({ navigation }) => {
   };
 
   const renderEmployeeItem = ({ item }) => (
-    <TouchableOpacity style={styles.employeeCard}>
+    <TouchableOpacity
+      style={styles.employeeCard}
+      onPress={() =>
+        navigation.navigate("adminEmployeeProfile", { employeeId: item.id })
+      }
+    >
       <Image
         source={{ uri: item.profileImage }} // Use the profile image from Firebase
         style={styles.employeeImage}
