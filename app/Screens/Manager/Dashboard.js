@@ -29,6 +29,7 @@ import {
 const ManagerDashboard = ({ navigation }) => {
   const [managerData, setManagerData] = useState(null);
   const [teamCount, setTeamCount] = useState(0);
+  const [activeCount, setActiveCount] = useState(0);
   const currentDate = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
@@ -55,6 +56,33 @@ const ManagerDashboard = ({ navigation }) => {
 
           const teamSnapshot = await getDocs(activeTeamQuery);
           setTeamCount(teamSnapshot.size);
+
+          // Track active employees
+          let activeEmployeesCount = 0;
+          teamSnapshot.forEach(async (relationshipDoc) => {
+            const employeeId = relationshipDoc.data().employeeId;
+            const employeeRef = doc(db, "users", employeeId);
+
+            onSnapshot(employeeRef, (employeeDoc) => {
+              if (employeeDoc.exists()) {
+                const employeeData = employeeDoc.data();
+
+                // Check if employee is clocked in (has clockInTime but no clockOutTime)
+                if (employeeData.clockInTime && !employeeData.clockOutTime) {
+                  activeEmployeesCount++;
+                  setActiveCount(activeEmployeesCount);
+                }
+                // Remove from active count if clocked out
+                else if (
+                  !employeeData.clockInTime &&
+                  employeeData.clockOutTime
+                ) {
+                  activeEmployeesCount = Math.max(0, activeEmployeesCount - 1);
+                  setActiveCount(activeEmployeesCount);
+                }
+              }
+            });
+          });
         } else {
           console.log("No such document!");
         }
@@ -69,7 +97,7 @@ const ManagerDashboard = ({ navigation }) => {
 
   const teamStats = [
     { title: "Team Members", count: teamCount, icon: "people" },
-    { title: "Active Now", count: 8, icon: "radio-button-on" },
+    { title: "Active Now", count: activeCount, icon: "radio-button-on" },
     { title: "On Leave", count: 2, icon: "calendar" },
   ];
 
