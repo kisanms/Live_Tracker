@@ -125,7 +125,12 @@ const ManagerList = ({ navigation }) => {
   };
 
   const renderManager = ({ item }) => (
-    <TouchableOpacity style={styles.managerCard}>
+    <TouchableOpacity
+      style={styles.managerCard}
+      onPress={() =>
+        navigation.navigate("adminManagerProfile", { managerId: item.id })
+      }
+    >
       <View style={styles.cardHeader}>
         <Image
           source={{ uri: item.profileImage }}

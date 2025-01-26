@@ -30,6 +30,7 @@ import ManagerUnderEmp from "./Screens/Admin/ManagerUnderEmp";
 import EmployeeLocNoti from "./Screens/Manager/EmployeeLocNoti";
 import ManagerProfile from "./Screens/Manager/Profile";
 import AdminProfile from "./Screens/Admin/Profile";
+import AdminsManagerProfile from "./Screens/Admin/AdminsManagerProfile";
 
 const Stack = createNativeStackNavigator();
 
@@ -94,6 +95,11 @@ const RootLayout = ({ initialUser }) => {
       <Stack.Screen
         name="AllStaffLocNoti"
         component={AllStaffLocNoti}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="adminManagerProfile"
+        component={AdminsManagerProfile}
         options={{ headerShown: false }}
       />
 
