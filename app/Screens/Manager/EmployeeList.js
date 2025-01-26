@@ -18,6 +18,7 @@ import {
   query,
   where,
 } from "firebase/firestore";
+import { COLORS, SHADOWS } from "../../constants/theme"; // Adjust the path as necessary
 
 const ManagerEmployeeList = ({ navigation }) => {
   const [employees, setEmployees] = useState([]);
@@ -104,30 +105,30 @@ const ManagerEmployeeList = ({ navigation }) => {
   };
 
   const renderEmployeeItem = ({ item }) => (
-    <View style={styles.employeeCard}>
+    <TouchableOpacity style={styles.employeeCard}>
       <Image
         source={{ uri: item.profileImage }} // Use the profile image from Firebase
-        style={styles.profileImage}
+        style={styles.employeeImage}
       />
       <View style={styles.employeeInfo}>
         <Text style={styles.employeeName}>{item.name}</Text>
-        <Text style={styles.employeeEmail}>{item.email}</Text>
+        <Text style={styles.employeeRole}>{item.department}</Text>
       </View>
-      <View style={styles.buttonContainer}>
+      <View style={styles.actions}>
         <TouchableOpacity
-          style={styles.circleButton}
+          style={styles.actionButton}
           onPress={() => handleLocationPress(item)}
         >
           <Ionicons name="location" size={20} color="#fff" />
         </TouchableOpacity>
         <TouchableOpacity
-          style={styles.circleButton}
+          style={styles.actionButton}
           onPress={() => handleCallPress(item)}
         >
           <Ionicons name="call" size={20} color="#fff" />
         </TouchableOpacity>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   return (
@@ -143,7 +144,7 @@ const ManagerEmployeeList = ({ navigation }) => {
         data={employees}
         renderItem={renderEmployeeItem}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.employeeList}
+        contentContainerStyle={styles.list}
       />
     </View>
   );
@@ -156,60 +157,61 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: "row",
-    justifyContent: "flex-start",
     alignItems: "center",
+    justifyContent: "space-between",
     padding: 20,
     backgroundColor: "#4A90E2",
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#fff",
-    marginLeft: 10,
-  },
-  employeeCard: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 15,
-    elevation: 3,
-    flexDirection: "row",
-    alignItems: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
-  profileImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 15,
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#fff",
+  },
+  employeeCard: {
+    flexDirection: "row",
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 15,
+    ...SHADOWS.medium,
+  },
+  employeeImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
   },
   employeeInfo: {
     flex: 1,
+    marginLeft: 15,
   },
   employeeName: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
     color: "#1A1A1A",
   },
-  employeeEmail: {
-    fontSize: 15,
+  employeeRole: {
+    fontSize: 14,
     color: "#666",
+    marginTop: 4,
   },
-  buttonContainer: {
+  actions: {
     flexDirection: "row",
     alignItems: "center",
   },
-  circleButton: {
+  actionButton: {
     backgroundColor: "#4A90E2",
     padding: 10,
     borderRadius: 25,
     marginLeft: 5,
     alignItems: "center",
     justifyContent: "center",
-    elevation: 2,
+  },
+  list: {
+    padding: 16,
   },
 });
 
