@@ -127,7 +127,10 @@ const ManagerList = ({ navigation }) => {
   const renderManager = ({ item }) => (
     <TouchableOpacity style={styles.managerCard}>
       <View style={styles.cardHeader}>
-        <Image source={{ uri: item.image }} style={styles.managerImage} />
+        <Image
+          source={{ uri: item.profileImage }}
+          style={styles.managerImage}
+        />
         <View style={styles.headerInfo}>
           <Text style={styles.managerName}>{item.name}</Text>
           <Text style={styles.department}>{item.department}</Text>
