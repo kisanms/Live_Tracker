@@ -152,14 +152,13 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
 - **Jan 22**
   - employee can update it's profile now
 - **Jan 23**
-  -Admin can see the interval loc of both empl and manager
-  -Created Admin and manager profile page
+  - Admin can see the interval loc of both empl and manager
+  - Created Admin and manager profile page
 - **Jan 24**
-  -add clock in and out feature
-  -added profile images inside manager's employee list
+  - add clock in and out feature
+  - added profile images inside manager's employee list
 - **Jan 25**
-  -add clock in and out feature
-  -added profile images inside manager's employee list
+  - add clock in extra one
  
 
 ## 🎉 Features Implementation
