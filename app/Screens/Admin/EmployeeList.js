@@ -121,7 +121,12 @@ const EmployeeList = ({ navigation }) => {
   };
 
   const renderEmployee = ({ item }) => (
-    <TouchableOpacity style={styles.employeeCard}>
+    <TouchableOpacity
+      style={styles.employeeCard}
+      onPress={() =>
+        navigation.navigate("adminEmployeeProfile", { employeeId: item.id })
+      }
+    >
       <Image source={{ uri: item.profileImage }} style={styles.employeeImage} />
       <View style={styles.employeeInfo}>
         <Text style={styles.employeeName}>{item.name}</Text>
