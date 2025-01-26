@@ -80,13 +80,22 @@ const EmployeeDashboard = ({ navigation }) => {
           setCompanyName(userData.companyName);
           setProfileImage(userData.profileImage);
 
-          // Check clock-in status
-          if (userData.currentStatus === "Clocked In" && userData.clockInTime) {
-            setIsClockedIn(true);
-            setClockInTime(userData.clockInTime.toDate());
+          // Check if clockInTime is for today
+          if (userData.clockInTime) {
+            const clockInDate = userData.clockInTime.toDate();
+            const today = new Date();
+
+            if (
+              clockInDate.getDate() === today.getDate() &&
+              clockInDate.getMonth() === today.getMonth() &&
+              clockInDate.getFullYear() === today.getFullYear()
+            ) {
+              setIsClockedIn(true);
+              setClockInTime(clockInDate);
+            }
           }
 
-          // Existing manager verification code remains the same
+          // Existing manager relationship check
           const relationshipsRef = collection(
             db,
             "managerEmployeeRelationships"
@@ -103,8 +112,6 @@ const EmployeeDashboard = ({ navigation }) => {
             setManagerEmail(relationshipData.managerEmail);
             setIsManagerVerified(true);
           }
-        } else {
-          console.log("No such document!");
         }
       } catch (error) {
         console.error("Error fetching employee data:", error);
@@ -393,28 +400,31 @@ const EmployeeDashboard = ({ navigation }) => {
     try {
       const userDocRef = doc(db, "users", auth.currentUser.uid);
       const currentTime = new Date();
-      const midnight = new Date(
-        currentTime.getFullYear(),
-        currentTime.getMonth(),
-        currentTime.getDate() + 1,
-        0,
-        0,
-        0
-      );
 
-      // Check if current time is past midnight
-      if (currentTime >= midnight) {
-        await updateDoc(userDocRef, {
-          clockInTime: null,
-          clockOutTime: null,
-          currentStatus: "Not Clocked In",
-          lastShiftDuration: null,
-        });
+      // Check if current time is past midnight or no valid clock-in for today
+      const userDoc = await getDoc(userDocRef);
+      const userData = userDoc.data();
 
-        // Reset local state
-        setClockInTime(null);
-        setClockOutTime(null);
-        setIsClockedIn(false);
+      if (userData.clockInTime) {
+        const clockInDate = userData.clockInTime.toDate();
+        const isDifferentDay =
+          clockInDate.getDate() !== currentTime.getDate() ||
+          clockInDate.getMonth() !== currentTime.getMonth() ||
+          clockInDate.getFullYear() !== currentTime.getFullYear();
+
+        if (isDifferentDay) {
+          await updateDoc(userDocRef, {
+            clockInTime: null,
+            clockOutTime: null,
+            currentStatus: "Not Clocked In",
+            lastShiftDuration: null,
+          });
+
+          // Reset local state
+          setClockInTime(null);
+          setClockOutTime(null);
+          setIsClockedIn(false);
+        }
       }
     } catch (error) {
       console.error("Data cleanup error:", error);
