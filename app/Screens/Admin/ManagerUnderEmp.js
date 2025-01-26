@@ -68,7 +68,12 @@ const ManagerUnderEmp = ({ route, navigation }) => {
   }, [managerId]);
 
   const renderEmployee = ({ item }) => (
-    <TouchableOpacity style={styles.employeeCard}>
+    <TouchableOpacity
+      style={styles.employeeCard}
+      onPress={() =>
+        navigation.navigate("adminEmployeeProfile", { employeeId: item.id })
+      }
+    >
       <View style={styles.imageContainer}>
         <Image
           source={{ uri: item.profileImage }}
