@@ -71,7 +71,7 @@ const ManagerUnderEmp = ({ route, navigation }) => {
     <TouchableOpacity style={styles.employeeCard}>
       <View style={styles.imageContainer}>
         <Image
-          source={{ uri: item.image }}
+          source={{ uri: item.profileImage }}
           style={styles.employeeImage}
           defaultSource={{
             uri: "https://randomuser.me/api/portraits/men/41.jpg",
