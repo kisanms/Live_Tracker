@@ -4909,11 +4909,6 @@ expo-background-fetch@~13.0.3:
   dependencies:
     expo-task-manager "~12.0.0"
 
-expo-blur@~14.0.1:
-  version "14.0.1"
-  resolved "https://registry.npmjs.org/expo-blur/-/expo-blur-14.0.1.tgz"
-  integrity sha512-3Q6jFBLbY8n2vwk28ycUC+eIlVhnlqwkXUKk/Lfaj+SGV3AZMQyrixe7OYwJdUfwqETBrnYYMB6uNrJzOSbG+g==
-
 expo-constants@*, expo-constants@~17.0.0, expo-constants@~17.0.3, expo-constants@~17.0.4:
   version "17.0.4"
   resolved "https://registry.npmjs.org/expo-constants/-/expo-constants-17.0.4.tgz"

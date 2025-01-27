@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Image,
   Alert,
+  RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -30,6 +31,7 @@ const ManagerDashboard = ({ navigation }) => {
   const [managerData, setManagerData] = useState(null);
   const [teamCount, setTeamCount] = useState(0);
   const [activeCount, setActiveCount] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
   const currentDate = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
@@ -37,64 +39,66 @@ const ManagerDashboard = ({ navigation }) => {
     day: "numeric",
   });
 
-  useEffect(() => {
-    const fetchManagerData = async () => {
-      try {
-        const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
-        if (userDoc.exists()) {
-          setManagerData(userDoc.data());
+  const fetchManagerData = async () => {
+    try {
+      const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+      if (userDoc.exists()) {
+        setManagerData(userDoc.data());
 
-          const relationshipsRef = collection(
-            db,
-            "managerEmployeeRelationships"
-          );
-          const activeTeamQuery = query(
-            relationshipsRef,
-            where("managerId", "==", auth.currentUser.uid),
-            where("status", "==", "active")
-          );
+        const relationshipsRef = collection(db, "managerEmployeeRelationships");
+        const activeTeamQuery = query(
+          relationshipsRef,
+          where("managerId", "==", auth.currentUser.uid),
+          where("status", "==", "active")
+        );
 
-          const teamSnapshot = await getDocs(activeTeamQuery);
-          setTeamCount(teamSnapshot.size);
+        const teamSnapshot = await getDocs(activeTeamQuery);
+        setTeamCount(teamSnapshot.size);
 
-          // Track active employees
-          let activeEmployeesCount = 0;
-          teamSnapshot.forEach(async (relationshipDoc) => {
+        // Reset active count before recounting
+        let activeEmployeesCount = 0;
+
+        // Create an array of promises for all employee checks
+        const employeeChecks = teamSnapshot.docs.map(
+          async (relationshipDoc) => {
             const employeeId = relationshipDoc.data().employeeId;
-            const employeeRef = doc(db, "users", employeeId);
+            const employeeDoc = await getDoc(doc(db, "users", employeeId));
 
-            onSnapshot(employeeRef, (employeeDoc) => {
-              if (employeeDoc.exists()) {
-                const employeeData = employeeDoc.data();
-
-                // Check if employee is clocked in (has clockInTime but no clockOutTime)
-                if (employeeData.clockInTime && !employeeData.clockOutTime) {
-                  activeEmployeesCount++;
-                  setActiveCount(activeEmployeesCount);
-                }
-                // Remove from active count if clocked out
-                else if (
-                  !employeeData.clockInTime &&
-                  employeeData.clockOutTime
-                ) {
-                  activeEmployeesCount = Math.max(0, activeEmployeesCount - 1);
-                  setActiveCount(activeEmployeesCount);
-                }
+            if (employeeDoc.exists()) {
+              const employeeData = employeeDoc.data();
+              if (employeeData.clockInTime && !employeeData.clockOutTime) {
+                activeEmployeesCount++;
               }
-            });
-          });
-        } else {
-          console.log("No such document!");
-        }
-      } catch (error) {
-        console.error("Error fetching manager data:", error);
-        Alert.alert("Error", "Failed to load manager data.");
-      }
-    };
+            }
+          }
+        );
 
+        // Wait for all employee checks to complete
+        await Promise.all(employeeChecks);
+        setActiveCount(activeEmployeesCount);
+      } else {
+        console.log("No such document!");
+      }
+    } catch (error) {
+      console.error("Error fetching manager data:", error);
+      Alert.alert("Error", "Failed to load manager data.");
+    }
+  };
+
+  useEffect(() => {
     fetchManagerData();
   }, []);
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await fetchManagerData();
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+      Alert.alert("Error", "Failed to refresh data.");
+    }
+    setRefreshing(false);
+  }, []);
   const teamStats = [
     { title: "Team Members", count: teamCount, icon: "people" },
     { title: "Active Now", count: activeCount, icon: "radio-button-on" },
@@ -181,7 +185,17 @@ const ManagerDashboard = ({ navigation }) => {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={["#4A90E2"]}
+          tintColor="#4A90E2"
+        />
+      }
+    >
       <View style={styles.header}>
         <View>
           <Text style={styles.dateText}>{currentDate}</Text>
