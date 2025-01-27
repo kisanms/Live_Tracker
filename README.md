@@ -161,6 +161,7 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
   - add clock in extra one
 - **Jan 26**
   - if employee already clocked in , and if reload the data will there only because it's clocked in already
+  - Show Active now count in manager
  
 
 ## 🎉 Features Implementation
