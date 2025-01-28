@@ -307,7 +307,7 @@ const ManagerDashboard = ({ navigation }) => {
         </View>
       </View>
 
-      <View style={styles.recentActivity}>
+      {/*<View style={styles.recentActivity}>
         <Text style={styles.sectionTitle}>Recent Activity</Text>
         {recentActivities.map((activity, index) => (
           <View key={index} style={styles.activityItem}>
@@ -321,7 +321,7 @@ const ManagerDashboard = ({ navigation }) => {
             </View>
           </View>
         ))}
-      </View>
+      </View>*/}
     </ScrollView>
   );
 };

@@ -493,10 +493,7 @@ const EmployeeDashboard = ({ navigation }) => {
           <Ionicons name="location" size={24} color="#4A90E2" />
           <Text style={styles.actionText}>Share Location</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.actionButton, { width: "48%" }]}
-          onPress={() => navigation.navigate("leaveRequest")}
-        >
+        <TouchableOpacity style={[styles.actionButton, { width: "48%" }]}>
           <Ionicons name="calendar" size={24} color="#4A90E2" />
           <Text style={styles.actionText}>Request Leave</Text>
         </TouchableOpacity>
