@@ -23,18 +23,18 @@ const AllEmpLoc = () => {
       );
 
       const relationshipSnapshot = await getDocs(employeeQuery);
-      console.log("Number of relationships found:", relationshipSnapshot.size);
+      // console.log("Number of relationships found:", relationshipSnapshot.size);
 
       // Get employee emails directly from relationships
       const employeeEmails = relationshipSnapshot.docs.map(
         (doc) => doc.data().employeeEmail
       );
-      console.log("Employee emails:", employeeEmails);
+      // console.log("Employee emails:", employeeEmails);
 
       // Fetch locations from employeeLocations collection
       const locationsRef = collection(db, "employeeLocations");
       const locationPromises = employeeEmails.map(async (email) => {
-        console.log("Looking up location for email:", email);
+        //  console.log("Looking up location for email:", email);
         const locationQuery = query(locationsRef, where("email", "==", email));
         const locationSnapshot = await getDocs(locationQuery);
 
@@ -98,10 +98,10 @@ const AllEmpLoc = () => {
           // Add validation check
           if (!employee.latitude || !employee.longitude) return null;
 
-          console.log("Rendering marker for:", employee.name, {
-            lat: employee.latitude,
-            lng: employee.longitude,
-          });
+          // console.log("Rendering marker for:", employee.name, {
+          //   lat: employee.latitude,
+          //   lng: employee.longitude,
+          // });
 
           return (
             <Marker
