@@ -17,6 +17,9 @@ import {
   onSnapshot,
   getDoc,
   doc,
+  getDocs,
+  orderBy,
+  limit,
 } from "firebase/firestore";
 import { db } from "../../firebase";
 import { auth } from "../../firebase";
@@ -74,45 +77,38 @@ const EmployeeList = ({ navigation }) => {
 
   const handleLocationPress = async (employee) => {
     try {
-      const locationDoc = await getDoc(
-        doc(db, "employeeLocations", employee.id)
+      // Query persistentClockIns for the most recent active clock-in
+      const clockInsRef = collection(db, "persistentClockIns");
+      const clockInQuery = query(
+        clockInsRef,
+        where("employeeId", "==", employee.id),
+        where("status", "==", "active"),
+        orderBy("clockInTime", "desc"),
+        limit(1)
       );
 
-      if (
-        locationDoc.exists() &&
-        locationDoc.data().latitude &&
-        locationDoc.data().longitude
-      ) {
-        const locationData = locationDoc.data();
-        navigation.navigate("adminLocationTracking", {
-          employeeName: employee.name,
-          employeeEmail: employee.email,
-          latitude: locationData.latitude,
-          longitude: locationData.longitude,
-        });
-        return;
-      }
+      const clockInSnapshot = await getDocs(clockInQuery);
 
-      const userDoc = await getDoc(doc(db, "users", employee.id));
-      if (
-        userDoc.exists() &&
-        userDoc.data().lastLocation &&
-        userDoc.data().lastLocation.latitude &&
-        userDoc.data().lastLocation.longitude
-      ) {
-        const { lastLocation } = userDoc.data();
-        navigation.navigate("adminLocationTracking", {
-          employeeName: employee.name,
-          employeeEmail: employee.email,
-          latitude: lastLocation.latitude,
-          longitude: lastLocation.longitude,
-        });
-        return;
+      if (!clockInSnapshot.empty) {
+        const clockInData = clockInSnapshot.docs[0].data();
+
+        // Check if location data exists
+        if (clockInData.location?.latitude && clockInData.location?.longitude) {
+          navigation.navigate("adminLocationTracking", {
+            employeeName: clockInData.employeeName,
+            employeeEmail: clockInData.employeeEmail,
+            latitude: clockInData.location.latitude,
+            longitude: clockInData.location.longitude,
+            lastUpdated: clockInData.clockInTime,
+            companyName: clockInData.companyName,
+          });
+          return;
+        }
       }
 
       Alert.alert(
-        "Location Unavailable",
-        "This employee's location is not available."
+        "No Active Clock-in",
+        "This employee doesn't have an active clock-in with location data."
       );
     } catch (error) {
       console.error("Error fetching location:", error);

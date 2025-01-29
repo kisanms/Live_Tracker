@@ -482,7 +482,7 @@ const EmployeeDashboard = ({ navigation }) => {
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Quick Actions</Text>
       <View style={styles.quickActions}>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={[styles.actionButton, { width: "48%" }]}
           onPress={handleShareLocation}
         >
@@ -492,7 +492,7 @@ const EmployeeDashboard = ({ navigation }) => {
         <TouchableOpacity style={[styles.actionButton, { width: "48%" }]}>
           <Ionicons name="calendar" size={24} color="#4A90E2" />
           <Text style={styles.actionText}>Request Leave</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
       <TouchableOpacity
         style={styles.changeManagerButton}
