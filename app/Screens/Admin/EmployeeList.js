@@ -7,6 +7,7 @@ import {
   Image,
   TouchableOpacity,
   Alert,
+  Linking,
 } from "react-native";
 import { COLORS, SHADOWS } from "../../constants/theme";
 import { Ionicons } from "@expo/vector-icons";
@@ -116,6 +117,33 @@ const EmployeeList = ({ navigation }) => {
     }
   };
 
+  const handleCallPress = async (managerId) => {
+    try {
+      // Fetch the user document for the manager
+      const userDoc = await getDoc(doc(db, "users", managerId));
+
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        const mobileNumber = userData.mobile; // Assuming 'mobile' is the field name
+
+        if (mobileNumber) {
+          // Open the phone dialer with the mobile number
+          Linking.openURL(`tel:${mobileNumber}`);
+        } else {
+          Alert.alert(
+            "No Phone Number",
+            "This manager does not have a phone number."
+          );
+        }
+      } else {
+        Alert.alert("User  Not Found", "Could not find the manager's details.");
+      }
+    } catch (error) {
+      console.error("Error fetching mobile number:", error);
+      Alert.alert("Error", "Failed to fetch manager's phone number.");
+    }
+  };
+
   const renderEmployee = ({ item }) => (
     <TouchableOpacity
       style={styles.employeeCard}
@@ -136,7 +164,10 @@ const EmployeeList = ({ navigation }) => {
         >
           <Ionicons name="location" size={20} color={COLORS.primary} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => handleCallPress(item.id)}
+        >
           <Ionicons name="call" size={20} color={COLORS.success} />
         </TouchableOpacity>
       </View>

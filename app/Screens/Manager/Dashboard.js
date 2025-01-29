@@ -143,20 +143,20 @@ const ManagerDashboard = ({ navigation }) => {
     ]);
   };
 
-  const handleShareLocation = () => {
-    if (!managerData?.name || !managerData?.email) {
-      Alert.alert("Error", "Manager data is not loaded yet.");
-      return;
-    }
+  // const handleShareLocation = () => {
+  //   if (!managerData?.name || !managerData?.email) {
+  //     Alert.alert("Error", "Manager data is not loaded yet.");
+  //     return;
+  //   }
 
-    navigation.navigate("maps", {
-      userRole: "manager",
-      userData: {
-        name: managerData.name,
-        email: managerData.email,
-      },
-    });
-  };
+  //   navigation.navigate("maps", {
+  //     userRole: "manager",
+  //     userData: {
+  //       name: managerData.name,
+  //       email: managerData.email,
+  //     },
+  //   });
+  // };
 
   const handlePersistentClockIn = async () => {
     try {
@@ -425,13 +425,6 @@ const ManagerDashboard = ({ navigation }) => {
           >
             <Ionicons name="map" size={24} color="#4A90E2" />
             <Text style={styles.actionText}>All Staff Loc</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.actionButton, { width: "48%" }]}
-            onPress={handleShareLocation}
-          >
-            <Ionicons name="share-social" size={24} color="#4A90E2" />
-            <Text style={styles.actionText}>Share Location</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.actionButton, { width: "48%" }]}

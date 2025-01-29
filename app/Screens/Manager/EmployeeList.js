@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Alert,
   Image,
+  Linking,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { db, auth } from "../../firebase";
@@ -110,10 +111,59 @@ const ManagerEmployeeList = ({ navigation }) => {
     }
   };
 
-  const handleCallPress = (employee) => {
-    Alert.alert("Call", `Calling ${employee.name}...`);
+  const handleCallPress = async (managerId) => {
+    try {
+      // Fetch the user document for the manager
+      const userDoc = await getDoc(doc(db, "users", managerId));
+
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        const mobileNumber = userData.mobile; // Assuming 'mobile' is the field name
+
+        if (mobileNumber) {
+          // Open the phone dialer with the mobile number
+          Linking.openURL(`tel:${mobileNumber}`);
+        } else {
+          Alert.alert(
+            "No Phone Number",
+            "This manager does not have a phone number."
+          );
+        }
+      } else {
+        Alert.alert("User  Not Found", "Could not find the manager's details.");
+      }
+    } catch (error) {
+      console.error("Error fetching mobile number:", error);
+      Alert.alert("Error", "Failed to fetch manager's phone number.");
+    }
   };
 
+  const handleEmailPress = async (managerId) => {
+    try {
+      // Fetch the user document for the manager
+      const userDoc = await getDoc(doc(db, "users", managerId));
+
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        const email = userData.email; // Assuming 'email' is the field name
+
+        if (email) {
+          // Open the email app with the email address
+          Linking.openURL(`mailto:${email}`);
+        } else {
+          Alert.alert(
+            "No Email Address",
+            "This manager does not have an email address."
+          );
+        }
+      } else {
+        Alert.alert("User  Not Found", "Could not find the manager's details.");
+      }
+    } catch (error) {
+      console.error("Error fetching email address:", error);
+      Alert.alert("Error", "Failed to fetch manager's email address.");
+    }
+  };
   const renderEmployeeItem = ({ item }) => (
     <TouchableOpacity
       style={styles.employeeCard}
@@ -135,9 +185,15 @@ const ManagerEmployeeList = ({ navigation }) => {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.actionButton}
-          onPress={() => handleCallPress(item)}
+          onPress={() => handleCallPress(item.id)}
         >
           <Ionicons name="call" size={20} color="#fff" />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => handleEmailPress(item.id)}
+        >
+          <Ionicons name="mail" size={20} color="#fff" />
         </TouchableOpacity>
       </View>
     </TouchableOpacity>

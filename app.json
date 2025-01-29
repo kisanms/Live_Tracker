@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Live_Tracker",
-    "slug": "Live_Tracker",
+    "name": "Active Tracker",
+    "slug": "Active Tracker",
     "version": "2.9.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon-512.png",
