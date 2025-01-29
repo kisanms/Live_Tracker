@@ -318,11 +318,7 @@ const EmployeeDashboard = ({ navigation }) => {
         clockInTime: currentTime,
         currentStatus: "Active",
         clockOutTime: null,
-        lastPersistentClockIn: currentTime,
-        lastKnownLocation: {
-          latitude: latitude,
-          longitude: longitude,
-        }, // Optionally update user's last known location
+        lastPersistentClockIn: currentTime, // Optionally update user's last known location
       });
 
       setClockInTime(currentTime);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   Alert,
   Modal,
   TextInput,
+  RefreshControl,
 } from "react-native";
 import {
   widthPercentageToDP as wp,
@@ -37,79 +38,140 @@ const AdminDashboard = ({ navigation }) => {
   const [adminData, setAdminData] = useState(null);
   const [totalManagers, setTotalManagers] = useState(0);
   const [totalEmployees, setTotalEmployees] = useState(0);
+  const [activeUsers, setActiveUsers] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchActiveUsers = async () => {
+    if (!adminData?.companyName) return;
+
+    try {
+      // Query for active managers
+      const activeManagersQuery = query(
+        collection(db, "users"),
+        where("companyName", "==", adminData.companyName),
+        where("role", "==", "manager")
+      );
+      const managerSnapshot = await getDocs(activeManagersQuery);
+
+      // Query for active employees
+      const activeEmployeesQuery = query(
+        collection(db, "users"),
+        where("companyName", "==", adminData.companyName),
+        where("role", "==", "employee")
+      );
+      const employeeSnapshot = await getDocs(activeEmployeesQuery);
+
+      let activeCount = 0;
+
+      // Count active managers
+      const managerChecks = managerSnapshot.docs.map(async (userDoc) => {
+        const userData = userDoc.data();
+        if (userData.clockInTime && !userData.clockOutTime) {
+          activeCount++;
+        }
+      });
+
+      // Count active employees
+      const employeeChecks = employeeSnapshot.docs.map(async (userDoc) => {
+        const userData = userDoc.data();
+        if (userData.clockInTime && !userData.clockOutTime) {
+          activeCount++;
+        }
+      });
+
+      // Wait for all checks to complete
+      await Promise.all([...managerChecks, ...employeeChecks]);
+      setActiveUsers(activeCount);
+    } catch (error) {
+      console.error("Error fetching active users:", error);
+    }
+  };
+
+  const fetchAdminData = async () => {
+    if (!auth.currentUser) return;
+
+    try {
+      const userDoc = await getDoc(doc(db, "companies", auth.currentUser.uid));
+      const userProfileDoc = await getDoc(
+        doc(db, "users", auth.currentUser.uid)
+      );
+
+      if (userDoc.exists()) {
+        setAdminData({
+          ...userDoc.data(),
+          profileImage: userProfileDoc.exists()
+            ? userProfileDoc.data().profileImage
+            : null,
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching admin data:", error);
+      Alert.alert("Error", "Failed to load admin data");
+    }
+  };
+
+  const fetchTotalManagers = async () => {
+    if (!adminData?.companyName) return;
+    try {
+      const managersQuery = query(
+        collection(db, "users"),
+        where("companyName", "==", adminData.companyName),
+        where("role", "==", "manager")
+      );
+      const managersSnapshot = await getDocs(managersQuery);
+      setTotalManagers(managersSnapshot.size);
+    } catch (error) {
+      console.error("Error fetching total managers:", error);
+    }
+  };
+
+  const fetchTotalEmployees = async () => {
+    if (!adminData?.companyName) return;
+    try {
+      const employeesQuery = query(
+        collection(db, "users"),
+        where("companyName", "==", adminData.companyName),
+        where("role", "==", "employee")
+      );
+      const employeesSnapshot = await getDocs(employeesQuery);
+      setTotalEmployees(employeesSnapshot.size);
+    } catch (error) {
+      console.error("Error fetching total employees:", error);
+    }
+  };
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await fetchAdminData();
+      await fetchTotalManagers();
+      await fetchTotalEmployees();
+      await fetchActiveUsers();
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+      Alert.alert("Error", "Failed to refresh data");
+    }
+    setRefreshing(false);
+  }, [adminData?.companyName]);
 
   useEffect(() => {
-    const fetchAdminData = async () => {
-      if (!auth.currentUser) return;
-
-      try {
-        // Get admin data from companies collection
-        const userDoc = await getDoc(
-          doc(db, "companies", auth.currentUser.uid)
-        );
-
-        // Get profile image from users collection
-        const userProfileDoc = await getDoc(
-          doc(db, "users", auth.currentUser.uid)
-        );
-
-        if (userDoc.exists()) {
-          setAdminData({
-            ...userDoc.data(),
-            profileImage: userProfileDoc.exists()
-              ? userProfileDoc.data().profileImage
-              : null,
-          });
-        } else {
-          console.log("No such document in companies collection!");
-        }
-      } catch (error) {
-        console.error("Error fetching admin data:", error);
-        Alert.alert("Error", "Failed to load admin data");
-      }
-    };
-
-    const fetchTotalManagers = async () => {
-      if (!adminData || !auth.currentUser) return;
-      try {
-        const managersQuery = query(
-          collection(db, "users"),
-          where("companyName", "==", adminData.companyName),
-          where("role", "==", "manager")
-        );
-        const managersSnapshot = await getDocs(managersQuery);
-        setTotalManagers(managersSnapshot.size);
-      } catch (error) {
-        console.error("Error fetching total managers:", error);
-      }
-    };
-
-    const fetchTotalEmployees = async () => {
-      if (!adminData || !auth.currentUser) return;
-      try {
-        const employeesQuery = query(
-          collection(db, "users"),
-          where("companyName", "==", adminData.companyName),
-          where("role", "==", "employee")
-        );
-        const employeesSnapshot = await getDocs(employeesQuery);
-        setTotalEmployees(employeesSnapshot.size);
-      } catch (error) {
-        console.error("Error fetching total employees:", error);
-      }
-    };
-
     if (auth.currentUser) {
       fetchAdminData();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (adminData?.companyName) {
       fetchTotalManagers();
       fetchTotalEmployees();
+      fetchActiveUsers();
     }
   }, [adminData]);
 
   const stats = [
     { title: "Total Employees", count: totalEmployees, icon: "people" },
     { title: "Total Managers", count: totalManagers, icon: "briefcase" },
-    { title: "Active Now", count: 32, icon: "radio-button-on" },
+    { title: "Active Now", count: activeUsers, icon: "radio-button-on" },
   ];
 
   const handleLogout = async () => {
@@ -193,7 +255,17 @@ const AdminDashboard = ({ navigation }) => {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={[COLORS.primary]}
+          tintColor={COLORS.primary}
+        />
+      }
+    >
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Admin Dashboard</Text>
         <View style={styles.headerRight}>
