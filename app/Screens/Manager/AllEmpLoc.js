@@ -1,137 +1,142 @@
-import React, { useState, useEffect } from "react";
-import { View, StyleSheet, Alert, Text } from "react-native";
-import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
-import { collection, query, where, getDocs } from "firebase/firestore";
-import { db, auth } from "../../firebase";
+// import React, { useState, useEffect } from "react";
+// import { View, StyleSheet, Alert, Text } from "react-native";
+// import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+// import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
+// import { db, auth } from "../../firebase";
 
-const AllEmpLoc = () => {
-  const [employees, setEmployees] = useState([]);
-  const [loading, setLoading] = useState(true);
+// const AllEmpLoc = () => {
+//   const [employees, setEmployees] = useState([]);
+//   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchEmployeeLocations();
-  }, []);
+//   useEffect(() => {
+//     fetchEmployeeLocations();
+//   }, []);
 
-  const fetchEmployeeLocations = async () => {
-    try {
-      // First, get all employees under the current manager
-      const relationshipsRef = collection(db, "managerEmployeeRelationships");
-      const employeeQuery = query(
-        relationshipsRef,
-        where("managerId", "==", auth.currentUser.uid),
-        where("status", "==", "active")
-      );
+//   const fetchEmployeeLocations = async () => {
+//     try {
+//       // First, get all employees under the current manager
+//       const relationshipsRef = collection(db, "managerEmployeeRelationships");
+//       const employeeQuery = query(
+//         relationshipsRef,
+//         where("managerId", "==", auth.currentUser.uid),
+//         where("status", "==", "active")
+//       );
 
-      const relationshipSnapshot = await getDocs(employeeQuery);
-      // console.log("Number of relationships found:", relationshipSnapshot.size);
+//       const relationshipSnapshot = await getDocs(employeeQuery);
+//       const employeeIds = relationshipSnapshot.docs.map(
+//         (doc) => doc.data().employeeId
+//       );
 
-      // Get employee emails directly from relationships
-      const employeeEmails = relationshipSnapshot.docs.map(
-        (doc) => doc.data().employeeEmail
-      );
-      // console.log("Employee emails:", employeeEmails);
+//       if (employeeIds.length === 0) {
+//         setEmployees([]);
+//         Alert.alert(
+//           "No Employees Found",
+//           "You don't have any active employees assigned."
+//         );
+//         return;
+//       }
 
-      // Fetch locations from employeeLocations collection
-      const locationsRef = collection(db, "employeeLocations");
-      const locationPromises = employeeEmails.map(async (email) => {
-        //  console.log("Looking up location for email:", email);
-        const locationQuery = query(locationsRef, where("email", "==", email));
-        const locationSnapshot = await getDocs(locationQuery);
+//       // Fetch locations from persistentClockIns collection
+//       const clockInsRef = collection(db, "persistentClockIns");
+//       const locationPromises = employeeIds.map(async (employeeId) => {
+//         const clockInQuery = query(
+//           clockInsRef,
+//           where("employeeId", "==", employeeId),
+//           where("status", "==", "active"),
+//           orderBy("clockInTime", "desc")
+//         );
 
-        const locationData = locationSnapshot.docs[0]?.data();
-        if (locationData) {
-          //console.log("Found location data for", email, ":", locationData);
-          return {
-            ...locationData,
-            email: email,
-          };
-        }
-        return null;
-      });
+//         const clockInSnapshot = await getDocs(clockInQuery);
+//         const clockInData = clockInSnapshot.docs[0]?.data();
 
-      const employeeData = (await Promise.all(locationPromises))
-        .filter(Boolean)
-        .filter((emp) => emp.latitude && emp.longitude);
+//         if (clockInData && clockInData.location) {
+//           return {
+//             employeeId: employeeId,
+//             name: clockInData.employeeName,
+//             email: clockInData.employeeEmail,
+//             latitude: clockInData.location.latitude,
+//             longitude: clockInData.location.longitude,
+//             clockInTime: clockInData.clockInTime,
+//             companyName: clockInData.companyName,
+//           };
+//         }
+//         return null;
+//       });
 
-      //console.log("Final employee data with locations:", employeeData);
-      setEmployees(employeeData);
+//       const employeeData = (await Promise.all(locationPromises))
+//         .filter(Boolean)
+//         .filter((emp) => emp.latitude && emp.longitude);
 
-      if (employeeData.length === 0) {
-        Alert.alert(
-          "No Locations Found",
-          "None of your employees have shared their location yet."
-        );
-      }
-    } catch (error) {
-      console.error("Error fetching employee locations:", error);
-      Alert.alert(
-        "Error",
-        "Failed to load employee locations: " + error.message
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+//       setEmployees(employeeData);
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Text>Loading employee locations...</Text>
-      </View>
-    );
-  }
+//       if (employeeData.length === 0) {
+//         Alert.alert(
+//           "No Active Clock-ins",
+//           "None of your employees have active clock-ins with location data."
+//         );
+//       }
+//     } catch (error) {
+//       console.error("Error fetching employee locations:", error);
+//       Alert.alert(
+//         "Error",
+//         "Failed to load employee locations: " + error.message
+//       );
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
 
-  return (
-    <View style={styles.container}>
-      <MapView
-        provider={PROVIDER_GOOGLE}
-        style={styles.map}
-        initialRegion={{
-          // Use a default location (e.g., city center) if no employees have locations
-          latitude: employees[0]?.latitude || 37.7749, // Default to San Francisco
-          longitude: employees[0]?.longitude || -122.4194,
-          latitudeDelta: 0.122,
-          longitudeDelta: 0.221,
-        }}
-      >
-        {employees.map((employee, index) => {
-          // Add validation check
-          if (!employee.latitude || !employee.longitude) return null;
+//   if (loading) {
+//     return (
+//       <View style={styles.loadingContainer}>
+//         <Text>Loading employee locations...</Text>
+//       </View>
+//     );
+//   }
 
-          // console.log("Rendering marker for:", employee.name, {
-          //   lat: employee.latitude,
-          //   lng: employee.longitude,
-          // });
+//   return (
+//     <View style={styles.container}>
+//       <MapView
+//         provider={PROVIDER_GOOGLE}
+//         style={styles.map}
+//         initialRegion={{
+//           latitude: employees[0]?.latitude || 21.1458, // Default to India
+//           longitude: employees[0]?.longitude || 79.0882,
+//           latitudeDelta: 0.122,
+//           longitudeDelta: 0.221,
+//         }}
+//       >
+//         {employees.map((employee, index) => {
+//           if (!employee.latitude || !employee.longitude) return null;
 
-          return (
-            <Marker
-              key={index}
-              coordinate={{
-                latitude: parseFloat(employee.latitude),
-                longitude: parseFloat(employee.longitude),
-              }}
-              title={employee.name || "Employee"}
-              description={employee.email || ""}
-            />
-          );
-        })}
-      </MapView>
-    </View>
-  );
-};
+//           return (
+//             <Marker
+//               key={index}
+//               coordinate={{
+//                 latitude: parseFloat(employee.latitude),
+//                 longitude: parseFloat(employee.longitude),
+//               }}
+//               title={`${employee.name}`}
+//             />
+//           );
+//         })}
+//       </MapView>
+//     </View>
+//   );
+// };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  map: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-});
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//   },
+//   map: {
+//     flex: 1,
+//   },
+//   loadingContainer: {
+//     flex: 1,
+//     justifyContent: "center",
+//     alignItems: "center",
+//   },
+// });
 
-export default AllEmpLoc;
+// export default AllEmpLoc;

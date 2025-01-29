@@ -17,8 +17,10 @@ import {
   getDoc,
   query,
   where,
+  orderBy,
+  limit,
 } from "firebase/firestore";
-import { COLORS, SHADOWS } from "../../constants/theme"; // Adjust the path as necessary
+import { COLORS, SHADOWS } from "../../constants/theme";
 
 const ManagerEmployeeList = ({ navigation }) => {
   const [employees, setEmployees] = useState([]);
@@ -65,34 +67,42 @@ const ManagerEmployeeList = ({ navigation }) => {
 
   const handleLocationPress = async (employee) => {
     try {
-      const locationDoc = await getDoc(
-        doc(db, "employeeLocations", employee.id)
+      // Query the persistentClockIns collection using employeeId
+      const clockInsRef = collection(db, "persistentClockIns");
+      const clockInsQuery = query(
+        clockInsRef,
+        where("employeeId", "==", employee.id),
+        where("status", "==", "active"),
+        orderBy("clockInTime", "desc"),
+        limit(1)
       );
 
-      if (locationDoc.exists()) {
-        const locationData = locationDoc.data();
-        navigation.navigate("managerLocationTracking", {
-          employeeName: employee.name,
-          employeeEmail: employee.email,
-          latitude: locationData.latitude,
-          longitude: locationData.longitude,
-        });
-      } else {
-        const userDoc = await getDoc(doc(db, "users", employee.id));
-        if (userDoc.exists() && userDoc.data().lastLocation) {
-          const { lastLocation } = userDoc.data();
+      const clockInsSnapshot = await getDocs(clockInsQuery);
+
+      if (!clockInsSnapshot.empty) {
+        const clockInData = clockInsSnapshot.docs[0].data();
+
+        // Check if location data exists
+        if (clockInData.location?.latitude && clockInData.location?.longitude) {
           navigation.navigate("managerLocationTracking", {
-            employeeName: employee.name,
-            employeeEmail: employee.email,
-            latitude: lastLocation.latitude,
-            longitude: lastLocation.longitude,
+            employeeName: clockInData.employeeName,
+            employeeEmail: clockInData.employeeEmail,
+            latitude: clockInData.location.latitude,
+            longitude: clockInData.location.longitude,
+            lastUpdated: clockInData.clockInTime,
+            companyName: clockInData.companyName,
           });
         } else {
           Alert.alert(
             "No Location",
-            "No location data available for this employee"
+            "No location data available in the latest clock-in"
           );
         }
+      } else {
+        Alert.alert(
+          "No Clock-in",
+          "No active clock-in found for this employee"
+        );
       }
     } catch (error) {
       console.error("Error fetching location:", error);
@@ -111,10 +121,7 @@ const ManagerEmployeeList = ({ navigation }) => {
         navigation.navigate("adminEmployeeProfile", { employeeId: item.id })
       }
     >
-      <Image
-        source={{ uri: item.profileImage }} // Use the profile image from Firebase
-        style={styles.employeeImage}
-      />
+      <Image source={{ uri: item.profileImage }} style={styles.employeeImage} />
       <View style={styles.employeeInfo}>
         <Text style={styles.employeeName}>{item.name}</Text>
         <Text style={styles.employeeRole}>{item.department}</Text>
