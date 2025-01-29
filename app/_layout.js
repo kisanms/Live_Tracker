@@ -19,6 +19,7 @@ import ManagerUnderEmp from "./Screens/Admin/ManagerUnderEmp";
 import AdminProfile from "./Screens/Admin/Profile";
 import AdminsManagerProfile from "./Screens/Admin/AdminsManagerProfile";
 import AdminsEmployeeProfile from "./Screens/Admin/AdminsEmployeeProfile";
+import AllStaffWorkHour from "./Screens/Admin/AllStaffWorkHour";
 
 // Manager Screens
 import ManagerDashboard from "./Screens/Manager/Dashboard";
@@ -27,12 +28,12 @@ import ManagerLocationTracking from "./Screens/Manager/LocationTracking";
 import AllEmpLoc from "./Screens/Manager/AllEmpLoc";
 import EmployeeLocNoti from "./Screens/Manager/EmployeeLocNoti";
 import ManagerProfile from "./Screens/Manager/Profile";
+import AllEmpWorkHour from "./Screens/Manager/AllEmpWorkHour";
 
 // Employee Screens
 import EmployeeDashboard from "./Screens/Employee/Dashboard";
 import EmployeeProfile from "./Screens/Employee/Profile";
 import Maps from "./Screens/Maps";
-import AllEmpWorkHour from "./Screens/Manager/AllEmpWorkHour";
 
 const Stack = createNativeStackNavigator();
 
@@ -107,6 +108,11 @@ const RootLayout = ({ initialUser }) => {
       <Stack.Screen
         name="adminEmployeeProfile"
         component={AdminsEmployeeProfile}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="allStaffWorkHour"
+        component={AllStaffWorkHour}
         options={{ headerShown: false }}
       />
 

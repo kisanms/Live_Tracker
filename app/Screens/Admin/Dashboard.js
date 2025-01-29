@@ -346,7 +346,10 @@ const AdminDashboard = ({ navigation }) => {
             <Ionicons name="people" size={24} color={COLORS.primary} />
             <Text style={styles.actionText}>All Staff Location</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.actionCard, { width: "48%" }]}>
+          <TouchableOpacity
+            style={[styles.actionCard, { width: "48%" }]}
+            onPress={() => navigation.navigate("allStaffWorkHour")}
+          >
             <Ionicons name="time" size={24} color="#4A90E2" />
             <Text style={styles.actionText}>Work Hour</Text>
           </TouchableOpacity>
