@@ -19,6 +19,8 @@ import {
 import { StatusBar } from "expo-status-bar";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useNavigation } from "@react-navigation/native";
+import { auth } from "../firebase";
+import { sendPasswordResetEmail } from "firebase/auth";
 
 const styles = StyleSheet.create({
   container: {
@@ -107,39 +109,47 @@ export default function ForgotPassword() {
   const navigation = useNavigation();
   const [loading, setLoading] = useState(false);
   const emailRef = useRef("");
-  const passwordRef = useRef("");
-  const confirmPasswordRef = useRef("");
 
   const handleReset = async () => {
-    if (
-      !emailRef.current ||
-      !passwordRef.current ||
-      !confirmPasswordRef.current
-    ) {
-      Alert.alert("Reset Password", "Please fill all the details!");
-      return;
-    }
-
-    if (passwordRef.current !== confirmPasswordRef.current) {
-      Alert.alert("Reset Password", "Passwords do not match!");
+    if (!emailRef.current) {
+      Alert.alert("Reset Password", "Please enter your email address!");
       return;
     }
 
     setLoading(true);
 
     try {
-      // Add logic for password reset here
-      setTimeout(() => {
-        setLoading(false);
-        Alert.alert(
-          "Reset Successful",
-          "Your password has been updated successfully."
-        );
-        navigation.navigate("signIn");
-      }, 2000);
+      await sendPasswordResetEmail(auth, emailRef.current);
+      setLoading(false);
+      Alert.alert(
+        "Reset Email Sent",
+        "Please check your email for password reset instructions.",
+        [
+          {
+            text: "OK",
+            onPress: () => navigation.navigate("signIn"),
+          },
+        ]
+      );
     } catch (error) {
       setLoading(false);
-      Alert.alert("Reset Failed", error.message || "Something went wrong!");
+      let errorMessage = "Something went wrong!";
+
+      switch (error.code) {
+        case "auth/invalid-email":
+          errorMessage = "Please enter a valid email address.";
+          break;
+        case "auth/user-not-found":
+          errorMessage = "No account exists with this email address.";
+          break;
+        case "auth/too-many-requests":
+          errorMessage = "Too many attempts. Please try again later.";
+          break;
+        default:
+          errorMessage = error.message;
+      }
+
+      Alert.alert("Reset Failed", errorMessage);
     }
   };
 
@@ -155,7 +165,6 @@ export default function ForgotPassword() {
         <View style={styles.contentContainer}>
           <StatusBar style="dark" />
 
-          {/* Header Image */}
           <View style={styles.headerContainer}>
             <Image
               style={styles.headerImage}
@@ -164,7 +173,6 @@ export default function ForgotPassword() {
             <Text style={styles.title}>Reset Password</Text>
           </View>
 
-          {/* Email Input */}
           <View style={styles.inputContainer}>
             <Octicons name="mail" size={hp(2.7)} color="#666" />
             <TextInput
@@ -172,34 +180,12 @@ export default function ForgotPassword() {
               style={styles.input}
               placeholder="Email address"
               placeholderTextColor="#999"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
             />
           </View>
 
-          {/* New Password Input */}
-          <View style={styles.inputContainer}>
-            <Octicons name="lock" size={hp(2.7)} color="#666" />
-            <TextInput
-              onChangeText={(value) => (passwordRef.current = value)}
-              style={styles.input}
-              placeholder="New Password"
-              secureTextEntry
-              placeholderTextColor="#999"
-            />
-          </View>
-
-          {/* Confirm Password Input */}
-          <View style={styles.inputContainer}>
-            <Octicons name="lock" size={hp(2.7)} color="#666" />
-            <TextInput
-              onChangeText={(value) => (confirmPasswordRef.current = value)}
-              style={styles.input}
-              placeholder="Confirm Password"
-              secureTextEntry
-              placeholderTextColor="#999"
-            />
-          </View>
-
-          {/* Submit Button */}
           <TouchableOpacity
             style={[styles.button, { opacity: loading ? 0.7 : 1 }]}
             onPress={handleReset}
@@ -215,12 +201,11 @@ export default function ForgotPassword() {
                   fontWeight: "bold",
                 }}
               >
-                Reset Password
+                Send Reset Link
               </Text>
             )}
           </TouchableOpacity>
 
-          {/* Back to Sign In */}
           <View style={styles.linkContainer}>
             <Text style={styles.linkText}>Remember your credentials? </Text>
             <TouchableOpacity onPress={() => navigation.navigate("signIn")}>
