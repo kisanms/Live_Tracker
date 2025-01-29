@@ -166,6 +166,8 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
 - **Jan 27**
   - For both emp and manager when clock in there location info will be share
   - Changes in maps.js file
+- **Jan 28**
+  
     
  
 
