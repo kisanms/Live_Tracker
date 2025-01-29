@@ -127,18 +127,7 @@ const EmployeeList = ({ navigation }) => {
       <View style={styles.employeeInfo}>
         <Text style={styles.employeeName}>{item.name}</Text>
         <Text style={styles.employeeRole}>{item.department}</Text>
-        <View style={styles.statusContainer}>
-          <View
-            style={[
-              styles.statusDot,
-              {
-                backgroundColor:
-                  item.status === "Active" ? COLORS.success : COLORS.gray,
-              },
-            ]}
-          />
-          <Text style={styles.statusText}>{item.status}</Text>
-        </View>
+        <Text style={styles.employeeRole}>{item.email}</Text>
       </View>
       <View style={styles.actions}>
         <TouchableOpacity

@@ -16,6 +16,9 @@ import {
   onSnapshot,
   getDoc,
   doc,
+  orderBy,
+  limit,
+  getDocs,
 } from "firebase/firestore";
 import { db } from "../../firebase";
 import { auth } from "../../firebase";
@@ -73,25 +76,37 @@ const ManagerList = ({ navigation }) => {
 
   const handleLocationPress = async (manager) => {
     try {
-      // First check in managerLocations collection
-      const locationDoc = await getDoc(doc(db, "managerLocations", manager.id));
+      // Query the persistentClockIns collection using managerId
+      const clockInsRef = collection(db, "persistentClockIns");
+      const q = query(
+        clockInsRef,
+        where("managerId", "==", manager.id),
+        orderBy("timestamp", "desc"),
+        limit(1)
+      );
 
-      if (
-        locationDoc.exists() &&
-        locationDoc.data().latitude &&
-        locationDoc.data().longitude
-      ) {
-        const locationData = locationDoc.data();
-        navigation.navigate("adminLocationTracking", {
-          employeeName: manager.name,
-          employeeEmail: manager.email,
-          latitude: locationData.latitude,
-          longitude: locationData.longitude,
-        });
-        return;
+      const clockInSnapshot = await getDocs(q);
+
+      if (!clockInSnapshot.empty) {
+        const clockInData = clockInSnapshot.docs[0].data();
+
+        if (
+          clockInData.location &&
+          clockInData.location.latitude &&
+          clockInData.location.longitude
+        ) {
+          navigation.navigate("adminLocationTracking", {
+            employeeName: manager.name,
+            employeeEmail: manager.email,
+            latitude: clockInData.location.latitude,
+            longitude: clockInData.location.longitude,
+            timestamp: clockInData.timestamp,
+          });
+          return;
+        }
       }
 
-      // If not found in managerLocations, check in users collection
+      // Fallback to checking users collection if no clock-in data found
       const userDoc = await getDoc(doc(db, "users", manager.id));
       if (
         userDoc.exists() &&
@@ -109,10 +124,10 @@ const ManagerList = ({ navigation }) => {
         return;
       }
 
-      // If no location data found
+      // If no location data found in either collection
       Alert.alert(
         "Location Unavailable",
-        "This manager's location is not available."
+        "No recent location data available for this manager."
       );
     } catch (error) {
       console.error("Error fetching location:", error);
@@ -140,7 +155,7 @@ const ManagerList = ({ navigation }) => {
           <Text style={styles.managerName}>{item.name}</Text>
           <Text style={styles.department}>{item.department}</Text>
         </View>
-        <View
+        {/*<View
           style={[
             styles.statusBadge,
             {
@@ -165,7 +180,7 @@ const ManagerList = ({ navigation }) => {
           >
             {item.status}
           </Text>
-        </View>
+        </View>*/}
       </View>
 
       <View style={styles.cardFooter}>
