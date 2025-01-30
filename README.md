@@ -1,4 +1,4 @@
-# 📱 Live Tracker - Project Documentation
+# 📱 Live Tracker - Project Documentation <img src="https://github.com/user-attachments/assets/e09885f1-5d95-49cd-8c60-0ed521490483" alt="icon" width="100" align="right">
 
 ## 📋 Table of Contents
 1. [Project Overview](#project-overview)
