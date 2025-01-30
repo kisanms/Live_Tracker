@@ -482,25 +482,25 @@ const EmployeeDashboard = ({ navigation }) => {
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Quick Actions</Text>
       <View style={styles.quickActions}>
-        {/* <TouchableOpacity
+        <TouchableOpacity
           style={[styles.actionButton, { width: "48%" }]}
           onPress={handleShareLocation}
         >
-          <Ionicons name="location" size={24} color="#4A90E2" />
+          <Ionicons name="share" size={24} color="#4A90E2" />
           <Text style={styles.actionText}>Share Location</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.actionButton, { width: "48%" }]}>
+        {/* <TouchableOpacity style={[styles.actionButton, { width: "48%" }]}>
           <Ionicons name="calendar" size={24} color="#4A90E2" />
           <Text style={styles.actionText}>Request Leave</Text>
         </TouchableOpacity> */}
+        <TouchableOpacity
+          style={[styles.actionButton, { width: "48%" }]}
+          onPress={() => setShowChangeManager(true)}
+        >
+          <Ionicons name="person" size={20} color="#4A90E2" />
+          <Text style={styles.actionText}>Change Manager</Text>
+        </TouchableOpacity>
       </View>
-      <TouchableOpacity
-        style={styles.changeManagerButton}
-        onPress={() => setShowChangeManager(true)}
-      >
-        <Ionicons name="person" size={20} color="#4A90E2" />
-        <Text style={styles.changeManagerText}>Change Manager</Text>
-      </TouchableOpacity>
     </View>
   );
 
@@ -802,7 +802,7 @@ const styles = StyleSheet.create({
   quickActions: {
     flexDirection: "row",
     justifyContent: "space-between",
-    flexWrap: "wrap",
+    alignItems: "center",
   },
   actionButton: {
     backgroundColor: "#fff",
@@ -810,7 +810,8 @@ const styles = StyleSheet.create({
     padding: 15,
     alignItems: "center",
     elevation: 2,
-    marginBottom: 10,
+    height: 90,
+    justifyContent: "center",
   },
   actionText: {
     marginTop: 8,

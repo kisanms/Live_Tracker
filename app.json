@@ -1,10 +1,10 @@
 {
   "expo": {
     "name": "Active Tracker",
-    "slug": "Active Tracker",
-    "version": "2.9.0",
+    "slug": "Live_Tracker",
+    "version": "3.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon-512.png",
+    "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -45,9 +45,9 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/icon-512.png",
+          "image": "./assets/images/icon-splash.png",
           "imageWidth": 200,
-          "resizeMode": "contain",
+          "resizeMode": "cover",
           "backgroundColor": "#2196f3"
         }
       ],
