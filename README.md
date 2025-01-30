@@ -170,7 +170,8 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
   - Work hour file is created
   - Now we can the location data when clockin and clock out.
 - **Jan 29**
-  -Manager clockin data store in workhour and Persistent clockin db 
+  - Manager clockin data store in workhour and Persistent clockin db
+  - Admin's active now is working for manager 
     
  
 
