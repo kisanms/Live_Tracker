@@ -222,6 +222,9 @@ export default function SignIn() {
       let msg = error.message;
       if (msg.includes("(auth/invalid-credential)")) msg = "User not found";
       if (msg.includes("(auth/invalid-email)")) msg = "Invalid email address";
+      if (msg.includes("(auth/wrong-password)")) msg = "Invalid password";
+      if (msg.includes("(auth/network-request-failed)"))
+        msg = "Please check your internet connection";
       Alert.alert("SignIn", msg || "Failed to sign in");
     } finally {
       setLoading(false);
