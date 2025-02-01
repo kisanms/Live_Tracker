@@ -175,7 +175,10 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
   - Workhour data in admin showing for both emp and manager
   - Reset Password working now
 - **Jan 30**
-  -Finally the app is completed
+  - Finally the app is completed
+- **Jan 31**
+  - Because of free tier of firebase server issues occur
+
  
 
 ## 🎉 Features Implementation
