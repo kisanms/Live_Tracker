@@ -179,7 +179,7 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
 - **Jan 31**
   - Because of free tier of firebase server issues occur
 - **Feb 1**
-  -
+  - Testing phase
   
  
 
