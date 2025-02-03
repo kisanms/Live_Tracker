@@ -143,21 +143,6 @@ const ManagerDashboard = ({ navigation }) => {
     ]);
   };
 
-  // const handleShareLocation = () => {
-  //   if (!managerData?.name || !managerData?.email) {
-  //     Alert.alert("Error", "Manager data is not loaded yet.");
-  //     return;
-  //   }
-
-  //   navigation.navigate("maps", {
-  //     userRole: "manager",
-  //     userData: {
-  //       name: managerData.name,
-  //       email: managerData.email,
-  //     },
-  //   });
-  // };
-
   const handlePersistentClockIn = async () => {
     try {
       const currentTime = new Date();

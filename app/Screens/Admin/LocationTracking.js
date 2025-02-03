@@ -37,15 +37,15 @@ const AdminLocationTracking = ({ route, navigation }) => {
     setLoading(false);
   }, [latitude, longitude]);
 
-  const openGoogleMaps = () => {
-    if (markerLocation) {
-      const { latitude, longitude } = markerLocation;
-      const url = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
-      Linking.openURL(url);
-    } else {
-      Alert.alert("Error", "Location data is not available.");
-    }
-  };
+  // const openGoogleMaps = () => {
+  //   if (markerLocation) {
+  //     const { latitude, longitude } = markerLocation;
+  //     const url = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
+  //     Linking.openURL(url);
+  //   } else {
+  //     Alert.alert("Error", "Location data is not available.");
+  //   }
+  // };
 
   if (loading) {
     return (
@@ -91,12 +91,9 @@ const AdminLocationTracking = ({ route, navigation }) => {
           <View style={styles.infoCard}>
             <Text style={styles.employeeName}>{employeeName}</Text>
             <Text style={styles.employeeEmail}>{employeeEmail}</Text>
-            <Text style={styles.coordinatesText}>
-              Lat: {latitude.toFixed(6)}, Long: {longitude.toFixed(6)}
-            </Text>
           </View>
 
-          <TouchableOpacity
+          {/*<TouchableOpacity
             style={styles.seeLocationButton}
             onPress={openGoogleMaps}
           >
@@ -104,7 +101,7 @@ const AdminLocationTracking = ({ route, navigation }) => {
             <Text style={styles.seeLocationButtonText}>
               Open in Google Maps
             </Text>
-          </TouchableOpacity>
+          </TouchableOpacity>*/}
         </View>
       ) : (
         <View style={styles.errorContainer}>
