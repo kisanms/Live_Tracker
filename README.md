@@ -181,7 +181,7 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
 - **Feb 1**
   - Testing phase
 - **Feb 3**
-  - Testing phase
+  - Changes in admin managerList where location data is fetching from managerslocation, but that was wrong
   
  
 
