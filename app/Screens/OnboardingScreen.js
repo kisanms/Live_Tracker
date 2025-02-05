@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, memo } from "react";
 import {
   SafeAreaView,
   Image,
@@ -9,7 +9,9 @@ import {
   StatusBar,
   TouchableOpacity,
   ImageBackground,
-  ActivityIndicator, // For smooth loading
+  ActivityIndicator,
+  Animated,
+  Dimensions,
 } from "react-native";
 import {
   widthPercentageToDP as wp,
@@ -19,15 +21,23 @@ import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { auth, db } from "../firebase";
+import { LinearGradient } from "expo-linear-gradient";
 
-const COLORS = { primary: "#0170db", white: "#fff", grey: "#d3d3d3" };
+const { width } = Dimensions.get("window");
+
+const COLORS = {
+  primary: "#0170db",
+  white: "#fff",
+  grey: "#d3d3d3",
+  black: "#000",
+  overlay: "rgba(0,0,0,0.3)",
+};
 
 const slides = [
-  // Slides data
   {
     id: "1",
     image: require("../../assets/images/map2.jpg"),
-    title: "Welcome To Live Tracking System",
+    title: "Welcome To Active Tracker System",
     subtitle:
       "Efficiently track employee data in real-time for better management.",
   },
@@ -49,29 +59,91 @@ const slides = [
     title: "Sign In to Your Account",
     subtitle: "Log in to your app to manage your business and employees.",
   },
+  {
+    id: "5",
+    image: require("../../assets/images/map5.jpg"),
+    title: "Location Access Required",
+    subtitle:
+      "Please allow location access 'Always' to enable real-time tracking and ensure accurate attendance monitoring.",
+  },
 ];
+
+// Memoized Slide component
+const Slide = memo(({ item }) => (
+  <View style={styles.slideContainer}>
+    <Image source={item.image} style={styles.image} />
+    <LinearGradient
+      colors={["transparent", COLORS.overlay]}
+      style={styles.gradient}
+    />
+    <View style={styles.textContainer}>
+      <Text style={styles.title}>{item.title}</Text>
+      <Text style={styles.subtitle}>{item.subtitle}</Text>
+    </View>
+  </View>
+));
+
+// Memoized Dot component
+const Dot = memo(({ animatedStyle }) => (
+  <Animated.View style={[styles.dot, animatedStyle]} />
+));
+
+// Memoized Pagination component
+const Pagination = memo(({ scrollX }) => {
+  return (
+    <View style={styles.pagination}>
+      {slides.map((_, index) => {
+        const inputRange = [
+          (index - 1) * width,
+          index * width,
+          (index + 1) * width,
+        ];
+
+        const scale = scrollX.interpolate({
+          inputRange,
+          outputRange: [0.8, 1.4, 0.8],
+          extrapolate: "clamp",
+        });
+
+        const opacity = scrollX.interpolate({
+          inputRange,
+          outputRange: [0.4, 1, 0.4],
+          extrapolate: "clamp",
+        });
+
+        return (
+          <Dot
+            key={index}
+            animatedStyle={{
+              opacity,
+              transform: [{ scale }],
+            }}
+          />
+        );
+      })}
+    </View>
+  );
+});
 
 const OnboardingScreen = ({ navigation }) => {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-  const [isLoading, setIsLoading] = useState(true); // Loading state
-  const ref = React.useRef();
+  const [isLoading, setIsLoading] = useState(true);
+  const scrollX = React.useRef(new Animated.Value(0)).current;
+  const flatListRef = React.useRef();
 
   useEffect(() => {
     const initialize = async () => {
-      // Add a delay to show the loader
       await new Promise((resolve) => setTimeout(resolve, 1000));
-
       const hasSeenOnboarding = await AsyncStorage.getItem("hasSeenOnboarding");
       if (hasSeenOnboarding) {
         navigation.replace("signIn");
       } else {
-        setIsLoading(false); // Stop loading when onboarding should show
+        setIsLoading(false);
       }
     };
 
     initialize();
 
-    // Auth state listener
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         const userDoc = await getDoc(doc(db, "users", user.uid));
@@ -106,19 +178,29 @@ const OnboardingScreen = ({ navigation }) => {
     navigation.replace("signIn");
   };
 
-  const goToNextSlide = () => {
-    const nextSlideIndex = currentSlideIndex + 1;
-    if (nextSlideIndex < slides.length) {
-      ref.current.scrollToOffset({ offset: nextSlideIndex * wp(100) });
-      setCurrentSlideIndex(nextSlideIndex);
-    }
-  };
+  const keyExtractor = React.useCallback((item) => item.id, []);
 
-  const skip = () => {
-    const lastSlideIndex = slides.length - 1;
-    ref.current.scrollToOffset({ offset: lastSlideIndex * wp(100) });
-    setCurrentSlideIndex(lastSlideIndex);
-  };
+  const renderItem = React.useCallback(({ item }) => <Slide item={item} />, []);
+
+  const onMomentumScrollEnd = React.useCallback((e) => {
+    const contentOffsetX = e.nativeEvent.contentOffset.x;
+    const currentIndex = Math.round(contentOffsetX / width);
+    setCurrentSlideIndex(currentIndex);
+  }, []);
+
+  const onSkip = React.useCallback(() => {
+    flatListRef.current?.scrollToOffset({
+      offset: (slides.length - 1) * width,
+    });
+    setCurrentSlideIndex(slides.length - 1);
+  }, []);
+
+  const onNext = React.useCallback(() => {
+    flatListRef.current?.scrollToOffset({
+      offset: (currentSlideIndex + 1) * width,
+    });
+    setCurrentSlideIndex(currentSlideIndex + 1);
+  }, [currentSlideIndex]);
 
   if (isLoading) {
     return (
@@ -129,73 +211,87 @@ const OnboardingScreen = ({ navigation }) => {
   }
 
   return (
-    <ImageBackground
-      source={require("../../assets/images/bg.jpg")}
-      style={styles.backgroundImage}
-    >
-      <SafeAreaView style={styles.container}>
-        <StatusBar style="light" backgroundColor="#0067dc" />
-        <FlatList
-          ref={ref}
-          horizontal
-          pagingEnabled
-          data={slides}
-          renderItem={({ item }) => (
-            <View style={styles.slideContainer}>
-              <Image source={item.image} style={styles.image} />
-              <Text style={styles.title}>{item.title}</Text>
-              <Text style={styles.subtitle}>{item.subtitle}</Text>
-            </View>
-          )}
-          showsHorizontalScrollIndicator={false}
-          onMomentumScrollEnd={(e) => {
-            const contentOffsetX = e.nativeEvent.contentOffset.x;
-            const currentIndex = Math.round(contentOffsetX / wp(100));
-            setCurrentSlideIndex(currentIndex);
-          }}
-        />
-        <View style={styles.footer}>
-          <View style={styles.indicatorContainer}>
-            {slides.map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.indicator,
-                  currentSlideIndex === index && styles.activeIndicator,
-                ]}
-              />
-            ))}
-          </View>
-          <View style={styles.buttonContainer}>
+    <View style={styles.container}>
+      <StatusBar translucent backgroundColor="transparent" />
+      <ImageBackground
+        source={require("../../assets/images/bg.jpg")}
+        style={styles.backgroundImage}
+      >
+        <SafeAreaView style={styles.safeArea}>
+          <Animated.FlatList
+            ref={flatListRef}
+            data={slides}
+            renderItem={renderItem}
+            keyExtractor={keyExtractor}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onScroll={Animated.event(
+              [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+              { useNativeDriver: true }
+            )}
+            scrollEventThrottle={16}
+            onMomentumScrollEnd={onMomentumScrollEnd}
+            initialNumToRender={1}
+            maxToRenderPerBatch={1}
+            windowSize={3}
+            removeClippedSubviews={true}
+          />
+          <View style={styles.footer}>
+            <Pagination scrollX={scrollX} />
             {currentSlideIndex === slides.length - 1 ? (
               <TouchableOpacity
                 style={styles.getStartedButton}
                 onPress={markOnboardingComplete}
+                activeOpacity={0.8}
               >
-                <Text style={styles.getStartedText}>GET STARTED</Text>
+                <LinearGradient
+                  colors={[COLORS.primary, "#0051a8"]}
+                  style={styles.buttonGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  <Text style={styles.getStartedText}>GET STARTED</Text>
+                </LinearGradient>
               </TouchableOpacity>
             ) : (
               <View style={styles.buttonRow}>
-                <TouchableOpacity style={styles.skipButton} onPress={skip}>
+                <TouchableOpacity
+                  style={styles.skipButton}
+                  onPress={onSkip}
+                  activeOpacity={0.8}
+                >
                   <Text style={styles.skipText}>SKIP</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.nextButton}
-                  onPress={goToNextSlide}
+                  onPress={onNext}
+                  activeOpacity={0.8}
                 >
-                  <Text style={styles.nextText}>NEXT</Text>
+                  <LinearGradient
+                    colors={[COLORS.primary, "#0051a8"]}
+                    style={styles.buttonGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                  >
+                    <Text style={styles.nextText}>NEXT</Text>
+                  </LinearGradient>
                 </TouchableOpacity>
               </View>
             )}
           </View>
-        </View>
-      </SafeAreaView>
-    </ImageBackground>
+        </SafeAreaView>
+      </ImageBackground>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    backgroundColor: COLORS.black,
+  },
+  safeArea: {
     flex: 1,
   },
   backgroundImage: {
@@ -209,65 +305,79 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
   },
   slideContainer: {
+    width,
+    height: "100%",
     alignItems: "center",
-    width: wp(100),
   },
   image: {
     width: wp(100),
-    height: hp(32),
-    resizeMode: "contain",
-    marginTop: hp(-0.8),
+    height: hp(45),
+    resizeMode: "cover",
+  },
+  gradient: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: hp(40),
+  },
+  textContainer: {
+    position: "absolute",
+    bottom: hp(25),
+    width: wp(90),
+    alignItems: "center",
   },
   title: {
     color: COLORS.white,
     fontSize: wp(7),
     fontWeight: "bold",
-    marginTop: hp(10),
     textAlign: "center",
+    marginBottom: hp(2),
+    textShadowColor: "rgba(0, 0, 0, 0.75)",
+    textShadowOffset: { width: -1, height: 1 },
+    textShadowRadius: 10,
   },
   subtitle: {
     color: COLORS.white,
     fontSize: wp(4),
-    marginTop: hp(2),
-    maxWidth: wp(80),
     textAlign: "center",
-    lineHeight: hp(2.5),
+    lineHeight: hp(3),
+    opacity: 0.8,
+    textShadowColor: "rgba(0, 0, 0, 0.75)",
+    textShadowOffset: { width: -1, height: 1 },
+    textShadowRadius: 10,
   },
   footer: {
-    height: hp(25),
-    justifyContent: "space-between",
+    position: "absolute",
+    bottom: hp(5),
+    left: 0,
+    right: 0,
     paddingHorizontal: wp(5),
   },
-  indicatorContainer: {
+  pagination: {
     flexDirection: "row",
     justifyContent: "center",
-    marginTop: hp(2),
+    alignItems: "center",
+    marginBottom: hp(4),
   },
-  indicator: {
-    height: hp(1),
-    width: wp(4),
-    backgroundColor: COLORS.grey,
-    marginHorizontal: wp(1),
-    borderRadius: hp(0.5),
-  },
-  activeIndicator: {
+  dot: {
+    height: hp(1.2),
+    width: wp(2.5),
     backgroundColor: COLORS.white,
-    width: wp(6),
-  },
-  buttonContainer: {
-    marginBottom: hp(2),
+    marginHorizontal: wp(1),
+    borderRadius: hp(0.6),
   },
   buttonRow: {
     flexDirection: "row",
     justifyContent: "space-between",
+    height: hp(7),
   },
   skipButton: {
     flex: 1,
-    height: hp(6),
-    borderWidth: 1,
-    borderColor: COLORS.white,
     justifyContent: "center",
     alignItems: "center",
+    borderWidth: 1,
+    borderColor: COLORS.white,
     borderRadius: wp(2),
     marginRight: wp(2),
   },
@@ -278,28 +388,28 @@ const styles = StyleSheet.create({
   },
   nextButton: {
     flex: 1,
-    height: hp(6),
-    backgroundColor: COLORS.white,
-    justifyContent: "center",
-    alignItems: "center",
     borderRadius: wp(2),
+    overflow: "hidden",
   },
   nextText: {
-    color: COLORS.primary,
+    color: COLORS.white,
     fontSize: wp(4),
     fontWeight: "bold",
   },
   getStartedButton: {
-    height: hp(6),
-    backgroundColor: COLORS.white,
-    justifyContent: "center",
-    alignItems: "center",
+    height: hp(7),
     borderRadius: wp(2),
+    overflow: "hidden",
   },
   getStartedText: {
-    color: COLORS.primary,
+    color: COLORS.white,
     fontSize: wp(4.5),
     fontWeight: "bold",
+  },
+  buttonGradient: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 
