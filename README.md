@@ -180,6 +180,9 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
   - Because of free tier of firebase server issues occur
 - **Feb 1**
   - Testing phase
+- **Feb 3**
+  - Changes in admin managerList where location data is fetching from managerslocation, but that was wrong
+  - Issue has been solved
   
  
 
