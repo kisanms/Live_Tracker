@@ -323,15 +323,24 @@ const ManagerDashboard = ({ navigation }) => {
   };
 
   const teamStats = [
-    { title: "Team Members", count: teamCount, icon: "people" },
-    { title: "Active Now", count: activeCount, icon: "radio-button-on" },
-    { title: "On Leave", count: 2, icon: "calendar" },
+    {
+      title: "Team Members",
+      count: teamCount,
+      icon: "people",
+      gradient: ["#4A90E2", "#357ABD"],
+    },
+    {
+      title: "Active Now",
+      count: activeCount,
+      icon: "radio-button-on",
+      gradient: ["#2ECC71", "#27AE60"],
+    },
   ];
 
   if (!managerData) {
     return (
       <View style={styles.loadingContainer}>
-        <Text>Loading...</Text>
+        <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
   }
@@ -349,14 +358,10 @@ const ManagerDashboard = ({ navigation }) => {
       }
     >
       <View style={styles.header}>
-        <View>
+        <View style={styles.headerContent}>
           <Text style={styles.dateText}>{currentDate}</Text>
           <Text style={styles.welcomeText}>
-            Welcome back{" "}
-            <Text style={{ fontWeight: "bold", color: "#4A90E2" }}>
-              Manager
-            </Text>
-            ,
+            Welcome back, <Text style={styles.managerTitle}>Manager</Text>
           </Text>
           <Text style={styles.managerName}>{managerData.name}</Text>
         </View>
@@ -366,6 +371,7 @@ const ManagerDashboard = ({ navigation }) => {
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => navigation.navigate("managerProfile")}
+            style={styles.profileImageContainer}
           >
             <Image
               source={{
@@ -382,7 +388,9 @@ const ManagerDashboard = ({ navigation }) => {
       <View style={styles.statsContainer}>
         {teamStats.map((stat, index) => (
           <View key={index} style={styles.statCard}>
-            <Ionicons name={stat.icon} size={24} color="#4A90E2" />
+            <View style={styles.statIconContainer}>
+              <Ionicons name={stat.icon} size={28} color="#FFF" />
+            </View>
             <Text style={styles.statCount}>{stat.count}</Text>
             <Text style={styles.statTitle}>{stat.title}</Text>
           </View>
@@ -393,51 +401,76 @@ const ManagerDashboard = ({ navigation }) => {
         <Text style={styles.sectionTitle}>Quick Actions</Text>
         <View style={styles.actionButtons}>
           <TouchableOpacity
-            style={[styles.actionButton, { width: "48%" }]}
+            style={[
+              styles.actionButton,
+              isClockedIn && styles.actionButtonActive,
+            ]}
             onPress={handleClockInOut}
           >
-            <Ionicons
-              name={isClockedIn ? "log-out" : "log-in"}
-              size={24}
-              color="#4A90E2"
-            />
-            <Text style={styles.actionText}>
+            <View style={styles.actionIconContainer}>
+              <Ionicons
+                name={isClockedIn ? "log-out" : "log-in"}
+                size={24}
+                color={isClockedIn ? "#FFF" : "#4A90E2"}
+              />
+            </View>
+            <Text
+              style={[
+                styles.actionText,
+                isClockedIn && styles.actionTextActive,
+              ]}
+            >
               {isClockedIn ? "Clock Out" : "Clock In"}
             </Text>
           </TouchableOpacity>
+
           <TouchableOpacity
-            style={[styles.actionButton, { width: "48%" }]}
+            style={styles.actionButton}
             onPress={() => navigation.navigate("managerEmployeeList")}
           >
-            <Ionicons name="people" size={24} color="#4A90E2" />
+            <View style={styles.actionIconContainer}>
+              <Ionicons name="people" size={24} color="#4A90E2" />
+            </View>
             <Text style={styles.actionText}>Team List</Text>
           </TouchableOpacity>
+
           <TouchableOpacity
-            style={[styles.actionButton, { width: "48%" }]}
+            style={styles.actionButton}
             onPress={() => navigation.navigate("EmpLocNoti")}
           >
-            <Ionicons name="location" size={24} color="#4A90E2" />
+            <View style={styles.actionIconContainer}>
+              <Ionicons name="location" size={24} color="#4A90E2" />
+            </View>
             <Text style={styles.actionText}>Current Emp Loc</Text>
           </TouchableOpacity>
+
           <TouchableOpacity
-            style={[styles.actionButton, { width: "48%" }]}
+            style={styles.actionButton}
             onPress={() => navigation.navigate("allEmpLoc")}
           >
-            <Ionicons name="map" size={24} color="#4A90E2" />
+            <View style={styles.actionIconContainer}>
+              <Ionicons name="map" size={24} color="#4A90E2" />
+            </View>
             <Text style={styles.actionText}>All Staff Loc</Text>
           </TouchableOpacity>
+
           <TouchableOpacity
-            style={[styles.actionButton, { width: "48%" }]}
+            style={styles.actionButton}
             onPress={handleShareLocation}
           >
-            <Ionicons name="share-social" size={24} color="#4A90E2" />
+            <View style={styles.actionIconContainer}>
+              <Ionicons name="share-social" size={24} color="#4A90E2" />
+            </View>
             <Text style={styles.actionText}>Share Location</Text>
           </TouchableOpacity>
+
           <TouchableOpacity
-            style={[styles.actionButton, { width: "48%" }]}
+            style={styles.actionButton}
             onPress={() => navigation.navigate("allEmpWorkHour")}
           >
-            <Ionicons name="time" size={24} color="#4A90E2" />
+            <View style={styles.actionIconContainer}>
+              <Ionicons name="time" size={24} color="#4A90E2" />
+            </View>
             <Text style={styles.actionText}>Work Hour</Text>
           </TouchableOpacity>
         </View>
@@ -455,6 +488,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#F5F7FA",
+  },
+  loadingText: {
+    fontSize: 16,
+    color: "#4A90E2",
+    fontWeight: "500",
   },
   header: {
     flexDirection: "row",
@@ -462,51 +501,98 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 20,
     paddingTop: hp(4),
-    backgroundColor: "#fff",
-    elevation: 2,
+    backgroundColor: "#FFF",
+    borderBottomLeftRadius: 25,
+    borderBottomRightRadius: 25,
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  headerContent: {
+    flex: 1,
   },
   dateText: {
-    fontSize: 12,
+    fontSize: 13,
     color: "#666",
     marginBottom: 4,
+    fontWeight: "500",
   },
   welcomeText: {
     fontSize: 16,
     color: "#666",
+    marginBottom: 4,
+  },
+  managerTitle: {
+    color: "#4A90E2",
+    fontWeight: "bold",
   },
   managerName: {
     fontSize: 24,
     fontWeight: "bold",
     color: "#1A1A1A",
   },
-  profileImage: {
-    width: 50,
-    height: 50,
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  profileImageContainer: {
+    borderWidth: 2,
+    borderColor: "#4A90E2",
     borderRadius: 25,
+    padding: 2,
+  },
+  profileImage: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+  },
+  logoutButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: "#F5F7FA",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   statsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     padding: 20,
+    marginTop: 10,
   },
   statCard: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 15,
+    backgroundColor: "#FFF",
+    borderRadius: 16,
+    padding: 20,
     alignItems: "center",
-    width: "31%",
-    elevation: 2,
+    width: "48%",
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  statIconContainer: {
+    backgroundColor: "#4A90E2",
+    borderRadius: 12,
+    padding: 10,
+    marginBottom: 12,
   },
   statCount: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: "bold",
     color: "#1A1A1A",
-    marginTop: 8,
+    marginBottom: 4,
   },
   statTitle: {
-    fontSize: 12,
+    fontSize: 14,
     color: "#666",
-    marginTop: 4,
+    fontWeight: "500",
   },
   quickActions: {
     padding: 20,
