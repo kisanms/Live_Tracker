@@ -411,7 +411,7 @@ const ManagerDashboard = ({ navigation }) => {
               <Ionicons
                 name={isClockedIn ? "log-out" : "log-in"}
                 size={24}
-                color={isClockedIn ? "#FFF" : "#4A90E2"}
+                color={isClockedIn ? "#4A90E2" : "#4A90E2"}
               />
             </View>
             <Text
@@ -616,11 +616,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: "48%",
     elevation: 2,
-  },
-  actionText: {
-    marginTop: 8,
-    color: "#1A1A1A",
-    fontWeight: "500",
   },
   headerRight: {
     flexDirection: "row",
