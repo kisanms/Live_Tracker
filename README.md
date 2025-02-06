@@ -184,7 +184,7 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
   - Changes in admin managerList where location data is fetching from managerslocation, but that was wrong
   - Issue has been solved
 - **Feb 5**
- 
+   - onboard styling improved
   
  
 
