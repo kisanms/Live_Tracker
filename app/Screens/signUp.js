@@ -307,8 +307,14 @@ export default function SignUp() {
       Alert.alert("Success", "Account created successfully!");
       navigation.navigate("signIn");
     } catch (error) {
-      console.error("Registration error:", error);
-      Alert.alert("Error", error.message || "Failed to create account");
+      let msg = error.message;
+      if (msg.includes("(auth/invalid-credential)")) msg = "User not found";
+      if (msg.includes("(auth/invalid-email)")) msg = "Invalid email address";
+      if (msg.includes("(auth/email-already-in-use)."))
+        msg = "Email already in use";
+      if (msg.includes("(auth/network-request-failed)"))
+        msg = "Please check your internet connection";
+      Alert.alert("Error", msg || "Failed to create account");
     } finally {
       setLoading(false);
     }

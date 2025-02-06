@@ -224,7 +224,7 @@ const AdminDashboard = ({ navigation }) => {
         `Key generated successfully!\n\nKey: ${key}\n\nPlease share this key with the manager securely.`,
         [
           {
-            text: "Copy & Close",
+            text: "Close",
             onPress: () => {
               setManagerEmail("");
               setGeneratedKey("");

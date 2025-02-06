@@ -19,13 +19,15 @@ import {
 } from "react-native-responsive-screen";
 import * as ImagePicker from "expo-image-picker";
 import { auth, db } from "../../firebase";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc, deleteDoc } from "firebase/firestore";
+import { deleteUser } from "firebase/auth";
 
 const ManagerProfile = ({ navigation }) => {
   const [managerData, setManagerData] = useState(null);
   const [isModalVisible, setModalVisible] = useState(false);
   const [editedData, setEditedData] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [isDeleteModalVisible, setDeleteModalVisible] = useState(false);
 
   useEffect(() => {
     fetchManagerData();
@@ -100,6 +102,36 @@ const ManagerProfile = ({ navigation }) => {
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      setUploading(true);
+
+      // Delete from users collection
+      await deleteDoc(doc(db, "users", auth.currentUser.uid));
+
+      // Delete from Authentication
+      const user = auth.currentUser;
+      await deleteUser(user);
+
+      // Navigate to login or home screen
+      navigation.replace("signIn");
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      Alert.alert(
+        "Error",
+        "Failed to delete account. Please try again later.",
+        [{ text: "OK" }]
+      );
+    } finally {
+      setUploading(false);
+      setDeleteModalVisible(false);
+    }
+  };
+
+  const confirmDelete = () => {
+    setDeleteModalVisible(true);
   };
 
   const renderInfoItem = (icon, label, value) => (
@@ -178,6 +210,10 @@ const ManagerProfile = ({ navigation }) => {
         {renderInfoItem("people", "Team Size", managerData.teamSize || "0")}
         {renderInfoItem("calendar", "Join Date", managerData.joinDate)}
       </View>
+      <TouchableOpacity style={styles.deleteButton} onPress={confirmDelete}>
+        <Ionicons name="trash-outline" size={24} color="#FFF" />
+        <Text style={styles.deleteButtonText}>Delete Account</Text>
+      </TouchableOpacity>
 
       <Modal
         visible={isModalVisible}
@@ -337,6 +373,37 @@ const ManagerProfile = ({ navigation }) => {
             </View>
           </View>
         </SafeAreaView>
+      </Modal>
+      <Modal
+        visible={isDeleteModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setDeleteModalVisible(false)}
+      >
+        <View style={styles.deleteModalOverlay}>
+          <View style={styles.deleteModalContent}>
+            <Ionicons name="warning-outline" size={50} color="#FF3B30" />
+            <Text style={styles.deleteModalTitle}>Delete Account</Text>
+            <Text style={styles.deleteModalText}>
+              Are you sure you want to delete your account? This action cannot
+              be undone.
+            </Text>
+            <View style={styles.deleteModalButtons}>
+              <TouchableOpacity
+                style={[styles.deleteModalButton, styles.cancelDeleteButton]}
+                onPress={() => setDeleteModalVisible(false)}
+              >
+                <Text style={styles.cancelDeleteButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.deleteModalButton, styles.confirmDeleteButton]}
+                onPress={handleDeleteAccount}
+              >
+                <Text style={styles.confirmDeleteButtonText}>Delete</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
       </Modal>
     </ScrollView>
   );
@@ -570,6 +637,79 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontWeight: "bold",
     fontSize: wp("4%"),
+  },
+  deleteButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FF3B30",
+    margin: 15,
+    padding: 15,
+    borderRadius: 15,
+    elevation: 2,
+  },
+  deleteButtonText: {
+    color: "#FFF",
+    fontWeight: "bold",
+    fontSize: 16,
+    marginLeft: 10,
+  },
+  deleteModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  deleteModalContent: {
+    backgroundColor: "#FFF",
+    borderRadius: 20,
+    padding: 20,
+    alignItems: "center",
+    width: "90%",
+    elevation: 5,
+  },
+  deleteModalTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#1A1A1A",
+    marginTop: 15,
+    marginBottom: 10,
+  },
+  deleteModalText: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 20,
+    lineHeight: 22,
+  },
+  deleteModalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  deleteModalButton: {
+    flex: 1,
+    padding: 15,
+    borderRadius: 12,
+    alignItems: "center",
+    marginHorizontal: 8,
+  },
+  cancelDeleteButton: {
+    backgroundColor: "#F5F7FA",
+  },
+  confirmDeleteButton: {
+    backgroundColor: "#FF3B30",
+  },
+  cancelDeleteButtonText: {
+    color: "#666",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  confirmDeleteButtonText: {
+    color: "#FFF",
+    fontWeight: "bold",
+    fontSize: 16,
   },
 });
 

@@ -11,6 +11,7 @@ import {
   Image,
   Pressable,
   StyleSheet,
+  Alert,
 } from "react-native";
 import {
   widthPercentageToDP as wp,
@@ -182,8 +183,14 @@ export default function CompanyRegistration() {
       alert("Registration successful!");
       navigation.navigate("signIn");
     } catch (error) {
-      console.error("Registration error:", error);
-      alert(error.message || "Registration failed. Please try again.");
+      let msg = error.message;
+      if (msg.includes("(auth/invalid-credential)")) msg = "User not found";
+      if (msg.includes("(auth/invalid-email)")) msg = "Invalid email address";
+      if (msg.includes("(auth/email-already-in-use)."))
+        msg = "Email already in use";
+      if (msg.includes("(auth/network-request-failed)"))
+        msg = "Please check your internet connection";
+      Alert.alert("Invalid", msg || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }

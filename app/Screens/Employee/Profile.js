@@ -12,6 +12,7 @@ import {
   Platform,
   SafeAreaView,
   RefreshControl,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -20,14 +21,24 @@ import {
 } from "react-native-responsive-screen";
 import * as ImagePicker from "expo-image-picker";
 import { auth, db } from "../../firebase";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  updateDoc,
+  deleteDoc,
+  getDocs,
+  collection,
+  where,
+  query,
+} from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-
+import { deleteUser } from "firebase/auth";
 const EmployeeProfile = ({ navigation }) => {
   const [employeeData, setEmployeeData] = useState(null);
   const [isModalVisible, setModalVisible] = useState(false);
   const [editedData, setEditedData] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [isDeleteModalVisible, setDeleteModalVisible] = useState(false);
 
   useEffect(() => {
     fetchEmployeeData();
@@ -154,6 +165,50 @@ const EmployeeProfile = ({ navigation }) => {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    try {
+      setUploading(true);
+
+      // Delete from users collection
+      await deleteDoc(doc(db, "users", auth.currentUser.uid));
+
+      // Find and delete the correct document from managerEmployeeRelationships
+      const relationshipsRef = collection(db, "managerEmployeeRelationships");
+      const q = query(
+        relationshipsRef,
+        where("employeeId", "==", auth.currentUser.uid)
+      );
+      const querySnapshot = await getDocs(q);
+
+      // Delete all matching documents
+      const deletePromises = querySnapshot.docs.map((doc) =>
+        deleteDoc(doc.ref)
+      );
+      await Promise.all(deletePromises);
+
+      // Delete from Authentication
+      const user = auth.currentUser;
+      await deleteUser(user);
+
+      // Navigate to login or home screen
+      navigation.replace("signIn");
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      Alert.alert(
+        "Error",
+        "Failed to delete account. Please try again later.",
+        [{ text: "OK" }]
+      );
+    } finally {
+      setUploading(false);
+      setDeleteModalVisible(false);
+    }
+  };
+
+  const confirmDelete = () => {
+    setDeleteModalVisible(true);
+  };
+
   return (
     <ScrollView
       style={styles.container}
@@ -198,6 +253,10 @@ const EmployeeProfile = ({ navigation }) => {
         {renderInfoItem("person", "Manager", employeeData.manager)}
         {renderInfoItem("calendar", "Join Date", employeeData.joinDate)}
       </View>
+      <TouchableOpacity style={styles.deleteButton} onPress={confirmDelete}>
+        <Ionicons name="trash-outline" size={24} color="#FFF" />
+        <Text style={styles.deleteButtonText}>Delete Account</Text>
+      </TouchableOpacity>
 
       <Modal
         visible={isModalVisible}
@@ -347,6 +406,37 @@ const EmployeeProfile = ({ navigation }) => {
             </View>
           </View>
         </SafeAreaView>
+      </Modal>
+      <Modal
+        visible={isDeleteModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setDeleteModalVisible(false)}
+      >
+        <View style={styles.deleteModalOverlay}>
+          <View style={styles.deleteModalContent}>
+            <Ionicons name="warning-outline" size={50} color="#FF3B30" />
+            <Text style={styles.deleteModalTitle}>Delete Account</Text>
+            <Text style={styles.deleteModalText}>
+              Are you sure you want to delete your account? This action cannot
+              be undone.
+            </Text>
+            <View style={styles.deleteModalButtons}>
+              <TouchableOpacity
+                style={[styles.deleteModalButton, styles.cancelDeleteButton]}
+                onPress={() => setDeleteModalVisible(false)}
+              >
+                <Text style={styles.cancelDeleteButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.deleteModalButton, styles.confirmDeleteButton]}
+                onPress={handleDeleteAccount}
+              >
+                <Text style={styles.confirmDeleteButtonText}>Delete</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
       </Modal>
     </ScrollView>
   );
@@ -583,6 +673,79 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontWeight: "bold",
     fontSize: wp("4%"),
+  },
+  deleteButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FF3B30",
+    margin: 15,
+    padding: 15,
+    borderRadius: 15,
+    elevation: 2,
+  },
+  deleteButtonText: {
+    color: "#FFF",
+    fontWeight: "bold",
+    fontSize: 16,
+    marginLeft: 10,
+  },
+  deleteModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  deleteModalContent: {
+    backgroundColor: "#FFF",
+    borderRadius: 20,
+    padding: 20,
+    alignItems: "center",
+    width: "90%",
+    elevation: 5,
+  },
+  deleteModalTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#1A1A1A",
+    marginTop: 15,
+    marginBottom: 10,
+  },
+  deleteModalText: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 20,
+    lineHeight: 22,
+  },
+  deleteModalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  deleteModalButton: {
+    flex: 1,
+    padding: 15,
+    borderRadius: 12,
+    alignItems: "center",
+    marginHorizontal: 8,
+  },
+  cancelDeleteButton: {
+    backgroundColor: "#F5F7FA",
+  },
+  confirmDeleteButton: {
+    backgroundColor: "#FF3B30",
+  },
+  cancelDeleteButtonText: {
+    color: "#666",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  confirmDeleteButtonText: {
+    color: "#FFF",
+    fontWeight: "bold",
+    fontSize: 16,
   },
 });
 
