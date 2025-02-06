@@ -23,7 +23,14 @@ import Entypo from "@expo/vector-icons/Entypo";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useNavigation } from "@react-navigation/native";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
+import {
+  doc,
+  setDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
 import { auth, db } from "../firebase";
 
 const styles = StyleSheet.create({
@@ -129,6 +136,18 @@ export default function CompanyRegistration() {
   const [regNumber, setRegNumber] = useState("");
   const [address, setAddress] = useState("");
 
+  const checkCompanyNameExists = async (name) => {
+    try {
+      const companiesRef = collection(db, "companies");
+      const q = query(companiesRef, where("companyName", "==", name));
+      const querySnapshot = await getDocs(q);
+      return !querySnapshot.empty;
+    } catch (error) {
+      console.error("Error checking company name:", error);
+      throw new Error("Failed to check company name availability");
+    }
+  };
+
   function handleCompanyName(e) {
     const name = e.nativeEvent.text;
     setCompanyName(name);
@@ -155,6 +174,17 @@ export default function CompanyRegistration() {
 
     setLoading(true);
     try {
+      // Check if company name already exists
+      const companyExists = await checkCompanyNameExists(companyName);
+      if (companyExists) {
+        Alert.alert(
+          "Company Name Taken",
+          "This company name is already registered. Please choose a different name."
+        );
+        setLoading(false);
+        return;
+      }
+
       // Create user with email and password
       const userCredential = await createUserWithEmailAndPassword(
         auth,
