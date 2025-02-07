@@ -188,6 +188,7 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
    - changes in manager dashboard on leave removed
 - **Feb 6**
    - Added two new feature in admin and manager portal
+   - Both Manager And admin can see the workhour details
  
 
 ## 🎉 Features Implementation
