@@ -195,7 +195,7 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
    - created screenshot for mobile and tablet
    - https://whimsical.com/active-tracker-SPhtiVXUo3YbCaagSkek18@6HYTAunKLgTVw3i1faTe19EmPeowvgpAvNnPhsyv4ySs3aK
  - **Feb 11**
-   -
+   - application published on playstore
 ## 🎉 Features Implementation
 
 ### Admin Dashboard
