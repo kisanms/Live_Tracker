@@ -186,8 +186,18 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
 - **Feb 5**
    - onboard styling improved
    - changes in manager dashboard on leave removed
- 
-
+- **Feb 6**
+   - Added two new feature in admin and manager portal
+   - Both Manager And admin can see the workhour details
+   - Now admin, manager and employee can delete there account
+ - **Feb 7**
+   - deploy in playstore console now waiting for result
+   - created screenshot for mobile and tablet
+   - https://whimsical.com/active-tracker-SPhtiVXUo3YbCaagSkek18@6HYTAunKLgTVw3i1faTe19EmPeowvgpAvNnPhsyv4ySs3aK
+ - **Feb 11**
+   - application published on playstore
+   - https://play.google.com/store/apps/details?id=com.deepkm.Live_Tracker
+   - one issue i have to add the SHA-1 key of playstore to the google cloud console but getting error
 ## 🎉 Features Implementation
 
 ### Admin Dashboard
