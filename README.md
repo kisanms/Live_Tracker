@@ -201,7 +201,7 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
 - **Feb 13**
  - video explanation
 - **Feb 14**
- - video explanation
+ - ppt file explaination has been created
 
 ## 🎉 Features Implementation
 ### Admin Dashboard
