@@ -199,7 +199,10 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
    - https://play.google.com/store/apps/details?id=com.deepkm.Live_Tracker
    - one issue i have to add the SHA-1 key of playstore to the google cloud console but getting error
 - **Feb 13**
- - video explanation 
+ - video explanation
+- **Feb 14**
+ - video explanation
+
 ## 🎉 Features Implementation
 ### Admin Dashboard
 - Company data management
