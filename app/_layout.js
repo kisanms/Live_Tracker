@@ -60,7 +60,7 @@ const RootLayout = ({ initialUser }) => {
   return (
     <Stack.Navigator
       initialRouteName={getInitialRoute()}
-      screenOptions={{ headerShown: false }}
+      screenOptions={{ headerShown: false, animation: "none" }}
     >
       {/* Auth Screens */}
       <Stack.Screen name="slider" component={OnboardingScreen} />
