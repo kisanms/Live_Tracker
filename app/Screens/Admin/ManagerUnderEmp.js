@@ -82,9 +82,6 @@ const ManagerUnderEmp = ({ route, navigation }) => {
             uri: "https://randomuser.me/api/portraits/men/41.jpg",
           }}
         />
-        <View
-          style={[styles.statusIndicator, { backgroundColor: "#4CAF50" }]}
-        />
       </View>
       <View style={styles.employeeInfo}>
         <Text style={styles.employeeName} numberOfLines={1}>
