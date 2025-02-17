@@ -5,9 +5,9 @@ import RootLayout from "./_layout";
 import { View, ActivityIndicator, Alert } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import * as Notifications from "expo-notifications";
-import { auth } from "./firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import messaging from "@react-native-firebase/messaging";
+import { auth } from "../firebase";
 
 // Configure notifications for foreground
 Notifications.setNotificationHandler({
