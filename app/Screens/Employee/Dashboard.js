@@ -200,21 +200,37 @@ const EmployeeDashboard = ({ navigation }) => {
     ]);
   };
 
-  const handleShareLocation = () => {
+  const handleShareLocation = async () => {
     if (!employeeName || !employeeEmail) {
       Alert.alert("Error", "Employee data is not loaded yet.");
       return;
     }
 
-    navigation.navigate("maps", {
+    const getCurrentLocation = async () => {
+      try {
+        const location = await Location.getCurrentPositionAsync({});
+        return {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        };
+      } catch (error) {
+        console.error("Error getting location:", error);
+        return null;
+      }
+    };
+
+    navigation.navigate("camera", {
       userRole: "employee",
+      userId: auth.currentUser.uid,
+      userName: employeeName,
+      companyName: companyName,
+      getCurrentLocation,
       userData: {
         name: employeeName,
         email: employeeEmail,
       },
     });
   };
-
   const handleChangeManager = async () => {
     if (!newManagerEmail.trim()) {
       Alert.alert("Error", "Please enter new manager's email");
