@@ -29,6 +29,13 @@ const WorkHoursDetails = ({ route, navigation }) => {
     fetchWorkHoursData();
   }, [userId]);
 
+  const formatDate = (date) => {
+    const d = new Date(date);
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
   const fetchWorkHoursData = async () => {
     try {
       const workHoursRef = collection(db, "workHours");
@@ -54,7 +61,8 @@ const WorkHoursDetails = ({ route, navigation }) => {
         const record = doc.data();
         return {
           id: doc.id,
-          date: record.date.toDate().toLocaleDateString(),
+          dateObj: record.date.toDate(),
+          date: formatDate(record.date.toDate()),
           clockInTime: record.clockInTime.toDate(),
           clockOutTime: record.clockOutTime.toDate(),
           duration: record.duration.toFixed(2),

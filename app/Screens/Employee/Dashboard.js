@@ -29,6 +29,7 @@ import {
   addDoc,
   serverTimestamp,
   updateDoc,
+  runTransaction,
 } from "firebase/firestore";
 import {
   startLocationTracking,
@@ -290,44 +291,64 @@ const EmployeeDashboard = ({ navigation }) => {
   const handlePersistentClockIn = async () => {
     try {
       const currentTime = new Date();
+
+      // Check for recent clock-ins first
+      const persistentRef = collection(db, "persistentClockIns");
+      const recentClockInsQuery = query(
+        persistentRef,
+        where("employeeId", "==", auth.currentUser.uid),
+        where("status", "==", "active"),
+        // Add a time range check (last 5 minutes)
+        where("clockInTime", ">=", new Date(currentTime.getTime() - 5 * 60000))
+      );
+
+      const recentClockIns = await getDocs(recentClockInsQuery);
+
+      // If recent clock-in exists, don't create a new one
+      if (!recentClockIns.empty) {
+        // console.log("Recent clock-in already exists");
+        return;
+      }
+
+      // Get location only if we need to create a new entry
+      const location = await Location.getCurrentPositionAsync({});
       const userDocRef = doc(db, "users", auth.currentUser.uid);
 
-      // Fetch current location
-      const location = await Location.getCurrentPositionAsync({});
-      const latitude = location.coords.latitude;
-      const longitude = location.coords.longitude;
+      // Create new clock-in with transaction to ensure atomicity
+      await runTransaction(db, async (transaction) => {
+        // Create persistent clock-in
+        const newClockInRef = doc(collection(db, "persistentClockIns"));
 
-      await addDoc(collection(db, "persistentClockIns"), {
-        employeeId: auth.currentUser.uid,
-        employeeName: employeeName,
-        employeeEmail: employeeEmail,
-        clockInTime: currentTime,
-        companyName: companyName,
-        status: "active",
-        deviceInfo: {
-          platform: Platform.OS,
-          timestamp: serverTimestamp(),
-        },
-        location: {
-          latitude: latitude,
-          longitude: longitude,
-        }, // Add latitude and longitude here
+        transaction.set(newClockInRef, {
+          employeeId: auth.currentUser.uid,
+          employeeName: employeeName,
+          employeeEmail: employeeEmail,
+          clockInTime: currentTime,
+          companyName: companyName,
+          status: "active",
+          deviceInfo: {
+            platform: Platform.OS,
+            timestamp: serverTimestamp(),
+          },
+          location: {
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+          },
+        });
+
+        // Update user document
+        transaction.update(userDocRef, {
+          clockInTime: currentTime,
+          currentStatus: "Active",
+          clockOutTime: null,
+          lastPersistentClockIn: currentTime,
+        });
       });
-
-      await updateDoc(userDocRef, {
-        clockInTime: currentTime,
-        currentStatus: "Active",
-        clockOutTime: null,
-        lastPersistentClockIn: currentTime, // Optionally update user's last known location
-      });
-
-      setClockInTime(currentTime);
-      setIsClockedIn(true);
 
       Alert.alert("Success", "Clock-in data securely stored.");
     } catch (error) {
       console.error("Persistent clock-in error:", error);
-      Alert.alert("Error", "Failed to store clock-in data persistently");
+      throw error; // Re-throw to be handled by the caller
     }
   };
 
@@ -360,15 +381,11 @@ const EmployeeDashboard = ({ navigation }) => {
           return;
         }
 
-        await updateDoc(userDocRef, {
-          clockInTime: currentTime,
-          currentStatus: "Active",
-          clockOutTime: null,
-        });
-
+        // Start location tracking
         await startLocationTracking();
 
-        await handlePersistentClockIn();
+        // Handle clock in with persistent storage
+        await handlePersistentClockIn(); // This now handles both user doc update and persistent storage
 
         setClockInTime(currentTime);
         setClockOutTime(null);
@@ -380,38 +397,51 @@ const EmployeeDashboard = ({ navigation }) => {
           return;
         }
 
-        // Fetch current location before clocking out
-        const location = await Location.getCurrentPositionAsync({});
-        const lastLocation = {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-        };
+        try {
+          // Fetch current location before clocking out
+          const location = await Location.getCurrentPositionAsync({});
+          const lastLocation = {
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+          };
 
-        const workDuration = (currentTime - clockInTime) / (1000 * 60 * 60); // hours
+          const workDuration = (currentTime - clockInTime) / (1000 * 60 * 60); // hours
 
-        await addDoc(collection(db, "workHours"), {
-          employeeId: auth.currentUser.uid,
-          employeeName: employeeName,
-          employeeEmail: employeeEmail,
-          clockInTime: clockInTime,
-          clockOutTime: currentTime,
-          duration: workDuration,
-          date: serverTimestamp(),
-          lastLocation: lastLocation, // Save last location
-        });
+          // Use transaction for clock out to ensure all updates happen together
+          await runTransaction(db, async (transaction) => {
+            // Add work hours record
+            const workHoursRef = doc(collection(db, "workHours"));
+            transaction.set(workHoursRef, {
+              employeeId: auth.currentUser.uid,
+              employeeName: employeeName,
+              employeeEmail: employeeEmail,
+              clockInTime: clockInTime,
+              clockOutTime: currentTime,
+              duration: workDuration,
+              date: serverTimestamp(),
+              lastLocation: lastLocation,
+            });
 
-        await updateDoc(userDocRef, {
-          clockOutTime: currentTime,
-          currentStatus: "Inactive",
-          lastShiftDuration: workDuration,
-          clockInTime: null,
-          lastClockOutLocation: lastLocation, // Update user's last known location
-        });
+            // Update user document
+            transaction.update(userDocRef, {
+              clockOutTime: currentTime,
+              currentStatus: "Inactive",
+              lastShiftDuration: workDuration,
+              clockInTime: null,
+              lastClockOutLocation: lastLocation,
+            });
+          });
 
-        await stopLocationTracking();
+          // Stop location tracking after successful database updates
+          await stopLocationTracking();
 
-        setIsClockedIn(false);
-        setClockOutTime(currentTime);
+          setIsClockedIn(false);
+          setClockOutTime(currentTime);
+          Alert.alert("Success", "Clock-out successfully.");
+        } catch (error) {
+          console.error("Clock out transaction failed:", error);
+          Alert.alert("Error", "Failed to clock out. Please try again.");
+        }
       }
     } catch (error) {
       console.error("Clock in/out error:", error);
