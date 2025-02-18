@@ -266,97 +266,117 @@ const AdminDashboard = ({ navigation }) => {
         />
       }
     >
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Admin Dashboard</Text>
-        <View style={styles.headerRight}>
-          <TouchableOpacity
-            style={styles.notificationButton}
-            onPress={() => navigation.navigate("AllStaffLocNoti")}
-          >
-            <Ionicons
-              name="location-outline"
-              size={24}
-              color={COLORS.primary}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Ionicons name="log-out-outline" size={24} color={COLORS.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => navigation.navigate("adminProfile")}
-            style={styles.profileButton}
-          >
-            <Image
-              source={{
-                uri:
-                  adminData?.profileImage ||
-                  "https://randomuser.me/api/portraits/men/1.jpg",
-              }}
-              style={styles.profileImage}
-            />
-          </TouchableOpacity>
+      {/* Enhanced Header */}
+      <View style={styles.headerContainer}>
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <Text style={styles.headerTitle}>
+              Welcome Back <Text style={styles.headerTitleAdmin}>Admin</Text>
+            </Text>
+
+            <Text style={styles.companyName}>
+              {adminData?.companyName || "Company Name"}
+            </Text>
+          </View>
+          <View style={styles.headerRight}>
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={() => navigation.navigate("AllStaffLocNoti")}
+            >
+              <Ionicons
+                name="location-outline"
+                size={24}
+                color={COLORS.primary}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.iconButton} onPress={handleLogout}>
+              <Ionicons
+                name="log-out-outline"
+                size={24}
+                color={COLORS.primary}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("adminProfile")}
+              style={styles.profileButton}
+            >
+              <Image
+                source={{
+                  uri:
+                    adminData?.profileImage ||
+                    "https://randomuser.me/api/portraits/men/1.jpg",
+                }}
+                style={styles.profileImage}
+              />
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
 
+      {/* Enhanced Stats Section */}
       <View style={styles.statsContainer}>
         {stats.map((stat, index) => (
           <View key={index} style={styles.statCard}>
-            <Ionicons name={stat.icon} size={24} color={COLORS.primary} />
+            <View style={styles.statIconContainer}>
+              <Ionicons name={stat.icon} size={24} color={COLORS.primary} />
+            </View>
             <Text style={styles.statCount}>{stat.count}</Text>
             <Text style={styles.statTitle}>{stat.title}</Text>
           </View>
         ))}
       </View>
 
+      {/* Enhanced Quick Actions */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Quick Actions</Text>
         <View style={styles.actionGrid}>
-          <TouchableOpacity
-            style={styles.actionCard}
-            onPress={handleShareLocation}
-          >
-            <Ionicons name="location" size={24} color={COLORS.primary} />
-            <Text style={styles.actionText}>My Location</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.actionCard}
-            onPress={() => navigation.navigate("managerList")}
-          >
-            <Ionicons name="people" size={24} color={COLORS.primary} />
-            <Text style={styles.actionText}>Managers</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.actionCard}
-            onPress={() => navigation.navigate("employeeList")}
-          >
-            <Ionicons name="person" size={24} color={COLORS.primary} />
-            <Text style={styles.actionText}>Employees</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.actionCard}
-            onPress={() => setIsModalVisible(true)}
-          >
-            <Ionicons name="key" size={24} color={COLORS.primary} />
-            <Text style={styles.actionText}>Generate Key</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.actionCard}
-            onPress={() => navigation.navigate("allEmpLocs")}
-          >
-            <Ionicons name="people" size={24} color={COLORS.primary} />
-            <Text style={styles.actionText}>All Staff Location</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.actionCard, { width: "48%" }]}
-            onPress={() => navigation.navigate("allStaffWorkHour")}
-          >
-            <Ionicons name="time" size={24} color="#4A90E2" />
-            <Text style={styles.actionText}>Work Hour</Text>
-          </TouchableOpacity>
+          {[
+            {
+              icon: "location",
+              text: "My Location",
+              onPress: handleShareLocation,
+            },
+            {
+              icon: "people",
+              text: "Managers",
+              onPress: () => navigation.navigate("managerList"),
+            },
+            {
+              icon: "person",
+              text: "Employees",
+              onPress: () => navigation.navigate("employeeList"),
+            },
+            {
+              icon: "key",
+              text: "Generate Key",
+              onPress: () => setIsModalVisible(true),
+            },
+            {
+              icon: "people",
+              text: "All Staff Location",
+              onPress: () => navigation.navigate("allEmpLocs"),
+            },
+            {
+              icon: "time",
+              text: "Work Hour",
+              onPress: () => navigation.navigate("allStaffWorkHour"),
+            },
+          ].map((action, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.actionCard}
+              onPress={action.onPress}
+            >
+              <View style={styles.actionIconContainer}>
+                <Ionicons name={action.icon} size={24} color={COLORS.primary} />
+              </View>
+              <Text style={styles.actionText}>{action.text}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
       </View>
 
-      {/* Modal for generating manager key */}
+      {/* Enhanced Modal */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -365,7 +385,15 @@ const AdminDashboard = ({ navigation }) => {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Generate Manager Key</Text>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Generate Manager Key</Text>
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                onPress={() => setIsModalVisible(false)}
+              >
+                <Ionicons name="close" size={24} color={COLORS.gray} />
+              </TouchableOpacity>
+            </View>
             <TextInput
               style={styles.modalInput}
               placeholder="Enter manager's email"
@@ -401,103 +429,148 @@ const AdminDashboard = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  // Main Container
   container: {
     flex: 1,
-    backgroundColor: COLORS.lightGray,
+    backgroundColor: "#F8F9FA",
+  },
+
+  // Header Styles
+  headerContainer: {
+    backgroundColor: COLORS.white,
+    paddingTop: hp(4),
+    paddingBottom: hp(2),
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    ...SHADOWS.medium,
+    marginBottom: hp(1),
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: hp(2),
-    paddingTop: hp(3),
-    backgroundColor: COLORS.white,
-    ...SHADOWS.small,
+    paddingHorizontal: wp(5),
+  },
+  headerLeft: {
+    flex: 1,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: COLORS.black,
-  },
-  profileButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    overflow: "hidden",
-  },
-  profileImage: {
-    width: "100%",
-    height: "100%",
-  },
-  statsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    padding: 20,
-  },
-  statCard: {
-    backgroundColor: COLORS.cardBg,
-    padding: 15,
-    borderRadius: 12,
-    alignItems: "center",
-    width: "31%",
-    ...SHADOWS.medium,
-  },
-  statCount: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: COLORS.black,
-    marginTop: 8,
-  },
-  statTitle: {
-    fontSize: 12,
+    fontSize: 16,
     color: COLORS.gray,
-    marginTop: 4,
+    marginBottom: 4,
   },
-  section: {
-    padding: 20,
-  },
-  sectionTitle: {
-    fontSize: 18,
+  headerTitleAdmin: {
+    fontSize: 16,
     fontWeight: "bold",
-    color: COLORS.black,
-    marginBottom: 15,
+    color: COLORS.primary,
+    marginBottom: 4,
   },
-  actionGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-  },
-  actionCard: {
-    backgroundColor: COLORS.cardBg,
-    width: "48%",
-    padding: 20,
-    borderRadius: 12,
-    alignItems: "center",
-    textAlign: "center",
-    marginBottom: 15,
-    ...SHADOWS.medium,
-  },
-  actionText: {
-    marginTop: 8,
-    fontSize: 14,
-    fontWeight: "600",
+  companyName: {
+    fontSize: 24,
+    fontWeight: "bold",
     color: COLORS.black,
   },
   headerRight: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: wp(3),
   },
-  logoutButton: {
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: COLORS.lightGray,
-  },
-  notificationButton: {
-    padding: 8,
-    borderRadius: 20,
+  iconButton: {
+    padding: 10,
+    borderRadius: 12,
     backgroundColor: "#F5F7FA",
+    ...SHADOWS.small,
   },
+  profileButton: {
+    width: 45,
+    height: 45,
+    borderRadius: 22.5,
+    overflow: "hidden",
+    ...SHADOWS.small,
+    borderWidth: 2,
+    borderColor: COLORS.white,
+  },
+  profileImage: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 22.5,
+  },
+
+  // Stats Section Styles
+  statsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    padding: wp(4), // Reduced padding
+    marginTop: hp(0.5), // Reduced margin
+  },
+  statCard: {
+    backgroundColor: COLORS.white,
+    padding: wp(4),
+    borderRadius: 16,
+    alignItems: "center",
+    width: "31%",
+    ...SHADOWS.small,
+    elevation: 2,
+  },
+  statIconContainer: {
+    backgroundColor: "#F5F7FA",
+    padding: 10,
+    borderRadius: 12,
+    marginBottom: 2,
+  },
+  statCount: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: COLORS.black,
+    marginTop: 4,
+  },
+  statTitle: {
+    fontSize: 12,
+    color: COLORS.gray,
+    marginTop: 4,
+    textAlign: "center",
+  },
+
+  // Quick Actions Section Styles
+  section: {
+    padding: wp(4), // Reduced padding
+    paddingTop: hp(1), // Reduced top padding
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: COLORS.black,
+    marginBottom: hp(1.5), // Reduced margin
+    letterSpacing: 0.5,
+  },
+  actionGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    gap: hp(1.2), // Reduced gap
+  },
+  actionCard: {
+    backgroundColor: COLORS.white,
+    width: "48.5%", // Slightly adjusted for better spacing
+    padding: wp(3), // Reduced padding
+    borderRadius: 16,
+    alignItems: "center",
+    ...SHADOWS.small,
+  },
+  actionIconContainer: {
+    backgroundColor: "#F5F7FA",
+    padding: 10,
+    borderRadius: 12,
+    marginBottom: 8, // Reduced margin
+  },
+  actionText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: COLORS.black,
+    textAlign: "center",
+    marginTop: 6, // Reduced margin
+  },
+  // Modal Styles
   modalContainer: {
     flex: 1,
     justifyContent: "center",
@@ -505,51 +578,86 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
-    backgroundColor: "white",
-    borderRadius: 20,
-    padding: 20,
+    backgroundColor: COLORS.white,
+    borderRadius: 24,
+    padding: 24,
     width: "90%",
-    alignItems: "center",
     ...SHADOWS.medium,
+    elevation: 5,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: hp(3),
   },
   modalTitle: {
-    fontSize: hp(2.5),
+    fontSize: 24,
     fontWeight: "bold",
-    marginBottom: hp(2),
     color: COLORS.black,
+    letterSpacing: 0.5,
+  },
+  modalCloseButton: {
+    padding: 4,
   },
   modalInput: {
     width: "100%",
     height: hp(6),
     borderWidth: 1,
-    borderColor: COLORS.gray,
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    marginBottom: hp(2),
+    borderColor: "#E9ECEF",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    marginBottom: hp(3),
+    backgroundColor: "#F8F9FA",
+    fontSize: 16,
   },
   modalButtons: {
     flexDirection: "row",
     justifyContent: "space-between",
-    width: "100%",
+    gap: wp(3),
   },
   modalButton: {
-    width: "48%",
+    flex: 1,
     height: hp(6),
-    borderRadius: 10,
+    borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
+    elevation: 2,
   },
   generateButton: {
     backgroundColor: COLORS.primary,
   },
   cancelButton: {
-    backgroundColor: COLORS.lightGray,
+    backgroundColor: "#F8F9FA",
+    borderWidth: 1,
+    borderColor: "#E9ECEF",
   },
   buttonText: {
-    color: "white",
-    fontSize: hp(2),
-    fontWeight: "bold",
+    fontSize: 16,
+    fontWeight: "700",
+    color: COLORS.white,
+  },
+
+  // Additional Utility Styles
+  divider: {
+    height: 1,
+    backgroundColor: "#E9ECEF",
+    marginVertical: hp(2),
+  },
+  shadow: {
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  textShadow: {
+    textShadowColor: "rgba(0, 0, 0, 0.2)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
 });
-
 export default AdminDashboard;
