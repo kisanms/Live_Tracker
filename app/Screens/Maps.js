@@ -155,7 +155,7 @@ const Maps = ({ route, navigation }) => {
         >
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Location Tracking</Text>
+        <Text style={styles.headerTitle}>Share Your Location</Text>
         <TouchableOpacity
           onPress={handleMyLocation}
           style={styles.myLocationButton}

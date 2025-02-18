@@ -108,8 +108,8 @@ const EmployeeList = ({ navigation }) => {
       }
 
       Alert.alert(
-        "No Active Clock-in",
-        "This employee doesn't have an active clock-in with location data."
+        "No Location Data",
+        "This employee doesn't have an active location data."
       );
     } catch (error) {
       console.error("Error fetching location:", error);
