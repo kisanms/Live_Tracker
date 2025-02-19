@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   StyleSheet,
   View,
@@ -7,7 +7,7 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import { Camera, useCameraPermissions } from "expo-camera";
+import { Camera } from "expo-camera";
 import { Ionicons } from "@expo/vector-icons";
 import { db } from "../../firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
@@ -19,7 +19,7 @@ const CameraScreen = ({ navigation, route }) => {
   const [isCapturing, setIsCapturing] = useState(false);
   const cameraRef = useRef(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     (async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();
       setHasPermission(status === "granted");
@@ -32,17 +32,22 @@ const CameraScreen = ({ navigation, route }) => {
     try {
       setIsCapturing(true);
       const photo = await cameraRef.current.takePictureAsync({
-        quality: 0.5, // Reduced quality for smaller base64 string
+        quality: 0.5,
         base64: true,
       });
 
-      const location = await route.params?.getCurrentLocation();
-      if (!location) {
-        Alert.alert("Error", "Could not get current location");
+      if (!photo.base64) {
+        Alert.alert("Error", "Failed to process the image.");
         return;
       }
 
-      // Save directly to Firestore with base64 string
+      const location = await route.params?.getCurrentLocation();
+      if (!location) {
+        Alert.alert("Error", "Could not get current location.");
+        return;
+      }
+
+      // Save photo to Firestore
       const photoDoc = await addDoc(collection(db, "locationPhotos"), {
         photoBase64: `data:image/jpeg;base64,${photo.base64}`,
         location: {
@@ -55,7 +60,7 @@ const CameraScreen = ({ navigation, route }) => {
         companyName: route.params?.companyName,
       });
 
-      // Navigate to maps with photo data
+      // Navigate to maps with the captured photo
       navigation.navigate("maps", {
         ...route.params,
         photoData: {
@@ -66,7 +71,7 @@ const CameraScreen = ({ navigation, route }) => {
       });
     } catch (error) {
       console.error("Capture error:", error);
-      Alert.alert("Error", "Failed to capture and save photo");
+      Alert.alert("Error", "Failed to capture and save photo.");
     } finally {
       setIsCapturing(false);
     }
@@ -86,7 +91,7 @@ const CameraScreen = ({ navigation, route }) => {
 
   return (
     <View style={styles.container}>
-      <Camera style={styles.camera} type={type} ref={cameraRef} mode="picture">
+      <Camera style={styles.camera} type={type} ref={cameraRef}>
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backButton}
@@ -97,13 +102,13 @@ const CameraScreen = ({ navigation, route }) => {
           <Text style={styles.headerTitle}>Take Location Photo</Text>
           <TouchableOpacity
             style={styles.flipButton}
-            onPress={() => {
+            onPress={() =>
               setType(
                 type === Camera.Constants.Type.back
                   ? Camera.Constants.Type.front
                   : Camera.Constants.Type.back
-              );
-            }}
+              )
+            }
           >
             <Ionicons name="camera-reverse" size={24} color="#fff" />
           </TouchableOpacity>

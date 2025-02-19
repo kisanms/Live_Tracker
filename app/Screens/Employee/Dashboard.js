@@ -36,6 +36,7 @@ import {
   stopLocationTracking,
 } from "../../services/LocationService.js";
 import * as Location from "expo-location"; // Ensure this import is present
+import { SHADOWS } from "../../constants/theme.js";
 
 const EmployeeDashboard = ({ navigation }) => {
   const [employeeName, setEmployeeName] = useState("");
@@ -200,31 +201,14 @@ const EmployeeDashboard = ({ navigation }) => {
     ]);
   };
 
-  const handleShareLocation = async () => {
+  const handleShareLocation = () => {
     if (!employeeName || !employeeEmail) {
       Alert.alert("Error", "Employee data is not loaded yet.");
       return;
     }
 
-    const getCurrentLocation = async () => {
-      try {
-        const location = await Location.getCurrentPositionAsync({});
-        return {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-        };
-      } catch (error) {
-        console.error("Error getting location:", error);
-        return null;
-      }
-    };
-
-    navigation.navigate("camera", {
+    navigation.navigate("maps", {
       userRole: "employee",
-      userId: auth.currentUser.uid,
-      userName: employeeName,
-      companyName: companyName,
-      getCurrentLocation,
       userData: {
         name: employeeName,
         email: employeeEmail,
@@ -535,10 +519,13 @@ const EmployeeDashboard = ({ navigation }) => {
           <Ionicons name="share" size={24} color="#4A90E2" />
           <Text style={styles.actionText}>Share Location</Text>
         </TouchableOpacity>
-        {/* <TouchableOpacity style={[styles.actionButton, { width: "48%" }]}>
-          <Ionicons name="calendar" size={24} color="#4A90E2" />
-          <Text style={styles.actionText}>Request Leave</Text>
-        </TouchableOpacity> */}
+        <TouchableOpacity
+          style={[styles.actionButton, { width: "48%" }]}
+          onPress={() => setShowChangeManager(true)}
+        >
+          <Ionicons name="person" size={20} color="#4A90E2" />
+          <Text style={styles.actionText}>Change Manager</Text>
+        </TouchableOpacity>
         <TouchableOpacity
           style={[styles.actionButton, { width: "48%" }]}
           onPress={() => setShowChangeManager(true)}
@@ -698,6 +685,9 @@ const styles = StyleSheet.create({
     paddingTop: hp(4),
     backgroundColor: "#fff",
     elevation: 2,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    ...SHADOWS.medium,
   },
   dateText: {
     fontSize: 12,
@@ -847,8 +837,10 @@ const styles = StyleSheet.create({
   },
   quickActions: {
     flexDirection: "row",
+    flexWrap: "wrap",
     justifyContent: "space-between",
     alignItems: "center",
+    gap: hp(1),
   },
   actionButton: {
     backgroundColor: "#fff",

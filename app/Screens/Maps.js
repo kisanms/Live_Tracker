@@ -9,8 +9,6 @@ import {
   Alert,
   SafeAreaView,
   ActivityIndicator,
-  Image,
-  Modal,
 } from "react-native";
 import {
   widthPercentageToDP as wp,
@@ -28,8 +26,6 @@ const Maps = ({ route, navigation }) => {
   const [mapRegion, setMapRegion] = useState(null);
   const [markerLocation, setMarkerLocation] = useState(null);
   const [isLocationFetched, setIsLocationFetched] = useState(false);
-  const [photoData, setPhotoData] = useState(null);
-  const [showFullImage, setShowFullImage] = useState(false);
   const mapRef = useRef(null);
 
   // Fetch user data from Firestore
@@ -50,57 +46,37 @@ const Maps = ({ route, navigation }) => {
     fetchUserData();
   }, []);
 
-  // Handle photo data from route params
+  // Get initial location
   useEffect(() => {
-    if (route.params?.photoData) {
-      setPhotoData(route.params.photoData);
-      if (route.params.photoData.location) {
-        const { latitude, longitude } = route.params.photoData.location;
-        setMapRegion({
+    const fetchLocation = async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+          Alert.alert("Permission to access location was denied");
+          return;
+        }
+
+        const location = await Location.getCurrentPositionAsync({});
+        const { latitude, longitude } = location.coords;
+
+        const region = {
           latitude,
           longitude,
           latitudeDelta: 0.005,
           longitudeDelta: 0.005,
-        });
+        };
+
+        setMapRegion(region);
         setMarkerLocation({ latitude, longitude });
         setIsLocationFetched(true);
+      } catch (error) {
+        console.error("Error fetching location:", error);
+        Alert.alert("Error", "Failed to get location");
       }
-    }
-  }, [route.params?.photoData]);
+    };
 
-  // Get initial location if no photo data
-  useEffect(() => {
-    if (!route.params?.photoData) {
-      const fetchLocation = async () => {
-        try {
-          const { status } = await Location.requestForegroundPermissionsAsync();
-          if (status !== "granted") {
-            Alert.alert("Permission to access location was denied");
-            return;
-          }
-
-          const location = await Location.getCurrentPositionAsync({});
-          const { latitude, longitude } = location.coords;
-
-          const region = {
-            latitude,
-            longitude,
-            latitudeDelta: 0.005,
-            longitudeDelta: 0.005,
-          };
-
-          setMapRegion(region);
-          setMarkerLocation({ latitude, longitude });
-          setIsLocationFetched(true);
-        } catch (error) {
-          console.error("Error fetching location:", error);
-          Alert.alert("Error", "Failed to get location");
-        }
-      };
-
-      fetchLocation();
-    }
-  }, [route.params?.photoData]);
+    fetchLocation();
+  }, []);
 
   // Handle manual location update
   const handleMyLocation = async () => {
@@ -134,7 +110,6 @@ const Maps = ({ route, navigation }) => {
         companyName: userData.companyName,
         timestamp: new Date().toISOString(),
         userId: auth.currentUser.uid,
-        ...(photoData && { photoReference: photoData.id }), // Add photo reference if exists
       };
 
       // Store in user-specific collection
@@ -154,65 +129,21 @@ const Maps = ({ route, navigation }) => {
     }
   };
 
-  // Update location every 30 seconds if no photo data
+  // Update location every 30 seconds
   useEffect(() => {
-    if (!photoData) {
-      const updateLocation = async () => {
-        try {
-          const location = await Location.getCurrentPositionAsync({});
-          const { latitude, longitude } = location.coords;
-          setMarkerLocation({ latitude, longitude });
-        } catch (error) {
-          console.error("Error updating location:", error);
-        }
-      };
+    const updateLocation = async () => {
+      try {
+        const location = await Location.getCurrentPositionAsync({});
+        const { latitude, longitude } = location.coords;
+        setMarkerLocation({ latitude, longitude });
+      } catch (error) {
+        console.error("Error updating location:", error);
+      }
+    };
 
-      const intervalId = setInterval(updateLocation, 30000);
-      return () => clearInterval(intervalId);
-    }
-  }, [photoData]);
-
-  const renderPhotoThumbnail = () => {
-    if (!photoData) return null;
-
-    return (
-      <TouchableOpacity
-        style={styles.photoContainer}
-        onPress={() => setShowFullImage(true)}
-      >
-        <Image
-          source={{ uri: photoData.base64 }}
-          style={styles.locationPhoto}
-        />
-      </TouchableOpacity>
-    );
-  };
-
-  const renderFullScreenImage = () => {
-    if (!photoData) return null;
-
-    return (
-      <Modal
-        visible={showFullImage}
-        transparent={true}
-        onRequestClose={() => setShowFullImage(false)}
-      >
-        <View style={styles.modalContainer}>
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={() => setShowFullImage(false)}
-          >
-            <Ionicons name="close" size={30} color="#fff" />
-          </TouchableOpacity>
-          <Image
-            source={{ uri: photoData.base64 }}
-            style={styles.fullScreenImage}
-            resizeMode="contain"
-          />
-        </View>
-      </Modal>
-    );
-  };
+    const intervalId = setInterval(updateLocation, 30000);
+    return () => clearInterval(intervalId);
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -224,7 +155,7 @@ const Maps = ({ route, navigation }) => {
         >
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Share Your Location</Text>
+        <Text style={styles.headerTitle}>Share Your Location </Text>
         <TouchableOpacity
           onPress={handleMyLocation}
           style={styles.myLocationButton}
@@ -234,33 +165,29 @@ const Maps = ({ route, navigation }) => {
       </View>
 
       {isLocationFetched ? (
-        <View style={styles.mapContainer}>
-          <MapView
-            provider={PROVIDER_GOOGLE}
-            ref={mapRef}
-            style={styles.map}
-            region={mapRegion}
-            showsUserLocation={true}
-            showsMyLocationButton={false}
-            showsCompass={true}
-          >
-            {markerLocation && (
-              <Marker
-                coordinate={markerLocation}
-                title={userData?.name || "User"}
-                description={userRole}
-                pinColor="#4A90E2"
-              />
-            )}
-          </MapView>
-          {renderPhotoThumbnail()}
-        </View>
+        <MapView
+          provider={PROVIDER_GOOGLE}
+          ref={mapRef}
+          style={styles.map}
+          region={mapRegion}
+          showsUserLocation={true}
+          showsMyLocationButton={false}
+          showsCompass={true}
+        >
+          {markerLocation && (
+            <Marker
+              coordinate={markerLocation}
+              title={userData?.name || "User"}
+              description={userRole}
+              pinColor="#4A90E2"
+            />
+          )}
+        </MapView>
       ) : (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#4A90E2" />
         </View>
       )}
-      {renderFullScreenImage()}
     </SafeAreaView>
   );
 };
@@ -290,10 +217,6 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 20,
   },
-  mapContainer: {
-    flex: 1,
-    position: "relative",
-  },
   map: {
     flex: 1,
   },
@@ -301,41 +224,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-  },
-  photoContainer: {
-    position: "absolute",
-    bottom: 20,
-    right: 20,
-    backgroundColor: "white",
-    borderRadius: 10,
-    padding: 5,
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  locationPhoto: {
-    width: 100,
-    height: 100,
-    borderRadius: 8,
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.9)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  fullScreenImage: {
-    width: "100%",
-    height: "80%",
-  },
-  closeButton: {
-    position: "absolute",
-    top: 40,
-    right: 20,
-    zIndex: 1,
-    padding: 10,
   },
 });
 
