@@ -207,12 +207,10 @@ const EmployeeDashboard = ({ navigation }) => {
       return;
     }
 
-    navigation.navigate("maps", {
-      userRole: "employee",
-      userData: {
-        name: employeeName,
-        email: employeeEmail,
-      },
+    navigation.navigate("LocationPhotoCapture", {
+      employeeName,
+      employeeEmail,
+      companyName,
     });
   };
   const handleChangeManager = async () => {
