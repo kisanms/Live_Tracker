@@ -207,6 +207,7 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
     - git commits is imp for builds
 - **Feb 18**
     - Admin: inside manager employee remove green dot
+    - Admin : Employee list alert message when no location available
 ## 🎉 Features Implementation
 ### Admin Dashboard
 - Company data management
