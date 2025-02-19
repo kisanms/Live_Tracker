@@ -528,10 +528,10 @@ const EmployeeDashboard = ({ navigation }) => {
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.actionButton, { width: "48%" }]}
-          onPress={() => setShowChangeManager(true)}
+          onPress={() => navigation.navigate("camera")}
         >
-          <Ionicons name="person" size={20} color="#4A90E2" />
-          <Text style={styles.actionText}>Change Manager</Text>
+          <Ionicons name="camera" size={20} color="#4A90E2" />
+          <Text style={styles.actionText}>Camera</Text>
         </TouchableOpacity>
       </View>
     </View>
