@@ -5004,6 +5004,13 @@ expo-background-fetch@~13.0.3:
   dependencies:
     expo-task-manager "~12.0.0"
 
+expo-camera@~16.0.16:
+  version "16.0.16"
+  resolved "https://registry.npmjs.org/expo-camera/-/expo-camera-16.0.16.tgz"
+  integrity sha512-igGPVHVEkvJBqzfz7tPFHC3DNnjltXguxH3X+35G22v3yYpYmwEWG4aVDOPasUl9my6Z/DdjGZsdCodX+hXQTw==
+  dependencies:
+    invariant "^2.2.4"
+
 expo-constants@*, expo-constants@~17.0.0, expo-constants@~17.0.3, expo-constants@~17.0.4:
   version "17.0.4"
   resolved "https://registry.npmjs.org/expo-constants/-/expo-constants-17.0.4.tgz"
@@ -5082,6 +5089,11 @@ expo-image-picker@~16.0.3:
   integrity sha512-c4IOqIQOtx8puWWU4fVsJhuGiAhH6gAIdrVzhimOXSEUHnfxCckRYzvznbd/0cuvaA5y9H0CSYrxpTUc/0WNVw==
   dependencies:
     expo-image-loader "~5.0.0"
+
+expo-image@~2.0.5:
+  version "2.0.5"
+  resolved "https://registry.npmjs.org/expo-image/-/expo-image-2.0.5.tgz"
+  integrity sha512-FAq7uyaTAfLWER3lN+KVAtep7IfGPZN9ygnVKW4GvgnvR4hKhTtZ5WNxiJ18KKLVb4nUKuHOpQeJNnljy3dtmA==
 
 expo-json-utils@~0.14.0:
   version "0.14.0"
@@ -8105,7 +8117,7 @@ react-native-maps@1.18.0:
   dependencies:
     "@types/geojson" "^7946.0.13"
 
-react-native-reanimated@*, react-native-reanimated@>=3.6.2, react-native-reanimated@~3.16.1:
+react-native-reanimated@*, react-native-reanimated@>=3.6.2:
   version "3.16.5"
   resolved "https://registry.npmjs.org/react-native-reanimated/-/react-native-reanimated-3.16.5.tgz"
   integrity sha512-mq/5k14pimkhCeP9XwFJkEr8XufaHqIekum8fqpsn0fcBzbLvyiqfM2LEuBvi0+DTv5Bd2dHmUHkYqGYfkj3Jw==
