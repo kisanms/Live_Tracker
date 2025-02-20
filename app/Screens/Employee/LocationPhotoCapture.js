@@ -15,11 +15,9 @@ import * as Location from "expo-location";
 import { Ionicons } from "@expo/vector-icons";
 import { db, auth } from "../../firebase";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { Image } from "expo-image";
-import {
-  widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
-} from "react-native-responsive-screen";
+import MapView, { Marker } from "react-native-maps";
+import { Image } from "react-native";
+import ViewShot from "react-native-view-shot";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -33,6 +31,9 @@ const LocationPhotoCapture = ({ navigation, route }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [cameraLayout, setCameraLayout] = useState(null);
+  const [locationAddress, setLocationAddress] = useState(null);
+  const [weatherInfo, setWeatherInfo] = useState(null);
+  const [plusCode, setPlusCode] = useState(null);
   const cameraRef = useRef(null);
 
   const { employeeName, employeeEmail, companyName } = route.params;
@@ -80,12 +81,41 @@ const LocationPhotoCapture = ({ navigation, route }) => {
         accuracy: Location.Accuracy.High,
       });
       setLocation(location);
+
+      // Get address from coordinates
+      const [address] = await Location.reverseGeocodeAsync({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+
+      if (address) {
+        const formattedAddress = `${address.name || ""}, ${
+          address.street || ""
+        }, ${address.city || ""}, ${address.region || ""} ${
+          address.postalCode || ""
+        }, ${address.country || ""}`;
+        setLocationAddress(address);
+
+        // Generate a mock plus code (you'd integrate with Google Maps API for real plus codes)
+        const mockPlusCode = generateMockPlusCode(
+          location.coords.latitude,
+          location.coords.longitude
+        );
+        setPlusCode(mockPlusCode);
+      }
     } catch (error) {
       Alert.alert("Error", "Failed to get your location. Please try again.");
       console.error("Location error:", error);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const generateMockPlusCode = (lat, lng) => {
+    // This is just a simple mock - actual plus codes would require Google Maps API
+    const latChars = Math.abs(lat).toString(36).substring(2, 5).toUpperCase();
+    const lngChars = Math.abs(lng).toString(36).substring(2, 5).toUpperCase();
+    return `${latChars}+${lngChars}`;
   };
 
   const handleCameraLayout = (event) => {
@@ -110,6 +140,9 @@ const LocationPhotoCapture = ({ navigation, route }) => {
       });
       setLocation(currentLocation);
       setCapturedImage(photo);
+
+      // Update address and weather for the current location
+      getLocation();
     } catch (error) {
       console.error("Error taking picture:", error);
       Alert.alert("Error", "Failed to take picture. Please try again.");
@@ -141,7 +174,18 @@ const LocationPhotoCapture = ({ navigation, route }) => {
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
           accuracy: location.coords.accuracy,
+          address: locationAddress
+            ? {
+                street: locationAddress.street,
+                city: locationAddress.city,
+                region: locationAddress.region,
+                postalCode: locationAddress.postalCode,
+                country: locationAddress.country,
+              }
+            : null,
+          plusCode: plusCode,
         },
+        weatherInfo: weatherInfo,
         imageUrl,
         status: "active",
         type: "manual_check_in",
@@ -214,6 +258,27 @@ const LocationPhotoCapture = ({ navigation, route }) => {
   }
 
   if (capturedImage) {
+    const formattedDate = new Date().toLocaleString("en-US", {
+      weekday: "long",
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    });
+
+    const formattedAddress = locationAddress
+      ? `${locationAddress.street || ""}, ${locationAddress.city || ""}, ${
+          locationAddress.region || ""
+        } ${locationAddress.postalCode || ""}, ${locationAddress.country || ""}`
+      : "Loading address...";
+
+    const placeName = locationAddress?.city || "Current Location";
+    const region = locationAddress?.region || "";
+    const country = locationAddress?.country || "";
+
     return (
       <View style={styles.container}>
         <View style={styles.previewHeader}>
@@ -226,21 +291,56 @@ const LocationPhotoCapture = ({ navigation, route }) => {
           <Text style={styles.previewTitle}>Preview</Text>
         </View>
 
-        <Image
-          source={{ uri: capturedImage.uri }}
-          style={styles.previewImage}
-          contentFit="cover"
-        />
+        <View style={styles.imageContainer}>
+          <Image
+            source={{ uri: capturedImage.uri }}
+            style={styles.previewImage}
+          />
 
-        {location && (
-          <View style={styles.locationInfo}>
-            <Ionicons name="location" size={20} color="#4A90E2" />
-            <Text style={styles.locationText}>
-              Location captured: {location.coords.latitude.toFixed(6)},{" "}
-              {location.coords.longitude.toFixed(6)}
-            </Text>
+          {/* Location Information Overlay */}
+          <View style={styles.photoOverlay}>
+            {/* Location Details and Minimap (positioned next to each other) */}
+            <View style={styles.bottomInfoContainer}>
+              {/* Minimap */}
+              {location && (
+                <View style={styles.minimapContainer}>
+                  <MapView
+                    style={styles.minimap}
+                    region={{
+                      latitude: location.coords.latitude,
+                      longitude: location.coords.longitude,
+                      latitudeDelta: 0.01,
+                      longitudeDelta: 0.01,
+                    }}
+                    scrollEnabled={false}
+                    zoomEnabled={false}
+                    rotateEnabled={false}
+                    pitchEnabled={false}
+                  >
+                    <Marker
+                      coordinate={{
+                        latitude: location.coords.latitude,
+                        longitude: location.coords.longitude,
+                      }}
+                    />
+                  </MapView>
+                </View>
+              )}
+
+              {/* Location Details */}
+              <View style={styles.photoLocationInfo}>
+                <Text style={styles.locationTitle}>
+                  {placeName}, {region}, {country}
+                </Text>
+                <Text style={styles.locationAddress}>{formattedAddress}</Text>
+                <Text style={styles.plusCode}>
+                  Plus Code: {plusCode || "Loading..."}
+                </Text>
+                <Text style={styles.dateTime}>{formattedDate}</Text>
+              </View>
+            </View>
           </View>
-        )}
+        </View>
 
         <View style={styles.previewActions}>
           <TouchableOpacity
@@ -444,15 +544,19 @@ const styles = StyleSheet.create({
   refreshLocation: {
     padding: 15,
   },
+  imageContainer: {
+    width: "100%",
+    height: "80%",
+    position: "relative",
+  },
   previewImage: {
     width: "100%",
-    height: "65%",
+    height: "100%",
   },
   previewHeader: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 20,
-    paddingTop: Platform.OS === "ios" ? 50 : 30,
+    padding: 10,
     backgroundColor: "#000",
   },
   previewTitle: {
@@ -461,16 +565,92 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginLeft: 15,
   },
-  locationInfo: {
+  photoOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "space-between",
+  },
+  bottomInfoContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    flexDirection: "row",
+    alignItems: "flex-start",
+    padding: 8,
+  },
+  minimapContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 6,
+    overflow: "hidden",
+    borderWidth: 2,
+    borderColor: "rgba(255,255,255,0.5)",
+    marginRight: 8,
+  },
+  minimap: {
+    width: "100%",
+    height: "100%",
+  },
+  photoLocationInfo: {
+    flex: 1,
+    paddingVertical: 4,
+  },
+  locationTitle: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 4,
+  },
+  locationAddress: {
+    color: "#fff",
+    fontSize: 12,
+    marginBottom: 2,
+  },
+  plusCode: {
+    color: "#fff",
+    fontSize: 12,
+    marginBottom: 2,
+  },
+  dateTime: {
+    color: "#fff",
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  locationNote: {
+    color: "#fff",
+    fontSize: 12,
+    fontStyle: "italic",
+    marginBottom: 8,
+  },
+  weatherMetrics: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255,255,255,0.3)",
+  },
+  metricItem: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 15,
-    backgroundColor: "#f5f5f5",
   },
-  locationText: {
-    marginLeft: 10,
-    color: "#333",
-    fontSize: 14,
+  metricText: {
+    color: "#fff",
+    fontSize: 12,
+    marginLeft: 6,
+  },
+  temperatureText: {
+    color: "#fff",
+    fontSize: 24,
+    fontWeight: "bold",
+    textShadowColor: "rgba(0,0,0,0.7)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
+    marginBottom: 4,
   },
   previewActions: {
     flexDirection: "row",
@@ -487,7 +667,7 @@ const styles = StyleSheet.create({
   },
   previewButton: {
     flex: 1,
-    margin: 8,
+    margin: 3,
     borderRadius: 10,
     padding: 15,
     flexDirection: "row",
