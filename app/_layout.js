@@ -36,7 +36,6 @@ import EmployeeWorkHoursDetails from "./Screens/Manager/EmployeeWorkHoursDetails
 import EmployeeDashboard from "./Screens/Employee/Dashboard";
 import EmployeeProfile from "./Screens/Employee/Profile";
 import Maps from "./Screens/Maps";
-import CameraScreen from "./Screens/Employee/CameraScreen";
 import LocationPhotoCapture from "./Screens/Employee/LocationPhotoCapture";
 
 const Stack = createNativeStackNavigator();
@@ -155,7 +154,6 @@ const RootLayout = ({ initialUser }) => {
       {/* Employee Portal Screens */}
       <Stack.Screen name="employeeDashboard" component={EmployeeDashboard} />
       <Stack.Screen name="employeeProfile" component={EmployeeProfile} />
-      <Stack.Screen name="camera" component={CameraScreen} />
       <Stack.Screen
         name="LocationPhotoCapture"
         component={LocationPhotoCapture}

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   Alert,
   ActivityIndicator,
   Platform,
+  Dimensions,
+  StatusBar,
 } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as Location from "expo-location";
@@ -19,6 +21,8 @@ import {
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+
 const LocationPhotoCapture = ({ navigation, route }) => {
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [locationPermission, setLocationPermission] = useState(null);
@@ -27,21 +31,47 @@ const LocationPhotoCapture = ({ navigation, route }) => {
   const [location, setLocation] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isCameraReady, setIsCameraReady] = useState(false);
+  const [cameraLayout, setCameraLayout] = useState(null);
   const cameraRef = useRef(null);
 
   const { employeeName, employeeEmail, companyName } = route.params;
 
   // Request location permissions when component mounts
-  React.useEffect(() => {
-    (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      setLocationPermission(status === "granted");
+  useEffect(() => {
+    StatusBar.setBarStyle("light-content");
 
-      if (status === "granted") {
-        getLocation();
+    const getLocationPermission = async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        setLocationPermission(status === "granted");
+
+        if (status === "granted") {
+          getLocation();
+        }
+      } catch (error) {
+        console.error("Error requesting location permission:", error);
+        setLocationPermission(false);
       }
-    })();
+    };
+
+    getLocationPermission();
+
+    return () => {
+      StatusBar.setBarStyle("default");
+    };
   }, []);
+
+  // Reset camera when retaking a picture
+  useEffect(() => {
+    if (!capturedImage) {
+      setIsCameraReady(false);
+      const timeout = setTimeout(() => {
+        setIsCameraReady(true);
+      }, 500);
+      return () => clearTimeout(timeout);
+    }
+  }, [capturedImage]);
 
   const getLocation = async () => {
     try {
@@ -58,14 +88,20 @@ const LocationPhotoCapture = ({ navigation, route }) => {
     }
   };
 
+  const handleCameraLayout = (event) => {
+    const { width, height } = event.nativeEvent.layout;
+    setCameraLayout({ width, height });
+  };
+
   const takePicture = async () => {
-    if (!cameraRef.current) return;
+    if (!cameraRef.current || !isCameraReady) return;
 
     try {
       setIsLoading(true);
       const photo = await cameraRef.current.takePictureAsync({
         quality: 0.7,
         base64: true,
+        skipProcessing: true,
       });
 
       // Get fresh location data when taking picture
@@ -96,7 +132,7 @@ const LocationPhotoCapture = ({ navigation, route }) => {
 
       // Create document in Firestore
       await addDoc(collection(db, "ImageslocationUpdates"), {
-        userId: auth.currentUser.uid,
+        userId: auth.currentUser?.uid,
         employeeName,
         employeeEmail,
         companyName,
@@ -142,11 +178,16 @@ const LocationPhotoCapture = ({ navigation, route }) => {
     setFacing(facing === "back" ? "front" : "back");
   };
 
+  const handleCameraReady = () => {
+    setIsCameraReady(true);
+  };
+
   // Check if permissions are still being determined
   if (!cameraPermission || locationPermission === null) {
     return (
-      <View style={styles.container}>
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#4A90E2" />
+        <Text style={styles.loadingText}>Checking permissions...</Text>
       </View>
     );
   }
@@ -157,7 +198,7 @@ const LocationPhotoCapture = ({ navigation, route }) => {
       <View style={styles.permissionContainer}>
         <Ionicons name="warning" size={50} color="#FF6347" />
         <Text style={styles.permissionText}>
-          Camera and location access is required for this feature
+          Camera and location access are required for this feature
         </Text>
         <TouchableOpacity
           style={styles.permissionButton}
@@ -231,62 +272,81 @@ const LocationPhotoCapture = ({ navigation, route }) => {
 
   return (
     <View style={styles.container}>
-      <CameraView
-        style={styles.camera}
-        facing={facing}
-        ref={cameraRef}
-        enableTorch={false}
-        mode="picture"
-      >
-        <View style={styles.cameraHeader}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
+      {isCameraReady ? (
+        <View style={styles.cameraContainer} onLayout={handleCameraLayout}>
+          <CameraView
+            style={[styles.camera]}
+            facing={facing}
+            ref={cameraRef}
+            enableTorch={false}
+            mode="picture"
+            onCameraReady={handleCameraReady}
+            ratio="16:9"
           >
-            <Ionicons name="arrow-back" size={24} color="#fff" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Location Check-in</Text>
-        </View>
+            {/* Camera content goes here */}
+          </CameraView>
 
-        {location && (
-          <View style={styles.locationBadge}>
-            <Ionicons name="location" size={16} color="#fff" />
-            <Text style={styles.locationBadgeText}>Location Ready</Text>
-          </View>
-        )}
+          {/* UI Overlay */}
+          <View style={styles.uiOverlay}>
+            <View style={styles.cameraHeader}>
+              <TouchableOpacity
+                style={styles.backButton}
+                onPress={() => navigation.goBack()}
+              >
+                <Ionicons name="arrow-back" size={24} color="#fff" />
+              </TouchableOpacity>
+              <Text style={styles.headerTitle}>Location Check-in</Text>
+            </View>
 
-        <View style={styles.cameraControls}>
-          <TouchableOpacity style={styles.flipButton} onPress={toggleFacing}>
-            <Ionicons name="camera-reverse" size={30} color="#fff" />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.captureButton}
-            onPress={takePicture}
-            disabled={isLoading || !location}
-          >
-            {isLoading ? (
-              <ActivityIndicator size="large" color="#fff" />
-            ) : (
-              <View style={styles.captureButtonInner} />
+            {location && (
+              <View style={styles.locationBadge}>
+                <Ionicons name="location" size={16} color="#fff" />
+                <Text style={styles.locationBadgeText}>Location Ready</Text>
+              </View>
             )}
-          </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.refreshLocation}
-            onPress={getLocation}
-            disabled={isLoading}
-          >
-            <Ionicons name="refresh" size={30} color="#fff" />
-          </TouchableOpacity>
-        </View>
+            <View style={styles.instructionContainer}>
+              <Text style={styles.instructionText}>
+                Take a clear photo for location check-in
+              </Text>
+            </View>
 
-        <View style={styles.instructionContainer}>
-          <Text style={styles.instructionText}>
-            Take a clear photo for location check-in
-          </Text>
+            <View style={styles.cameraControls}>
+              <TouchableOpacity
+                style={styles.flipButton}
+                onPress={toggleFacing}
+              >
+                <Ionicons name="camera-reverse" size={30} color="#fff" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.captureButton}
+                onPress={takePicture}
+                disabled={isLoading || !location}
+              >
+                {isLoading ? (
+                  <ActivityIndicator size="large" color="#fff" />
+                ) : (
+                  <View style={styles.captureButtonInner} />
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.refreshLocation}
+                onPress={getLocation}
+                disabled={isLoading}
+              >
+                <Ionicons name="refresh" size={30} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
-      </CameraView>
+      ) : (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#4A90E2" />
+          <Text style={styles.loadingText}>Loading camera...</Text>
+        </View>
+      )}
     </View>
   );
 };
@@ -296,9 +356,33 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#000",
   },
+  cameraContainer: {
+    flex: 1,
+    position: "relative",
+  },
   camera: {
     flex: 1,
+    width: "100%",
+    height: "100%",
+  },
+  uiOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     justifyContent: "space-between",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#000",
+  },
+  loadingText: {
+    color: "#fff",
+    marginTop: 10,
+    fontSize: 16,
   },
   cameraHeader: {
     flexDirection: "row",
@@ -326,6 +410,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     flexDirection: "row",
     alignItems: "center",
+    zIndex: 10,
   },
   locationBadgeText: {
     color: "#fff",
@@ -336,7 +421,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
-    paddingBottom: 30,
+    paddingBottom: Platform.OS === "ios" ? 40 : 30,
+    backgroundColor: "rgba(0,0,0,0.3)",
   },
   flipButton: {
     padding: 15,
