@@ -211,6 +211,9 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
 - **Feb 19**
     - Expo camera issues beacuse i am using old architecture
     - Expo camera is install through native changes means Gradlew and expo prebuild (Error "Type" old architecture)
+- **Feb 20**
+   - Experiment in a new ui for camera with gps images and states.
+  
 ## 🎉 Features Implementation
 ### Admin Dashboard
 - Company data management
