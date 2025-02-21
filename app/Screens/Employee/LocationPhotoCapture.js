@@ -18,6 +18,7 @@ import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import MapView, { Marker } from "react-native-maps";
 import { Image } from "react-native";
 import ViewShot from "react-native-view-shot";
+import { ImageManipulator } from "expo-image-manipulator";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -35,6 +36,7 @@ const LocationPhotoCapture = ({ navigation, route }) => {
   const [weatherInfo, setWeatherInfo] = useState(null);
   const [plusCode, setPlusCode] = useState(null);
   const cameraRef = useRef(null);
+  const viewShotRef = useRef(null);
 
   const { employeeName, employeeEmail, companyName } = route.params;
 
@@ -159,9 +161,99 @@ const LocationPhotoCapture = ({ navigation, route }) => {
 
     try {
       setIsSaving(true);
+      console.log("Starting to save location with photo");
 
-      // Convert base64 image to a data URL format
-      const imageUrl = `data:image/jpeg;base64,${capturedImage.base64}`;
+      // Capture the entire preview view as a single image
+      const uri = await viewShotRef.current.capture();
+      console.log("ViewShot captured successfully:", uri);
+
+      // Compress the image
+      console.log("Compressing image...");
+      const compressedImage = await ImageManipulator.manipulateAsync(
+        uri,
+        [{ resize: { width: 800 } }], // Resize to smaller width, maintaining aspect ratio
+        { compress: 0.6, format: ImageManipulator.SaveFormat.JPEG } // 60% quality JPEG
+      );
+      console.log("Image compressed successfully:", compressedImage.uri);
+
+      // Convert the compressed image to base64
+      const response = await fetch(compressedImage.uri);
+      const blob = await response.blob();
+      console.log("Blob created successfully");
+
+      const reader = new FileReader();
+      reader.readAsDataURL(blob);
+
+      reader.onloadend = async () => {
+        try {
+          console.log("FileReader completed");
+          const base64data = reader.result.split(",")[1];
+          console.log("Base64 conversion successful, size:", base64data.length);
+
+          // Check size before uploading
+          if (base64data.length > 900000) {
+            // ~900KB to be safe
+            console.warn(
+              "Image still large after compression:",
+              base64data.length
+            );
+            // Apply stronger compression if still too large
+            const furtherCompressed = await ImageManipulator.manipulateAsync(
+              compressedImage.uri,
+              [{ resize: { width: 600 } }],
+              { compress: 0.4, format: ImageManipulator.SaveFormat.JPEG }
+            );
+
+            const retryResponse = await fetch(furtherCompressed.uri);
+            const retryBlob = await retryResponse.blob();
+            const retryReader = new FileReader();
+            retryReader.readAsDataURL(retryBlob);
+
+            retryReader.onloadend = async () => {
+              const retryBase64 = retryReader.result.split(",")[1];
+              console.log("Further compressed size:", retryBase64.length);
+
+              // Proceed with upload
+              await uploadToFirestore(retryBase64);
+            };
+
+            retryReader.onerror = (error) => {
+              console.error("Retry FileReader error:", error);
+              Alert.alert("Error", "Failed to process compressed image");
+              setIsSaving(false);
+            };
+
+            return; // Exit early as we're handling in the nested callback
+          }
+
+          // Upload to Firestore if size is acceptable
+          await uploadToFirestore(base64data);
+        } catch (innerError) {
+          console.error("Error in reader.onloadend:", innerError);
+          Alert.alert(
+            "Error",
+            "Failed during image processing: " + innerError.message
+          );
+          setIsSaving(false);
+        }
+      };
+
+      reader.onerror = (error) => {
+        console.error("FileReader error:", error);
+        Alert.alert("Error", "Failed to read image data");
+        setIsSaving(false);
+      };
+    } catch (error) {
+      console.error("Error saving location data:", error);
+      Alert.alert("Error", "Failed to save location data: " + error.message);
+      setIsSaving(false);
+    }
+  };
+
+  // Helper function to upload data to Firestore
+  const uploadToFirestore = async (base64data) => {
+    try {
+      console.log("Attempting to save to Firebase");
 
       // Create document in Firestore
       await addDoc(collection(db, "ImageslocationUpdates"), {
@@ -186,7 +278,7 @@ const LocationPhotoCapture = ({ navigation, route }) => {
           plusCode: plusCode,
         },
         weatherInfo: weatherInfo,
-        imageUrl,
+        imageUrl: `data:image/jpeg;base64,${base64data}`,
         status: "active",
         type: "manual_check_in",
         deviceInfo: {
@@ -195,6 +287,8 @@ const LocationPhotoCapture = ({ navigation, route }) => {
           timestamp: new Date().toISOString(),
         },
       });
+
+      console.log("Successfully saved to Firebase");
 
       Alert.alert(
         "Success",
@@ -207,13 +301,12 @@ const LocationPhotoCapture = ({ navigation, route }) => {
         ]
       );
     } catch (error) {
-      console.error("Error saving location data:", error);
-      Alert.alert("Error", "Failed to save location data. Please try again.");
+      console.error("Error saving to Firestore:", error);
+      Alert.alert("Error", "Failed to save to database: " + error.message);
     } finally {
       setIsSaving(false);
     }
   };
-
   const retakePicture = () => {
     setCapturedImage(null);
   };
@@ -291,12 +384,15 @@ const LocationPhotoCapture = ({ navigation, route }) => {
           <Text style={styles.previewTitle}>Preview</Text>
         </View>
 
-        <View style={styles.imageContainer}>
+        <ViewShot
+          ref={viewShotRef}
+          options={{ quality: 0.9 }}
+          style={styles.imageContainer}
+        >
           <Image
             source={{ uri: capturedImage.uri }}
             style={styles.previewImage}
           />
-
           {/* Location Information Overlay */}
           <View style={styles.photoOverlay}>
             {/* Location Details and Minimap (positioned next to each other) */}
@@ -309,8 +405,8 @@ const LocationPhotoCapture = ({ navigation, route }) => {
                     region={{
                       latitude: location.coords.latitude,
                       longitude: location.coords.longitude,
-                      latitudeDelta: 0.01,
-                      longitudeDelta: 0.01,
+                      latitudeDelta: 0.1,
+                      longitudeDelta: 0.1,
                     }}
                     scrollEnabled={false}
                     zoomEnabled={false}
@@ -340,7 +436,7 @@ const LocationPhotoCapture = ({ navigation, route }) => {
               </View>
             </View>
           </View>
-        </View>
+        </ViewShot>
 
         <View style={styles.previewActions}>
           <TouchableOpacity
