@@ -218,6 +218,9 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
    - camera captured image error 107648 size error in firebase , may be server error.
    - Tried new dependencies RN(manipulator,shot)
   
+- **Feb 22**
+   - college presentation
+  
 ## 🎉 Features Implementation
 ### Admin Dashboard
 - Company data management
