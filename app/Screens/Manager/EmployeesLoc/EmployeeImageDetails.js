@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
-import { db } from "../../firebase";
+import { db } from "../../../firebase";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,

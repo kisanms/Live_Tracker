@@ -11,8 +11,8 @@ import {
   TouchableOpacity,
   Linking,
 } from "react-native";
-import { COLORS, SHADOWS } from "../../constants/theme";
-import { db, auth } from "../../firebase";
+import { COLORS, SHADOWS } from "../../../constants/theme";
+import { db, auth } from "../../../firebase";
 import {
   collection,
   query,

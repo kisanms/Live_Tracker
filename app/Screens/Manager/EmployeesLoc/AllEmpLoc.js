@@ -3,20 +3,20 @@ import {
   View,
   Text,
   StyleSheet,
-  FlatList,
-  TouchableOpacity,
   ActivityIndicator,
   Alert,
+  TouchableOpacity,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
-import { db, auth } from "../../firebase";
+import { db, auth } from "../../../firebase";
+import { Ionicons } from "@expo/vector-icons";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 
-const EmployeeImages = ({ navigation }) => {
+const AllEmpLoc = ({ navigation }) => {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -70,9 +70,6 @@ const EmployeeImages = ({ navigation }) => {
             timestamp:
               latestUpdate.timestamp?.toDate().toLocaleString() ||
               new Date().toLocaleString(),
-            images: updates
-              .map((update) => update.imageUrl)
-              .filter((url) => url),
           };
         }
         return null;
@@ -87,7 +84,7 @@ const EmployeeImages = ({ navigation }) => {
       if (employeeData.length === 0) {
         Alert.alert(
           "No Active Updates",
-          "None of your employees have active location updates with images."
+          "None of your employees have active location updates."
         );
       }
     } catch (error) {
@@ -101,15 +98,11 @@ const EmployeeImages = ({ navigation }) => {
     }
   };
 
-  const navigateToImageDetails = (employeeId) => {
-    navigation.navigate("employeeImagesDetails", { employeeId });
-  };
-
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#4A90E2" />
-        <Text style={styles.loadingText}>Loading employee data...</Text>
+        <Text style={styles.loadingText}>Loading employee locations...</Text>
       </View>
     );
   }
@@ -131,27 +124,37 @@ const EmployeeImages = ({ navigation }) => {
         >
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Employee Images & Locations</Text>
+        <Text style={styles.headerTitle}>All Employees Location</Text>
+        <TouchableOpacity
+          style={styles.galleryButton}
+          onPress={() => navigation.navigate("employeeImages")}
+        >
+          <Ionicons name="images" size={24} color="#fff" />
+        </TouchableOpacity>
       </View>
 
-      <FlatList
-        data={employees}
-        keyExtractor={(item) => item.employeeId}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.employeeCard}
-            onPress={() => navigateToImageDetails(item.employeeId)}
-          >
-            <View style={styles.headerSection}>
-              <Text style={styles.employeeName}>{item.name}</Text>
-              <Text style={styles.timestampText}>
-                Last Update: {item.timestamp}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        )}
-        contentContainerStyle={styles.listContent}
-      />
+      <MapView
+        provider={PROVIDER_GOOGLE}
+        style={styles.map}
+        initialRegion={{
+          latitude: employees[0]?.latitude || 21.1458, // Default to India
+          longitude: employees[0]?.longitude || 79.0882,
+          latitudeDelta: 0.122,
+          longitudeDelta: 0.221,
+        }}
+      >
+        {employees.map((employee, index) => (
+          <Marker
+            key={index}
+            coordinate={{
+              latitude: parseFloat(employee.latitude),
+              longitude: parseFloat(employee.longitude),
+            }}
+            title={`${employee.name}`}
+            description={`Last update: ${employee.timestamp}`}
+          />
+        ))}
+      </MapView>
     </View>
   );
 };
@@ -167,6 +170,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#4A90E2",
     padding: 15,
     elevation: 5,
+    justifyContent: "space-between",
   },
   backButton: {
     padding: 5,
@@ -175,8 +179,13 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     color: "#fff",
+    marginLeft: 10,
+  },
+  galleryButton: {
+    padding: 5,
+  },
+  map: {
     flex: 1,
-    textAlign: "center",
   },
   loadingContainer: {
     flex: 1,
@@ -200,41 +209,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "500",
   },
-  listContent: {
-    paddingVertical: 10,
-    paddingHorizontal: wp("2%"),
-  },
-  employeeCard: {
-    backgroundColor: "#fff",
-    marginVertical: 5,
-    borderRadius: 10,
-    overflow: "hidden",
-    marginHorizontal: wp("2%"),
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  headerSection: {
-    padding: 15,
-    backgroundColor: "#f5f5f5",
-  },
-  employeeName: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#333",
-  },
-  locationText: {
-    fontSize: 14,
-    color: "#666",
-    marginTop: 5,
-  },
-  timestampText: {
-    fontSize: 14,
-    color: "#999",
-    marginTop: 5,
-  },
 });
 
-export default EmployeeImages;
+export default AllEmpLoc;

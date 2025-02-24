@@ -9,9 +9,9 @@ import {
   TouchableOpacity,
   StatusBar,
 } from "react-native";
-import { db } from "../../firebase";
+import { db } from "../../../firebase";
 import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
-import { COLORS, SHADOWS } from "../../constants/theme";
+import { COLORS, SHADOWS } from "../../../constants/theme";
 import {
   heightPercentageToDP as hp,
   widthPercentageToDP as wp,
