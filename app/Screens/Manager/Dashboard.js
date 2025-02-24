@@ -351,12 +351,11 @@ const ManagerDashboard = ({ navigation }) => {
       return;
     }
 
-    navigation.navigate("maps", {
+    navigation.navigate("LocationPhotoCapture", {
       userRole: "manager",
-      userData: {
-        name: managerData.name,
-        email: managerData.email,
-      },
+      managerName: managerData.name,
+      managerEmail: managerData.email,
+      companyName: managerData.companyName, // Add company name
     });
   };
 
@@ -497,7 +496,7 @@ const ManagerDashboard = ({ navigation }) => {
             onPress={handleShareLocation}
           >
             <View style={styles.actionIconContainer}>
-              <Ionicons name="share-social" size={24} color="#4A90E2" />
+              <Ionicons name="camera" size={24} color="#4A90E2" />
             </View>
             <Text style={styles.actionText}>Share Location</Text>
           </TouchableOpacity>

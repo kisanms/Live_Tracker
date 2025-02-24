@@ -35,7 +35,14 @@ const LocationPhotoCapture = ({ navigation, route }) => {
   const [isCameraReady, setIsCameraReady] = useState(false);
   const cameraRef = useRef(null);
 
-  const { employeeName, employeeEmail, companyName } = route.params;
+  const {
+    employeeName,
+    employeeEmail,
+    companyName,
+    userRole,
+    managerName,
+    managerEmail,
+  } = route.params;
 
   useEffect(() => {
     StatusBar.setBarStyle("light-content");
@@ -136,10 +143,8 @@ const LocationPhotoCapture = ({ navigation, route }) => {
       setIsSaving(true);
       const imageUrl = `data:image/jpeg;base64,${capturedImage.base64}`;
 
-      await addDoc(collection(db, "ImageslocationUpdates"), {
+      const commonData = {
         userId: auth.currentUser?.uid,
-        employeeName,
-        employeeEmail,
         companyName,
         timestamp: serverTimestamp(),
         location: {
@@ -155,7 +160,29 @@ const LocationPhotoCapture = ({ navigation, route }) => {
           model: Platform.OS === "ios" ? "iOS Device" : "Android Device",
           timestamp: new Date().toISOString(),
         },
-      });
+      };
+
+      // Add role-specific data
+      const roleSpecificData =
+        userRole === "manager"
+          ? {
+              managerName,
+              managerEmail,
+              userRole: "manager",
+            }
+          : {
+              employeeName,
+              employeeEmail,
+              userRole: "employee",
+            };
+
+      // Combine common and role-specific data
+      const docData = {
+        ...commonData,
+        ...roleSpecificData,
+      };
+
+      await addDoc(collection(db, "ImageslocationUpdates"), docData);
 
       Alert.alert(
         "Success",
@@ -163,7 +190,7 @@ const LocationPhotoCapture = ({ navigation, route }) => {
         [
           {
             text: "OK",
-            onPress: () => navigation.goBack(),
+            onPress: () => navigation.goBack(), // Navigate back
           },
         ]
       );
@@ -265,6 +292,10 @@ const LocationPhotoCapture = ({ navigation, route }) => {
     );
   }
 
+  // Update the header title based on user role
+  const getHeaderTitle = () => {
+    return userRole === "manager" ? "Manager Check-in" : "Location Check-in";
+  };
   // Camera Screen (live preview remains mirrored for front camera)
   return (
     <View style={styles.container}>
@@ -287,7 +318,7 @@ const LocationPhotoCapture = ({ navigation, route }) => {
               >
                 <Ionicons name="arrow-back" size={24} color="#fff" />
               </TouchableOpacity>
-              <Text style={styles.headerTitle}>Location Check-in</Text>
+              <Text style={styles.headerTitle}>{getHeaderTitle()}</Text>
             </View>
             {location && (
               <View style={styles.locationBadge}>

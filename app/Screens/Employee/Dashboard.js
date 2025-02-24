@@ -514,7 +514,7 @@ const EmployeeDashboard = ({ navigation }) => {
           style={[styles.actionButton, { width: "48%" }]}
           onPress={handleShareLocation}
         >
-          <Ionicons name="share" size={24} color="#4A90E2" />
+          <Ionicons name="camera" size={24} color="#4A90E2" />
           <Text style={styles.actionText}>Share Location</Text>
         </TouchableOpacity>
         <TouchableOpacity
