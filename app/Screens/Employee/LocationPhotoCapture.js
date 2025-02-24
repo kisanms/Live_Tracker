@@ -16,6 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { db, auth } from "../../firebase";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { Image } from "expo-image";
+import * as ImageManipulator from "expo-image-manipulator"; // Add this import
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -32,12 +33,10 @@ const LocationPhotoCapture = ({ navigation, route }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isCameraReady, setIsCameraReady] = useState(false);
-  const [cameraLayout, setCameraLayout] = useState(null);
   const cameraRef = useRef(null);
 
   const { employeeName, employeeEmail, companyName } = route.params;
 
-  // Request location permissions when component mounts
   useEffect(() => {
     StatusBar.setBarStyle("light-content");
 
@@ -45,10 +44,7 @@ const LocationPhotoCapture = ({ navigation, route }) => {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
         setLocationPermission(status === "granted");
-
-        if (status === "granted") {
-          getLocation();
-        }
+        if (status === "granted") getLocation();
       } catch (error) {
         console.error("Error requesting location permission:", error);
         setLocationPermission(false);
@@ -56,19 +52,13 @@ const LocationPhotoCapture = ({ navigation, route }) => {
     };
 
     getLocationPermission();
-
-    return () => {
-      StatusBar.setBarStyle("default");
-    };
+    return () => StatusBar.setBarStyle("default");
   }, []);
 
-  // Reset camera when retaking a picture
   useEffect(() => {
     if (!capturedImage) {
       setIsCameraReady(false);
-      const timeout = setTimeout(() => {
-        setIsCameraReady(true);
-      }, 500);
+      const timeout = setTimeout(() => setIsCameraReady(true), 500);
       return () => clearTimeout(timeout);
     }
   }, [capturedImage]);
@@ -88,31 +78,43 @@ const LocationPhotoCapture = ({ navigation, route }) => {
     }
   };
 
-  const handleCameraLayout = (event) => {
-    const { width, height } = event.nativeEvent.layout;
-    setCameraLayout({ width, height });
-  };
-
   const takePicture = async () => {
     if (!cameraRef.current || !isCameraReady) return;
 
     try {
       setIsLoading(true);
       const photo = await cameraRef.current.takePictureAsync({
-        quality: 0.7,
-        base64: true,
-        skipProcessing: true,
+        quality: 0.5, // Moderate quality to start
+        skipProcessing: true, // Faster processing
       });
 
-      // Get fresh location data when taking picture
+      // Resize and compress the image
+      const manipulatedPhoto = await ImageManipulator.manipulateAsync(
+        photo.uri,
+        [{ resize: { width: 300 } }], // Resize to 300px width (adjust as needed)
+        { compress: 0.5, format: "jpeg", base64: true } // Compress and convert to base64
+      );
+
+      // Estimate base64 size in bytes (base64 is ~33% larger than binary)
+      const base64Size = Math.round((manipulatedPhoto.base64.length * 3) / 4);
+      console.log("Base64 size:", base64Size); // For debugging
+      if (base64Size > 900000) {
+        // Buffer below 1 MB
+        throw new Error("Image too large even after resizing.");
+      }
+
       const currentLocation = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
       });
       setLocation(currentLocation);
-      setCapturedImage(photo);
+      setCapturedImage(manipulatedPhoto); // Use manipulated photo
     } catch (error) {
       console.error("Error taking picture:", error);
-      Alert.alert("Error", "Failed to take picture. Please try again.");
+      Alert.alert(
+        "Error",
+        error.message ||
+          "Failed to take picture. Try again with a simpler scene."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -126,11 +128,8 @@ const LocationPhotoCapture = ({ navigation, route }) => {
 
     try {
       setIsSaving(true);
-
-      // Convert base64 image to a data URL format
       const imageUrl = `data:image/jpeg;base64,${capturedImage.base64}`;
 
-      // Create document in Firestore
       await addDoc(collection(db, "ImageslocationUpdates"), {
         userId: auth.currentUser?.uid,
         employeeName,
@@ -170,19 +169,13 @@ const LocationPhotoCapture = ({ navigation, route }) => {
     }
   };
 
-  const retakePicture = () => {
-    setCapturedImage(null);
-  };
+  const retakePicture = () => setCapturedImage(null);
 
-  const toggleFacing = () => {
-    setFacing(facing === "back" ? "front" : "back");
-  };
+  const toggleFacing = () => setFacing(facing === "back" ? "front" : "back");
 
-  const handleCameraReady = () => {
-    setIsCameraReady(true);
-  };
+  const handleCameraReady = () => setIsCameraReady(true);
 
-  // Check if permissions are still being determined
+  // Permissions UI unchanged (omitted for brevity)
   if (!cameraPermission || locationPermission === null) {
     return (
       <View style={styles.loadingContainer}>
@@ -192,7 +185,6 @@ const LocationPhotoCapture = ({ navigation, route }) => {
     );
   }
 
-  // Check if permissions are not granted
   if (!cameraPermission.granted || !locationPermission) {
     return (
       <View style={styles.permissionContainer}>
@@ -225,13 +217,11 @@ const LocationPhotoCapture = ({ navigation, route }) => {
           </TouchableOpacity>
           <Text style={styles.previewTitle}>Preview</Text>
         </View>
-
         <Image
           source={{ uri: capturedImage.uri }}
           style={styles.previewImage}
           contentFit="cover"
         />
-
         {location && (
           <View style={styles.locationInfo}>
             <Ionicons name="location" size={20} color="#4A90E2" />
@@ -241,7 +231,6 @@ const LocationPhotoCapture = ({ navigation, route }) => {
             </Text>
           </View>
         )}
-
         <View style={styles.previewActions}>
           <TouchableOpacity
             style={[styles.previewButton, styles.retakeButton]}
@@ -250,7 +239,6 @@ const LocationPhotoCapture = ({ navigation, route }) => {
             <Ionicons name="refresh" size={24} color="#FF6347" />
             <Text style={styles.retakeText}>Retake</Text>
           </TouchableOpacity>
-
           <TouchableOpacity
             style={[styles.previewButton, styles.saveButton]}
             onPress={saveLocationWithPhoto}
@@ -273,20 +261,16 @@ const LocationPhotoCapture = ({ navigation, route }) => {
   return (
     <View style={styles.container}>
       {isCameraReady ? (
-        <View style={styles.cameraContainer} onLayout={handleCameraLayout}>
+        <View style={styles.cameraContainer}>
           <CameraView
-            style={[styles.camera]}
+            style={styles.camera}
             facing={facing}
             ref={cameraRef}
             enableTorch={false}
             mode="picture"
             onCameraReady={handleCameraReady}
             ratio="16:9"
-          >
-            {/* Camera content goes here */}
-          </CameraView>
-
-          {/* UI Overlay */}
+          />
           <View style={styles.uiOverlay}>
             <View style={styles.cameraHeader}>
               <TouchableOpacity
@@ -297,20 +281,17 @@ const LocationPhotoCapture = ({ navigation, route }) => {
               </TouchableOpacity>
               <Text style={styles.headerTitle}>Location Check-in</Text>
             </View>
-
             {location && (
               <View style={styles.locationBadge}>
                 <Ionicons name="location" size={16} color="#fff" />
                 <Text style={styles.locationBadgeText}>Location Ready</Text>
               </View>
             )}
-
             <View style={styles.instructionContainer}>
               <Text style={styles.instructionText}>
                 Take a clear photo for location check-in
               </Text>
             </View>
-
             <View style={styles.cameraControls}>
               <TouchableOpacity
                 style={styles.flipButton}
@@ -318,7 +299,6 @@ const LocationPhotoCapture = ({ navigation, route }) => {
               >
                 <Ionicons name="camera-reverse" size={30} color="#fff" />
               </TouchableOpacity>
-
               <TouchableOpacity
                 style={styles.captureButton}
                 onPress={takePicture}
@@ -330,7 +310,6 @@ const LocationPhotoCapture = ({ navigation, route }) => {
                   <View style={styles.captureButtonInner} />
                 )}
               </TouchableOpacity>
-
               <TouchableOpacity
                 style={styles.refreshLocation}
                 onPress={getLocation}
@@ -351,20 +330,11 @@ const LocationPhotoCapture = ({ navigation, route }) => {
   );
 };
 
+// Styles unchanged (omitted for brevity)
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#000",
-  },
-  cameraContainer: {
-    flex: 1,
-    position: "relative",
-  },
-  camera: {
-    flex: 1,
-    width: "100%",
-    height: "100%",
-  },
+  container: { flex: 1, backgroundColor: "#000" },
+  cameraContainer: { flex: 1, position: "relative" },
+  camera: { flex: 1, width: "100%", height: "100%" },
   uiOverlay: {
     position: "absolute",
     top: 0,
@@ -379,11 +349,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#000",
   },
-  loadingText: {
-    color: "#fff",
-    marginTop: 10,
-    fontSize: 16,
-  },
+  loadingText: { color: "#fff", marginTop: 10, fontSize: 16 },
   cameraHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -391,9 +357,7 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === "ios" ? 50 : 30,
     backgroundColor: "rgba(0,0,0,0.3)",
   },
-  backButton: {
-    padding: 8,
-  },
+  backButton: { padding: 8 },
   headerTitle: {
     color: "#fff",
     fontSize: 18,
@@ -410,12 +374,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     flexDirection: "row",
     alignItems: "center",
-    zIndex: 10,
   },
-  locationBadgeText: {
+  locationBadgeText: { color: "#fff", fontSize: 14, marginLeft: 5 },
+  instructionContainer: {
+    position: "absolute",
+    bottom: 100,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+  },
+  instructionText: {
     color: "#fff",
     fontSize: 14,
-    marginLeft: 5,
+    textAlign: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
   },
   cameraControls: {
     flexDirection: "row",
@@ -424,9 +399,7 @@ const styles = StyleSheet.create({
     paddingBottom: Platform.OS === "ios" ? 40 : 30,
     backgroundColor: "rgba(0,0,0,0.3)",
   },
-  flipButton: {
-    padding: 15,
-  },
+  flipButton: { padding: 15 },
   captureButton: {
     width: 70,
     height: 70,
@@ -441,13 +414,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     backgroundColor: "#fff",
   },
-  refreshLocation: {
-    padding: 15,
-  },
-  previewImage: {
-    width: "100%",
-    height: "65%",
-  },
+  refreshLocation: { padding: 15 },
   previewHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -461,17 +428,14 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginLeft: 15,
   },
+  previewImage: { width: "100%", height: "65%" },
   locationInfo: {
     flexDirection: "row",
     alignItems: "center",
     padding: 15,
     backgroundColor: "#f5f5f5",
   },
-  locationText: {
-    marginLeft: 10,
-    color: "#333",
-    fontSize: 14,
-  },
+  locationText: { marginLeft: 10, color: "#333", fontSize: 14 },
   previewActions: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -499,19 +463,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ddd",
   },
-  saveButton: {
-    backgroundColor: "#4A90E2",
-  },
-  retakeText: {
-    marginLeft: 8,
-    color: "#FF6347",
-    fontWeight: "bold",
-  },
-  saveText: {
-    marginLeft: 8,
-    color: "#fff",
-    fontWeight: "bold",
-  },
+  saveButton: { backgroundColor: "#4A90E2" },
+  retakeText: { marginLeft: 8, color: "#FF6347", fontWeight: "bold" },
+  saveText: { marginLeft: 8, color: "#fff", fontWeight: "bold" },
   permissionContainer: {
     flex: 1,
     justifyContent: "center",
@@ -531,27 +485,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 8,
   },
-  permissionButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  instructionContainer: {
-    position: "absolute",
-    bottom: 100,
-    left: 0,
-    right: 0,
-    alignItems: "center",
-  },
-  instructionText: {
-    color: "#fff",
-    fontSize: 14,
-    textAlign: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-  },
+  permissionButtonText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
 });
 
 export default LocationPhotoCapture;
