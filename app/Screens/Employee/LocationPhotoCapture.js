@@ -16,7 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { db, auth } from "../../firebase";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { Image } from "expo-image";
-import * as ImageManipulator from "expo-image-manipulator"; // Add this import
+import * as ImageManipulator from "expo-image-manipulator";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -84,22 +84,28 @@ const LocationPhotoCapture = ({ navigation, route }) => {
     try {
       setIsLoading(true);
       const photo = await cameraRef.current.takePictureAsync({
-        quality: 0.5, // Moderate quality to start
+        quality: 0.99, // Near-maximum quality for initial capture
         skipProcessing: true, // Faster processing
       });
 
-      // Resize and compress the image
+      // Define manipulation actions
+      const actions = [{ resize: { width: 550 } }]; // Resize to 550px width
+      if (facing === "front") {
+        // Unmirror the front camera image for preview and storage
+        actions.push({ flip: ImageManipulator.FlipType.Horizontal });
+      }
+
+      // Process the image (resize and unmirror if front camera)
       const manipulatedPhoto = await ImageManipulator.manipulateAsync(
         photo.uri,
-        [{ resize: { width: 300 } }], // Resize to 300px width (adjust as needed)
-        { compress: 0.5, format: "jpeg", base64: true } // Compress and convert to base64
+        actions,
+        { compress: 0.99, format: "jpeg", base64: true } // Compress and convert to base64
       );
 
       // Estimate base64 size in bytes (base64 is ~33% larger than binary)
       const base64Size = Math.round((manipulatedPhoto.base64.length * 3) / 4);
       console.log("Base64 size:", base64Size); // For debugging
       if (base64Size > 900000) {
-        // Buffer below 1 MB
         throw new Error("Image too large even after resizing.");
       }
 
@@ -107,7 +113,7 @@ const LocationPhotoCapture = ({ navigation, route }) => {
         accuracy: Location.Accuracy.High,
       });
       setLocation(currentLocation);
-      setCapturedImage(manipulatedPhoto); // Use manipulated photo
+      setCapturedImage(manipulatedPhoto); // Set the unmirrored image for preview
     } catch (error) {
       console.error("Error taking picture:", error);
       Alert.alert(
@@ -157,7 +163,7 @@ const LocationPhotoCapture = ({ navigation, route }) => {
         [
           {
             text: "OK",
-            onPress: () => navigation.navigate("employeeDashboard"),
+            onPress: () => navigation.goBack(),
           },
         ]
       );
@@ -175,7 +181,7 @@ const LocationPhotoCapture = ({ navigation, route }) => {
 
   const handleCameraReady = () => setIsCameraReady(true);
 
-  // Permissions UI unchanged (omitted for brevity)
+  // Permissions UI
   if (!cameraPermission || locationPermission === null) {
     return (
       <View style={styles.loadingContainer}>
@@ -205,6 +211,7 @@ const LocationPhotoCapture = ({ navigation, route }) => {
     );
   }
 
+  // Preview Screen (unmirrored for front camera)
   if (capturedImage) {
     return (
       <View style={styles.container}>
@@ -258,6 +265,7 @@ const LocationPhotoCapture = ({ navigation, route }) => {
     );
   }
 
+  // Camera Screen (live preview remains mirrored for front camera)
   return (
     <View style={styles.container}>
       {isCameraReady ? (
@@ -330,7 +338,7 @@ const LocationPhotoCapture = ({ navigation, route }) => {
   );
 };
 
-// Styles unchanged (omitted for brevity)
+// Styles unchanged
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#000" },
   cameraContainer: { flex: 1, position: "relative" },
