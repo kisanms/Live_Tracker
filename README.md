@@ -223,7 +223,8 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
 - **Feb 23**
    - Finding solution how to compress the image with React-native manipulator
 - **Feb 24**
-   - Image is now compressed 
+   - Image is now compressed
+   - Both manager and employee can share there images now
   
 ## 🎉 Features Implementation
 ### Admin Dashboard
