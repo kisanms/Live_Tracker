@@ -353,7 +353,7 @@ const AdminDashboard = ({ navigation }) => {
             },
             {
               icon: "people",
-              text: "All Staff Location",
+              text: "All Shared Location",
               onPress: () => navigation.navigate("allEmpLocs"),
             },
             {
