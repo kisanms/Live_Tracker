@@ -16,6 +16,8 @@ import {
   getDocs,
   doc,
   getDoc,
+  orderBy,
+  limit,
 } from "firebase/firestore";
 import { db, auth } from "../../firebase";
 import { COLORS, SHADOWS } from "../../constants/theme";
@@ -75,13 +77,13 @@ const AllEmpLoc = ({ navigation }) => {
     fetchData();
   }, []);
 
-  // Fetch locations based on selected tab
+  // Fetch locations from ImageslocationUpdates based on selected tab
   useEffect(() => {
     if (!adminData?.companyName) return;
 
     const fetchLocations = async () => {
       try {
-        // Get users (managers or employees)
+        // Get users (managers or employees) under the admin's company
         const usersQuery = query(
           collection(db, "users"),
           where(
@@ -97,25 +99,30 @@ const AllEmpLoc = ({ navigation }) => {
           ...doc.data(),
         }));
 
-        // Get locations for each user
-        const locationCollection =
-          selectedTab === "managers" ? "managerLocations" : "employeeLocations";
+        // Fetch the most recent location from ImageslocationUpdates for each user
         const locationsData = [];
 
         for (const user of users) {
-          const locationDoc = await getDoc(
-            doc(db, locationCollection, user.id)
+          const updatesQuery = query(
+            collection(db, "ImageslocationUpdates"),
+            where("userId", "==", user.id),
+            where("status", "==", "active"),
+            orderBy("timestamp", "desc"),
+            limit(1) // Get only the most recent update
           );
-          if (
-            locationDoc.exists() &&
-            locationDoc.data().latitude &&
-            locationDoc.data().longitude
-          ) {
+          const updateSnapshot = await getDocs(updatesQuery);
+          const update = updateSnapshot.docs[0]?.data();
+
+          if (update && update.location) {
             locationsData.push({
               id: user.id,
               name: user.name,
               email: user.email,
-              ...locationDoc.data(),
+              latitude: update.location.latitude,
+              longitude: update.location.longitude,
+              timestamp:
+                update.timestamp?.toDate().toLocaleString() ||
+                new Date().toLocaleString(),
             });
           }
         }
@@ -147,7 +154,12 @@ const AllEmpLoc = ({ navigation }) => {
           <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Staff Locations</Text>
-        <View style={{ width: 24 }} />
+        <TouchableOpacity
+          style={styles.galleryButton}
+          onPress={() => navigation.navigate("EmployeeImages")}
+        >
+          <Ionicons name="images" size={24} color="#fff" />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.tabContainer}>
@@ -242,7 +254,6 @@ const AllEmpLoc = ({ navigation }) => {
               longitude: location.longitude,
             }}
             title={location.name}
-            description={location.email}
           >
             <View style={styles.markerContainer}>
               <View
@@ -294,7 +305,7 @@ const styles = StyleSheet.create({
   },
   tabContainer: {
     flexDirection: "row",
-    padding: 15,
+    padding: 10,
     backgroundColor: "#fff",
     marginBottom: 10,
     gap: 12,
@@ -411,6 +422,16 @@ const styles = StyleSheet.create({
   },
   employeeArrow: {
     borderColor: "#FF9800",
+  },
+  galleryButton: {
+    padding: 8,
+    backgroundColor: "#4A90E2",
+    borderRadius: 12,
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
 });
 
