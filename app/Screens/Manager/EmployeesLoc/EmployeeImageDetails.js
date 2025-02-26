@@ -8,20 +8,23 @@ import {
   TouchableOpacity,
   Modal,
   ActivityIndicator,
+  Alert,
   Linking,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import ImageViewer from "react-native-image-zoom-viewer"; // For zooming
 import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
 import { db } from "../../../firebase";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
+import { GestureHandlerRootView } from "react-native-gesture-handler"; // Required for gesture handling
 
 const EmployeeImageDetails = ({ navigation, route }) => {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(null); // Track index for zoom viewer
   const employeeId = route.params?.employeeId;
 
   useEffect(() => {
@@ -59,17 +62,21 @@ const EmployeeImageDetails = ({ navigation, route }) => {
     }
   };
 
-  const openFullImage = (image) => {
-    setSelectedImage(image);
+  const openFullImage = (index) => {
+    setSelectedImageIndex(index);
   };
 
   const closeFullImage = () => {
-    setSelectedImage(null);
+    setSelectedImageIndex(null);
   };
 
   const openGoogleMaps = (latitude, longitude) => {
     const url = `https://www.google.com/maps?q=${latitude},${longitude}`;
     Linking.openURL(url);
+  };
+
+  const handleImageChange = (index) => {
+    setSelectedImageIndex(index); // Update index when swiping
   };
 
   if (loading) {
@@ -91,88 +98,105 @@ const EmployeeImageDetails = ({ navigation, route }) => {
     );
   }
 
+  // Prepare image data for ImageViewer
+  const imageViewerData = images.map((image) => ({
+    url: image.url,
+  }));
+
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          {images[0].employeeName}'s Images
-        </Text>
-      </View>
-
-      <FlatList
-        data={images}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <View style={styles.container}>
+        <View style={styles.header}>
           <TouchableOpacity
-            style={styles.imageCard}
-            onPress={() => openFullImage(item)}
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
           >
-            <Image
-              source={{ uri: item.url }}
-              style={styles.thumbnail}
-              contentFit="cover"
-            />
-            <View style={styles.imageInfo}>
-              <Text style={styles.employeeName}>{item.employeeName}</Text>
-              <Text style={styles.timestampText}>
-                Captured: {item.timestamp}
-              </Text>
-            </View>
+            <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
-        )}
-        contentContainerStyle={styles.listContent}
-      />
+          <Text style={styles.headerTitle}>
+            {images[0].employeeName}'s Images
+          </Text>
+        </View>
 
-      <Modal
-        visible={!!selectedImage}
-        transparent={true}
-        animationType="slide" // Changed to slide for smoother animation
-        onRequestClose={closeFullImage}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+        <FlatList
+          data={images}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item, index }) => (
             <TouchableOpacity
-              style={styles.closeButton}
-              onPress={closeFullImage}
+              style={styles.imageCard}
+              onPress={() => openFullImage(index)}
             >
-              <Ionicons name="close" size={28} color="#fff" />
-            </TouchableOpacity>
-            <Image
-              source={{ uri: selectedImage?.url }}
-              style={styles.fullImage}
-              contentFit="contain"
-            />
-            <View style={styles.detailsContainer}>
-              <Text style={styles.employeeText}>
-                Employee: {selectedImage?.employeeName}
-              </Text>
-              <Text style={styles.timestampText}>
-                Captured: {selectedImage?.timestamp}
-              </Text>
-              <TouchableOpacity
-                style={styles.locationButton}
-                onPress={() =>
-                  openGoogleMaps(
-                    selectedImage?.latitude,
-                    selectedImage?.longitude
-                  )
-                }
-              >
-                <Text style={styles.locationButtonText}>
-                  View Location on Google Maps
+              <Image
+                source={{ uri: item.url }}
+                style={styles.thumbnail}
+                contentFit="cover"
+              />
+              <View style={styles.imageInfo}>
+                <Text style={styles.employeeName}>{item.employeeName}</Text>
+                <Text style={styles.timestampText}>
+                  Captured: {item.timestamp}
                 </Text>
-              </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          )}
+          numColumns={2} // Grid layout for gallery
+          contentContainerStyle={styles.galleryContent}
+        />
+
+        <Modal
+          visible={selectedImageIndex !== null}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={closeFullImage}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.customImageContainer}>
+              <View style={styles.modalHeader}>
+                <TouchableOpacity
+                  style={styles.backButtonModal}
+                  onPress={closeFullImage}
+                >
+                  <Ionicons name="arrow-back" size={28} color="#fff" />
+                </TouchableOpacity>
+              </View>
+
+              <ImageViewer
+                imageUrls={imageViewerData}
+                index={selectedImageIndex}
+                onSwipeDown={closeFullImage} // Close modal on swipe down
+                enableSwipeDown={true}
+                renderIndicator={() => null} // Hide default indicator
+                saveToLocalByLongPress={true} // Optional: Enable saving image
+                backgroundColor="rgba(0, 0, 0, 0.85)"
+                onChange={handleImageChange} // Update index when swiping
+              />
+
+              <View style={styles.footerContainer}>
+                <Text style={styles.footerEmployee}>
+                  Employee: {images[selectedImageIndex]?.employeeName || ""}
+                </Text>
+                <Text style={styles.footerTimestamp}>
+                  Captured: {images[selectedImageIndex]?.timestamp || ""}
+                </Text>
+                <TouchableOpacity
+                  style={styles.locationButton}
+                  onPress={() =>
+                    openGoogleMaps(
+                      images[selectedImageIndex]?.latitude,
+                      images[selectedImageIndex]?.longitude
+                    )
+                  }
+                >
+                  <Text style={styles.locationButtonText}>
+                    View Location on Google Maps
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
-      </Modal>
-    </View>
+        </Modal>
+      </View>
+    </GestureHandlerRootView>
   );
 };
 
@@ -186,6 +210,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#4A90E2",
     padding: 15,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
     elevation: 5,
   },
   backButton: {
@@ -220,13 +246,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "500",
   },
-  listContent: {
+  galleryContent: {
     paddingVertical: 10,
     paddingHorizontal: wp("2%"),
   },
   imageCard: {
     backgroundColor: "#fff",
-    marginVertical: 10,
+    margin: 5,
     borderRadius: 15,
     elevation: 3,
     shadowColor: "#000",
@@ -234,6 +260,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     overflow: "hidden",
+    flex: 1,
+    maxWidth: wp("45%"), // Two columns, accounting for margins
   },
   thumbnail: {
     width: "100%",
@@ -242,73 +270,78 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 15,
   },
   imageInfo: {
-    padding: 10,
+    padding: 12,
     backgroundColor: "#f5f5f5",
+    alignItems: "center",
+    justifyContent: "center",
   },
   employeeName: {
     fontSize: 16,
     fontWeight: "bold",
     color: "#333",
+    textAlign: "center",
   },
   timestampText: {
     fontSize: 14,
     color: "#666",
-    marginTop: 5,
+    textAlign: "center",
+    marginTop: 4,
   },
   modalOverlay: {
     flex: 1,
     justifyContent: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.85)", // Slightly darker overlay for contrast
-  },
-  modalContent: {
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    marginHorizontal: wp("5%"),
-    marginVertical: hp("5%"),
-    padding: 20,
-    elevation: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
     alignItems: "center",
-    position: "relative",
-    overflow: "hidden",
+    backgroundColor: "rgba(0, 0, 0, 0.85)",
   },
-  closeButton: {
+  customImageContainer: {
+    flex: 1,
+    width: "100%",
+    justifyContent: "space-between",
+  },
+  modalHeader: {
+    padding: 15,
+    width: "100%",
     position: "absolute",
-    top: 20,
-    right: 20,
-    padding: 12,
-    backgroundColor: "rgba(0, 0, 0, 0.7)", // Darker, more visible background
-    borderRadius: 20,
-    zIndex: 10, // Ensure it stays on top
+    top: 0,
+    zIndex: 1, // Ensure header stays above ImageViewer
   },
-  fullImage: {
+  backButtonModal: {
+    padding: 2,
+    width: 50,
+  },
+  footerContainer: {
+    backgroundColor: "#fff",
+    paddingVertical: 15,
+    paddingHorizontal: 20,
     width: "100%",
-    height: hp("60%"),
-    borderRadius: 10,
-    marginBottom: 20,
-  },
-  detailsContainer: {
     alignItems: "center",
-    paddingTop: 10,
-    width: "100%",
+    position: "absolute",
+    bottom: 0,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    zIndex: 1, // Ensure footer stays above ImageViewer
   },
-  employeeText: {
-    fontSize: 20,
+  footerEmployee: {
+    fontSize: 18,
     fontWeight: "bold",
     color: "#333",
-    marginBottom: 8,
+    textAlign: "center",
+    marginBottom: 6,
   },
-  timestampText: {
-    fontSize: 16,
+  footerTimestamp: {
+    fontSize: 14,
     color: "#666",
-    marginBottom: 15,
+    textAlign: "center",
+    marginBottom: 12,
   },
   locationButton: {
     backgroundColor: "#4A90E2",
-    paddingVertical: 14,
+    paddingVertical: 12,
     paddingHorizontal: 25,
     borderRadius: 12,
     alignItems: "center",
