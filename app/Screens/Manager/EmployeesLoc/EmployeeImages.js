@@ -7,9 +7,18 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  orderBy,
+  getDoc,
+  doc,
+} from "firebase/firestore";
 import { db, auth } from "../../../firebase";
 import {
   widthPercentageToDP as wp,
@@ -47,6 +56,18 @@ const EmployeeImages = ({ navigation }) => {
         return;
       }
 
+      const userPromises = employeeIds.map(async (employeeId) => {
+        const userDoc = await getDoc(doc(db, "users", employeeId));
+        return userDoc.exists()
+          ? { employeeId, profileImage: userDoc.data().profileImage || null }
+          : { employeeId, profileImage: null };
+      });
+      const userData = await Promise.all(userPromises);
+      const userMap = userData.reduce((acc, { employeeId, profileImage }) => {
+        acc[employeeId] = profileImage;
+        return acc;
+      }, {});
+
       const updatesRef = collection(db, "ImageslocationUpdates");
       const locationPromises = employeeIds.map(async (employeeId) => {
         const updateQuery = query(
@@ -73,6 +94,8 @@ const EmployeeImages = ({ navigation }) => {
             images: updates
               .map((update) => update.imageUrl)
               .filter((url) => url),
+            profileImage:
+              userMap[employeeId] || "https://via.placeholder.com/50",
           };
         }
         return null;
@@ -142,6 +165,11 @@ const EmployeeImages = ({ navigation }) => {
             style={styles.employeeCard}
             onPress={() => navigateToImageDetails(item.employeeId)}
           >
+            <Image
+              source={{ uri: item.profileImage }}
+              style={styles.profileImage}
+              contentFit="cover"
+            />
             <View style={styles.headerSection}>
               <Text style={styles.employeeName}>{item.name}</Text>
               <Text style={styles.timestampText}>
@@ -159,13 +187,13 @@ const EmployeeImages = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#f0f2f5", // Light gray background for contrast
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#4A90E2",
-    padding: 15,
+    padding: hp(2),
     elevation: 5,
   },
   backButton: {
@@ -201,39 +229,48 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   listContent: {
-    paddingVertical: 10,
-    paddingHorizontal: wp("2%"),
+    paddingVertical: 15,
+    paddingHorizontal: wp("4%"),
   },
   employeeCard: {
+    flexDirection: "row",
     backgroundColor: "#fff",
-    marginVertical: 5,
-    borderRadius: 10,
+    marginVertical: 8,
+    borderRadius: 15,
     overflow: "hidden",
-    marginHorizontal: wp("2%"),
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: "#e0e0e0", // Subtle border
+    elevation: 4,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
+    alignItems: "center",
+  },
+  profileImage: {
+    width: wp("18%"), // Slightly larger for better visibility
+    height: wp("18%"),
+    borderRadius: wp("9%"), // Fully circular
+    borderWidth: 2,
+    borderColor: "#4A90E2", // Accent border color
+    margin: 10,
   },
   headerSection: {
-    padding: 15,
-    backgroundColor: "#f5f5f5",
+    flex: 1,
+    paddingVertical: 15,
+    paddingRight: 15, // Add padding on the right for balance
+    backgroundColor: "#fff", // White background for text area
   },
   employeeName: {
     fontSize: 18,
-    fontWeight: "bold",
+    fontWeight: "600",
     color: "#333",
-  },
-  locationText: {
-    fontSize: 14,
-    color: "#666",
-    marginTop: 5,
+    marginBottom: 4, // Space between name and timestamp
   },
   timestampText: {
     fontSize: 14,
-    color: "#999",
-    marginTop: 5,
+    color: "#777",
+    fontStyle: "italic", // Slight italic for timestamp
   },
 });
 

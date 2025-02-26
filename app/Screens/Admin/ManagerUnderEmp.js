@@ -11,6 +11,10 @@ import {
   StatusBar,
   Dimensions,
 } from "react-native";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 import { Ionicons } from "@expo/vector-icons";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../../firebase";
@@ -149,7 +153,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 20,
+    padding: hp(2),
     backgroundColor: "#fff",
     elevation: 2,
     shadowColor: "#000",

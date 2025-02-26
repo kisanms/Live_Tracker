@@ -9,6 +9,10 @@ import {
   Alert,
   Linking,
 } from "react-native";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 import { Ionicons } from "@expo/vector-icons";
 import {
   collection,
@@ -281,7 +285,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 20,
+    padding: hp(2),
     backgroundColor: "#fff",
     elevation: 2,
   },

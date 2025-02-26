@@ -7,6 +7,10 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
 import * as Linking from "expo-linking";
@@ -121,7 +125,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 16,
+    padding: hp(2),
     backgroundColor: "#4A90E2",
     elevation: 4,
   },

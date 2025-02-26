@@ -209,9 +209,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#4A90E2",
-    padding: 15,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+    padding: hp(2),
     elevation: 5,
   },
   backButton: {

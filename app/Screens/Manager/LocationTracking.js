@@ -7,6 +7,10 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
 import * as Linking from "expo-linking";
@@ -36,16 +40,6 @@ const ManagerLocationTracking = ({ route, navigation }) => {
     }
     setLoading(false);
   }, [latitude, longitude]);
-
-  const openGoogleMaps = () => {
-    if (markerLocation) {
-      const { latitude, longitude } = markerLocation;
-      const url = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
-      Linking.openURL(url);
-    } else {
-      Alert.alert("Error", "Location data is not available.");
-    }
-  };
 
   if (loading) {
     return (
@@ -91,20 +85,7 @@ const ManagerLocationTracking = ({ route, navigation }) => {
           <View style={styles.infoCard}>
             <Text style={styles.employeeName}>{employeeName}</Text>
             <Text style={styles.employeeEmail}>{employeeEmail}</Text>
-            <Text style={styles.coordinatesText}>
-              Lat: {latitude.toFixed(6)}, Long: {longitude.toFixed(6)}
-            </Text>
           </View>
-
-          <TouchableOpacity
-            style={styles.seeLocationButton}
-            onPress={openGoogleMaps}
-          >
-            <Ionicons name="location-outline" size={28} color="#fff" />
-            <Text style={styles.seeLocationButtonText}>
-              Open in Google Maps
-            </Text>
-          </TouchableOpacity>
         </View>
       ) : (
         <View style={styles.errorContainer}>
@@ -124,7 +105,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 16,
+    padding: hp(2),
     backgroundColor: "#4A90E2",
     elevation: 4,
   },

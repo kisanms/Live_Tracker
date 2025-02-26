@@ -24,186 +24,36 @@ import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#ffffff",
-  },
-  contentContainer: {
-    flex: 1,
-    padding: wp(5),
-  },
-  headerContainer: {
-    alignItems: "center",
-    paddingVertical: hp(4),
-  },
-  headerImage: {
-    height: hp(25),
-    width: wp(90),
-    resizeMode: "contain",
-  },
-  title: {
-    fontSize: hp(4),
-    fontWeight: "bold",
-    textAlign: "center",
-    color: "#333",
-  },
-  inputContainer: {
-    backgroundColor: "white",
-    height: hp(7),
-    borderRadius: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: wp(4),
-    marginBottom: hp(2),
-    borderWidth: 1,
-    borderColor: "#f0f0f0",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  input: {
-    flex: 1,
-    fontSize: hp(2),
-    marginLeft: wp(3),
-    color: "#333",
-  },
-  forgotPassword: {
-    fontSize: hp(1.8),
-    color: "#666",
-    textAlign: "right",
-    marginTop: -hp(1),
-    marginBottom: hp(2),
-  },
-  button: {
-    backgroundColor: "#ff3b30",
-    height: hp(6.5),
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#ff3b30",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 4.65,
-    elevation: 8,
-  },
-  buttonText: {
-    color: "white",
-    fontSize: hp(2.7),
-    fontWeight: "bold",
-  },
-  dividerContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: hp(3),
-  },
-  divider: {
-    flex: 1,
-    height: 1,
-    backgroundColor: "#e0e0e0",
-  },
-  dividerText: {
-    color: "#666",
-    paddingHorizontal: wp(3),
-    fontSize: hp(1.8),
-  },
-  linkContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginTop: hp(2),
-  },
-  linkText: {
-    fontSize: hp(1.8),
-    color: "#666",
-  },
-  linkButton: {
-    fontSize: hp(1.8),
-    color: "#ff3b30",
-    fontWeight: "bold",
-  },
-});
-
-export default function SignIn() {
+const SignIn = () => {
   const navigation = useNavigation();
   const [loading, setLoading] = useState(false);
   const [initializing, setInitializing] = useState(true);
-  const emailRef = useRef("");
-  const passwordRef = useRef("");
+  const [email, setEmail] = useState(""); // Use state instead of ref for better control
+  const [password, setPassword] = useState("");
+  const emailRef = useRef(null); // For focusing inputs if needed
+  const passwordRef = useRef(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        try {
-          const userDoc = await getDoc(doc(db, "users", user.uid));
-          const companyDoc = await getDoc(doc(db, "companies", user.uid));
-
-          if (companyDoc.exists() && companyDoc.data().role === "admin") {
-            navigation.replace("adminDashboard");
-          } else if (userDoc.exists()) {
-            switch (userDoc.data().role) {
-              case "manager":
-                navigation.replace("managerDashboard");
-                break;
-              case "employee":
-                navigation.replace("employeeDashboard");
-                break;
-              default:
-                Alert.alert("Error", "Invalid user role");
-                await auth.signOut();
-            }
-          } else {
-            Alert.alert("Error", "User data not found");
-            await auth.signOut();
-          }
-        } catch (error) {
-          console.error("Error checking user role:", error);
-          Alert.alert("Error", "Failed to verify user role");
-          await auth.signOut();
-        }
+        await redirectUser(user);
       }
       setInitializing(false);
     });
 
-    return () => unsubscribe();
+    return () => unsubscribe(); // Cleanup listener on unmount
   }, []);
 
-  const handleLogin = async () => {
-    if (!emailRef.current || !passwordRef.current) {
-      Alert.alert("SignIn", "Please fill all the details!");
-      return;
-    }
-
-    setLoading(true);
+  const redirectUser = async (user) => {
     try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        emailRef.current,
-        passwordRef.current
-      );
-
-      const userDoc = await getDoc(doc(db, "users", userCredential.user.uid));
-      const companyDoc = await getDoc(
-        doc(db, "companies", userCredential.user.uid)
-      );
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      const companyDoc = await getDoc(doc(db, "companies", user.uid));
 
       if (companyDoc.exists() && companyDoc.data().role === "admin") {
         navigation.replace("adminDashboard");
       } else if (userDoc.exists()) {
-        switch (userDoc.data().role) {
+        const role = userDoc.data().role;
+        switch (role) {
           case "manager":
             navigation.replace("managerDashboard");
             break;
@@ -219,13 +69,34 @@ export default function SignIn() {
         await auth.signOut();
       }
     } catch (error) {
+      console.error("Error redirecting user:", error);
+      Alert.alert("Error", "Failed to verify user role");
+      await auth.signOut();
+    }
+  };
+
+  const handleLogin = async () => {
+    if (!email.trim() || !password.trim()) {
+      Alert.alert("Sign In", "Please fill all the details!");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email.trim(),
+        password
+      );
+      await redirectUser(userCredential.user); // Redirect after successful login
+    } catch (error) {
       let msg = error.message;
-      if (msg.includes("(auth/invalid-credential)")) msg = "User not found";
-      if (msg.includes("(auth/invalid-email)")) msg = "Invalid email address";
-      if (msg.includes("(auth/wrong-password)")) msg = "Invalid password";
-      if (msg.includes("(auth/network-request-failed)"))
+      if (msg.includes("auth/invalid-credential")) msg = "User not found";
+      if (msg.includes("auth/invalid-email")) msg = "Invalid email address";
+      if (msg.includes("auth/wrong-password")) msg = "Invalid password";
+      if (msg.includes("auth/network-request-failed"))
         msg = "Please check your internet connection";
-      Alert.alert("SignIn", msg || "Failed to sign in");
+      Alert.alert("Sign In", msg || "Failed to sign in");
     } finally {
       setLoading(false);
     }
@@ -245,7 +116,7 @@ export default function SignIn() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
+        contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.contentContainer}>
@@ -264,10 +135,15 @@ export default function SignIn() {
           <View style={styles.inputContainer}>
             <Octicons name="mail" size={hp(2.7)} color="#666" />
             <TextInput
-              onChangeText={(value) => (emailRef.current = value)}
+              ref={emailRef}
+              onChangeText={setEmail}
+              value={email}
               style={styles.input}
               placeholder="Email address"
               placeholderTextColor="#999"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
             />
           </View>
 
@@ -275,29 +151,34 @@ export default function SignIn() {
           <View style={styles.inputContainer}>
             <Octicons name="lock" size={hp(2.7)} color="#666" />
             <TextInput
-              onChangeText={(value) => (passwordRef.current = value)}
+              ref={passwordRef}
+              onChangeText={setPassword}
+              value={password}
               style={styles.input}
               placeholder="Password"
               secureTextEntry
               placeholderTextColor="#999"
+              autoCapitalize="none"
+              autoCorrect={false}
             />
           </View>
 
           {/* Forgot Password */}
           <TouchableOpacity
             onPress={() => navigation.navigate("forgotPassword")}
+            disabled={loading}
           >
             <Text style={styles.forgotPassword}>Forgot Password?</Text>
           </TouchableOpacity>
 
           {/* Submit Button */}
           <TouchableOpacity
-            style={[styles.button, { opacity: loading ? 0.7 : 1 }]}
+            style={[styles.button, loading && styles.buttonDisabled]}
             onPress={handleLogin}
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color="white" size="large" />
+              <ActivityIndicator color="#fff" size="large" />
             ) : (
               <Text style={styles.buttonText}>Sign In</Text>
             )}
@@ -306,7 +187,10 @@ export default function SignIn() {
           {/* Sign Up Link */}
           <View style={styles.linkContainer}>
             <Text style={styles.linkText}>Don't have an account? </Text>
-            <Pressable onPress={() => navigation.navigate("signUp")}>
+            <Pressable
+              onPress={() => navigation.navigate("signUp")}
+              disabled={loading}
+            >
               <Text style={styles.linkButton}>Sign Up</Text>
             </Pressable>
           </View>
@@ -321,7 +205,10 @@ export default function SignIn() {
           {/* Company Registration Link */}
           <View style={styles.linkContainer}>
             <Text style={styles.linkText}>If you are a company? </Text>
-            <Pressable onPress={() => navigation.navigate("compReg")}>
+            <Pressable
+              onPress={() => navigation.navigate("compReg")}
+              disabled={loading}
+            >
               <Text style={styles.linkButton}>Register</Text>
             </Pressable>
           </View>
@@ -329,4 +216,122 @@ export default function SignIn() {
       </ScrollView>
     </KeyboardAvoidingView>
   );
-}
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#fff", // Light gray for a softer look
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: "center", // Center content vertically when keyboard is hidden
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f0f2f5",
+  },
+  contentContainer: {
+    flex: 1,
+    padding: wp(6),
+    justifyContent: "center", // Center content vertically
+  },
+  headerContainer: {
+    alignItems: "center",
+    paddingVertical: hp(3),
+    marginBottom: hp(2),
+  },
+  headerImage: {
+    height: hp(30), // Slightly smaller for better balance
+    width: wp(80),
+    resizeMode: "contain",
+  },
+  title: {
+    fontSize: hp(3.5),
+    fontWeight: "700",
+    textAlign: "center",
+    color: "#333",
+    marginTop: hp(1),
+  },
+  inputContainer: {
+    backgroundColor: "#fff",
+    height: hp(7),
+    borderRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: wp(4),
+    marginBottom: hp(2),
+    borderWidth: 1,
+    borderColor: "#ddd", // Softer border color
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  input: {
+    flex: 1,
+    fontSize: hp(2),
+    marginLeft: wp(3),
+    color: "#333",
+  },
+  forgotPassword: {
+    fontSize: hp(1.8),
+    color: "#ff3b30", // Match button color for consistency
+    textAlign: "right",
+    marginBottom: hp(2.5),
+  },
+  button: {
+    backgroundColor: "#ff3b30",
+    height: hp(6.5),
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#ff3b30",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
+  },
+  buttonDisabled: {
+    opacity: 0.6, // Slightly more subtle opacity when disabled
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: hp(2.5),
+    fontWeight: "600",
+  },
+  dividerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: hp(3),
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "#ddd", // Softer gray
+  },
+  dividerText: {
+    color: "#777", // Softer gray for text
+    paddingHorizontal: wp(3),
+    fontSize: hp(1.8),
+  },
+  linkContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginVertical: hp(1),
+  },
+  linkText: {
+    fontSize: hp(1.8),
+    color: "#666",
+  },
+  linkButton: {
+    fontSize: hp(1.8),
+    color: "#ff3b30",
+    fontWeight: "600",
+  },
+});
+
+export default SignIn;

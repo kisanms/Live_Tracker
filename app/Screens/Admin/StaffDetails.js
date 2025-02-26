@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
+
 import { Ionicons } from "@expo/vector-icons";
 import {
   collection,
@@ -52,15 +53,15 @@ const StaffDetails = ({ navigation, route }) => {
           id: doc.id,
           name: doc.data().name,
           email: doc.data().email,
-          role: doc.data().role || "unknown", // Default to "unknown" if role is missing
-          profileImage: doc.data().profileImage || null, // Assuming profileImage exists in users
+          role: doc.data().role || "unknown",
+          profileImage: doc.data().profileImage || null,
         }))
         .filter(
           (user) =>
             user.role &&
             user.role.toLowerCase() !== "unknown" &&
             user.role.toLowerCase() !== "admin"
-        ); // Filter out unknown and admin roles
+        );
 
       setStaff(staffData);
     } catch (error) {
@@ -115,7 +116,7 @@ const StaffDetails = ({ navigation, route }) => {
             <Image
               source={{
                 uri: item.profileImage || "https://via.placeholder.com/50",
-              }} // Default placeholder if no profileImage
+              }}
               style={styles.profileImage}
               contentFit="cover"
             />
@@ -137,15 +138,13 @@ const StaffDetails = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#f0f2f5", // Light gray background for contrast
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#4A90E2",
-    padding: 15,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+    padding: hp(2),
     elevation: 5,
   },
   backButton: {
@@ -181,26 +180,30 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   listContent: {
-    paddingVertical: 10,
-    paddingHorizontal: wp("2%"),
+    paddingVertical: 15,
+    paddingHorizontal: wp("4%"),
   },
   staffCard: {
     flexDirection: "row",
     backgroundColor: "#fff",
-    marginVertical: 10,
+    marginVertical: 8,
     borderRadius: 15,
     padding: 15,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: "#e0e0e0", // Subtle border
+    elevation: 4,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
     alignItems: "center",
   },
   profileImage: {
-    width: wp("15%"),
-    height: wp("15%"),
-    borderRadius: 10,
+    width: wp("18%"), // Slightly larger for better visibility
+    height: wp("18%"),
+    borderRadius: wp("9%"), // Fully circular
+    borderWidth: 2,
+    borderColor: "#4A90E2", // Accent border color
     marginRight: 15,
   },
   staffInfo: {
@@ -208,18 +211,19 @@ const styles = StyleSheet.create({
   },
   staffName: {
     fontSize: 18,
-    fontWeight: "bold",
+    fontWeight: "600", // Slightly lighter bold for elegance
     color: "#333",
+    marginBottom: 4, // Space between name and email
   },
   staffEmail: {
     fontSize: 14,
-    color: "#666",
-    marginTop: 5,
+    color: "#777", // Softer gray for secondary info
+    marginBottom: 4,
   },
   staffRole: {
     fontSize: 14,
     color: "#999",
-    marginTop: 5,
+    fontStyle: "italic", // Italic for subtle distinction
   },
 });
 

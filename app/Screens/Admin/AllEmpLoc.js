@@ -7,6 +7,10 @@ import {
   Alert,
   Dimensions,
 } from "react-native";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 import { Ionicons } from "@expo/vector-icons";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import {
@@ -295,19 +299,18 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 20,
+    padding: hp(3),
     backgroundColor: "#fff",
     ...SHADOWS.small,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 25,
     fontWeight: "bold",
   },
   tabContainer: {
     flexDirection: "row",
     padding: 10,
     backgroundColor: "#fff",
-    marginBottom: 10,
     gap: 12,
   },
   tab: {

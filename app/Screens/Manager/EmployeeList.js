@@ -21,6 +21,10 @@ import {
   orderBy,
   limit,
 } from "firebase/firestore";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 import { COLORS, SHADOWS } from "../../constants/theme";
 
 const ManagerEmployeeList = ({ navigation }) => {
@@ -227,7 +231,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 20,
+    padding: hp(2),
     backgroundColor: "#4A90E2",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },

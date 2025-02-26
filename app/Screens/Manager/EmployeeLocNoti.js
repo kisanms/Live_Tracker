@@ -270,7 +270,8 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 20,
+    padding: hp(2),
+    paddingTop: hp(4),
     backgroundColor: "#F5F7FA",
   },
   backButton: {

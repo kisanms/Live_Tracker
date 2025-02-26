@@ -22,6 +22,10 @@ import {
   orderBy,
   limit,
 } from "firebase/firestore";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 import { db } from "../../firebase";
 import { auth } from "../../firebase";
 
@@ -204,7 +208,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 20,
+    padding: hp(2),
     backgroundColor: COLORS.white,
     ...SHADOWS.small,
   },
