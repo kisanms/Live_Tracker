@@ -229,6 +229,8 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
 - **Feb 25**
   - Admin can see the location of empl and manager from ImagesUpdateLocation
   - Admin can see the images of manager and empl shared
+- **Feb 26**
+  - Camera feature is completed now
 ## 🎉 Features Implementation
 ### Admin Dashboard
 - Company data management
