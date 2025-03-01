@@ -236,7 +236,8 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
   - data privacy issue occurred
   - create two new policy one for delete account and second for privacy
 - **Feb 28**
-
+  - issued was data safety form
+  - selected device & id than it working in production
 
 ## 🎉 Features Implementation
 ### Admin Dashboard
