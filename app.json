@@ -2,7 +2,7 @@
   "expo": {
     "name": "Active Tracker",
     "slug": "Live_Tracker",
-    "version": "4.0.6",
+    "version": "5.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
