@@ -240,6 +240,7 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
   - selected device & id than it working in production
 - **March 1**
   - what extra changes needed in the application
+  - chnages in manager and admin loc noti (it should show staff inside that there current move loc details)
 
 ## 🎉 Features Implementation
 ### Admin Dashboard
