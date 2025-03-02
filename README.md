@@ -241,7 +241,7 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
 - **March 1**
   - what extra changes needed in the application
   - chnages in manager and admin loc noti (it should show staff inside that there current move loc details)
-
+  - at the time of sign Up company name list should show so user can select from there easily
 ## 🎉 Features Implementation
 ### Admin Dashboard
 - Company data management
