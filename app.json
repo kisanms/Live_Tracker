@@ -13,8 +13,11 @@
       "infoPlist": {
         "UIBackgroundModes": [
           "location",
+          "fetch",
+          "location",
           "fetch"
-        ]
+        ],
+        "ITSAppUsesNonExemptEncryption": false
       },
       "bundleIdentifier": "ios-test"
     },
@@ -36,7 +39,9 @@
         "android.permission.FOREGROUND_SERVICE_LOCATION",
         "android.permission.ACCESS_BACKGROUND_LOCATION",
         "android.permission.FOREGROUND_SERVICE",
-        "android.permission.POST_NOTIFICATIONS"
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.CAMERA"
       ]
     },
     "web": {
@@ -69,10 +74,12 @@
           "isAndroidBackgroundLocationEnabled": true
         }
       ],
-      ["expo-camera",{
-        "cameraPermission": "Allow $(PRODUCT_NAME) to use your camera."
-
-      }]
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to use your camera."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

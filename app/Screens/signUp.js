@@ -22,7 +22,6 @@ import Octicons from "@expo/vector-icons/Octicons";
 import Feather from "@expo/vector-icons/Feather";
 import Entypo from "@expo/vector-icons/Entypo";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
-import { Picker } from "@react-native-picker/picker";
 import { useNavigation } from "@react-navigation/native";
 import {
   collection,
@@ -37,6 +36,7 @@ import {
 import { db } from "../firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
+import CustomDropdown from "../components/CustomDropdown"; // Make sure this path is correct
 
 const styles = StyleSheet.create({
   container: {
@@ -113,23 +113,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4.65,
     elevation: 8,
-  },
-  pickerContainer: {
-    backgroundColor: "white",
-    borderRadius: 12,
-    height: hp(7),
-    justifyContent: "center",
-    marginBottom: hp(2),
-    borderWidth: 1,
-    borderColor: "#f0f0f0",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
   },
   linkContainer: {
     flexDirection: "row",
@@ -341,23 +324,21 @@ export default function SignUp() {
             <Text style={styles.title}>Sign Up</Text>
           </View>
 
-          {/* Role Picker */}
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={role}
-              onValueChange={(itemValue) => {
-                setRole(itemValue);
-                if (!["manager"].includes(itemValue)) {
-                  setAdminManagerKey("");
-                }
-              }}
-              style={{ height: hp(8), color: "#333" }}
-            >
-              <Picker.Item label="Select Your Role" value="" color="#999" />
-              <Picker.Item label="Manager" value="manager" color="#333" />
-              <Picker.Item label="Employee" value="employee" color="#333" />
-            </Picker>
-          </View>
+          {/* Role Dropdown (using CustomDropdown instead of Picker) */}
+          <CustomDropdown
+            options={[
+              { label: "Manager", value: "manager" },
+              { label: "Employee", value: "employee" },
+            ]}
+            selectedValue={role}
+            onValueChange={(itemValue) => {
+              setRole(itemValue);
+              if (!["manager"].includes(itemValue)) {
+                setAdminManagerKey("");
+              }
+            }}
+            placeholder="Select Your Role"
+          />
 
           {/* Admin/Manager Key Input */}
           {["manager"].includes(role) && (
