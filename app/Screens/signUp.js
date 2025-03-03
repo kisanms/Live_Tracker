@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -146,7 +146,25 @@ export default function SignUp() {
   const [adminManagerKey, setAdminManagerKey] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [companyNameVerify, setCompanyNameVerify] = useState(false);
-
+  const [companies, setCompanies] = useState([]);
+  // Add this new function to fetch companies
+  const fetchCompanies = async () => {
+    try {
+      const companiesRef = collection(db, "companies");
+      const querySnapshot = await getDocs(companiesRef);
+      const companyList = querySnapshot.docs.map((doc) => ({
+        label: doc.data().companyName,
+        value: doc.data().companyName,
+      }));
+      setCompanies(companyList);
+    } catch (error) {
+      console.error("Error fetching companies:", error);
+    }
+  };
+  // Add useEffect to fetch companies when component mounts
+  useEffect(() => {
+    fetchCompanies();
+  }, []);
   function handleName(e) {
     const nameVar = e.nativeEvent.text;
     setName(nameVar);
@@ -418,26 +436,18 @@ export default function SignUp() {
             <Text style={styles.errorText}>Enter a valid mobile number</Text>
           )}
 
-          {/* Company Name Input */}
-          <View style={styles.inputContainer}>
-            <FontAwesome5 name="building" size={hp(2.7)} color="#666" />
-            <TextInput
-              onChange={handleCompanyName}
-              style={styles.input}
-              placeholder="Company Name"
-              placeholderTextColor="#999"
-            />
-            {companyName.length > 0 &&
-              (companyNameVerify ? (
-                <Feather name="check-circle" size={20} color="#4CAF50" />
-              ) : (
-                <Entypo name="circle-with-cross" size={20} color="#ff3b30" />
-              ))}
-          </View>
+          {/* Company Name Dropdown */}
+          <CustomDropdown
+            options={companies}
+            selectedValue={companyName}
+            onValueChange={(value) => {
+              setCompanyName(value);
+              setCompanyNameVerify(value.length > 1);
+            }}
+            placeholder="Select Company Name"
+          />
           {companyName.length > 0 && !companyNameVerify && (
-            <Text style={styles.errorText}>
-              Company name should be more than 1 character
-            </Text>
+            <Text style={styles.errorText}>Please select a company</Text>
           )}
 
           {/* Password Input */}
