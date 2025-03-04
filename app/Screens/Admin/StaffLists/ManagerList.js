@@ -25,8 +25,7 @@ import {
   limit,
   getDocs,
 } from "firebase/firestore";
-import { db } from "../../firebase";
-import { auth } from "../../firebase";
+import { db, auth } from "../../../firebase";
 
 const ManagerList = ({ navigation }) => {
   const [managers, setManagers] = useState([]);

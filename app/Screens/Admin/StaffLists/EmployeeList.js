@@ -9,7 +9,7 @@ import {
   Alert,
   Linking,
 } from "react-native";
-import { COLORS, SHADOWS } from "../../constants/theme";
+import { COLORS, SHADOWS } from "../../../constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import {
   collection,
@@ -26,8 +26,7 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
-import { db } from "../../firebase";
-import { auth } from "../../firebase";
+import { db, auth } from "../../../firebase";
 
 const EmployeeList = ({ navigation }) => {
   const [employees, setEmployees] = useState([]);

@@ -21,7 +21,7 @@ import {
   getDoc,
   doc,
 } from "firebase/firestore";
-import { db } from "../../firebase";
+import { db } from "../../../firebase";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,

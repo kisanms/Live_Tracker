@@ -12,9 +12,9 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
-import { COLORS, SHADOWS } from "../../constants/theme";
+import { COLORS, SHADOWS } from "../../../constants/theme";
 import { Ionicons } from "@expo/vector-icons";
-import { db } from "../../firebase";
+import { db, auth } from "../../../firebase";
 import {
   collection,
   query,
@@ -23,7 +23,6 @@ import {
   getDoc,
   doc,
 } from "firebase/firestore";
-import { auth } from "../../firebase";
 
 const AllStaffLocNoti = ({ navigation }) => {
   const [staffList, setStaffList] = useState([]);

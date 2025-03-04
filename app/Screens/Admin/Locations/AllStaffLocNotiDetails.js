@@ -17,10 +17,10 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
-import { db } from "../../firebase";
+import { db } from "../../../firebase";
 import { collection, getDocs, orderBy, query, limit } from "firebase/firestore";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS, SHADOWS } from "../../constants/theme";
+import { COLORS, SHADOWS } from "../../../constants/theme";
 import { LinearGradient } from "expo-linear-gradient";
 
 const formatTimestamp = (timestamp) => {
