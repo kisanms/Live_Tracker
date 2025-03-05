@@ -36,6 +36,7 @@ import AllEmpWorkHour from "./Screens/Manager/WorkHour/AllEmpWorkHour";
 import EmployeeWorkHoursDetails from "./Screens/Manager/WorkHour/EmployeeWorkHoursDetails";
 import EmployeeImages from "./Screens/Manager/EmployeesLoc/EmployeeImages";
 import EmployeeImageDetails from "./Screens/Manager/EmployeesLoc/EmployeeImageDetails";
+import EmployeeLocNotiDetails from "./Screens/Manager/EmployeeLocNotiDetails";
 
 // Employee Screens
 import EmployeeDashboard from "./Screens/Employee/Dashboard";
@@ -158,6 +159,10 @@ const RootLayout = ({ initialUser }) => {
       />
       <Stack.Screen name="allEmpLoc" component={AllEmpLoc} />
       <Stack.Screen name="EmpLocNoti" component={EmployeeLocNoti} />
+      <Stack.Screen
+        name="EmployeeLocNotiDetails"
+        component={EmployeeLocNotiDetails}
+      />
       <Stack.Screen name="allEmpWorkHour" component={AllEmpWorkHour} />
       <Stack.Screen
         name="employeeWorkHoursDetails"
