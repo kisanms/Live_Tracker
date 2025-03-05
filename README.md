@@ -408,8 +408,67 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
 <img src="https://github.com/user-attachments/assets/d7817726-9c9b-496a-a205-7e654cb3c939" width="300"/>  
 <img src="https://github.com/user-attachments/assets/ba658a7d-46b2-4f98-862c-d9aa0d77ad31" width="300"/>
 
-  
+---
 
+# Manager Section  
+
+## Manager Dashboard  
+<img src="https://github.com/user-attachments/assets/018f2221-42f9-4de4-b2aa-dc7261520aae" width="300">  
+
+## Manager Profile  
+<img src="https://github.com/user-attachments/assets/d4c5e53b-45e9-46b7-ab4d-55bc5c58ebc6" width="300">  
+<img src="https://github.com/user-attachments/assets/9c6e8aaa-f5c4-4136-9cf4-3d44063738f7" width="300">  
+
+## Manager Clock-In  
+<img src="https://github.com/user-attachments/assets/146ed907-dc83-4b25-bdcd-e32e2e0bba03" width="300">  
+<img src="https://github.com/user-attachments/assets/4cd493e6-c869-4578-a0f6-bec5f0655fb7" width="300">  
+<img src="https://github.com/user-attachments/assets/d716a528-d782-4d14-871c-13bb86c4d15f" width="300">  
+
+## Manager Team List  
+<img src="https://github.com/user-attachments/assets/6e223b20-790b-43a1-a1d4-c1db5d1749b6" width="300">  
+
+## Team Member Location  
+<img src="https://github.com/user-attachments/assets/bb4562be-1bcf-4cb7-b99b-b001007defc3" width="300">  
+
+## All Employee Locations with Shared Images  
+<img src="https://github.com/user-attachments/assets/2e92f90e-e37d-4f75-aab7-2a42d43fad45" width="300">  
+<img src="https://github.com/user-attachments/assets/fdc252c3-2ecb-400e-a61d-8342e50a98b7" width="300">  
+<img src="https://github.com/user-attachments/assets/172df911-0900-42e7-92a2-d9c7c1e29591" width="300">  
+
+## Share Image with Location  
+<img src="https://github.com/user-attachments/assets/9cafc4e2-6832-41b1-b058-c9915c92f29e" width="300">  
+<img src="https://github.com/user-attachments/assets/da9be01a-117e-4fc4-88cf-acae42de4376" width="300">  
+<img src="https://github.com/user-attachments/assets/50255c4f-853e-44d4-b84c-170e7e751e85" width="300">  
+
+## Work Hours and Details  
+<img src="https://github.com/user-attachments/assets/606ce353-4732-4de6-b62f-edbfb2099ab7" width="300">  
+<img src="https://github.com/user-attachments/assets/9f5b22a2-c2ac-4b52-8d02-9fc3c617afab" width="300">  
+
+## Current Movement Location Data  
+<img src="https://github.com/user-attachments/assets/f66f217c-b180-4f4d-96b8-8d47672ea45a" width="300">  
+<img src="https://github.com/user-attachments/assets/e76cc54d-5a90-4c34-bc69-f087feccfd2d" width="300">  
+<img src="https://github.com/user-attachments/assets/b341d71c-2474-43c0-94fd-c298e1ad67c3" width="300">  
+<img src="https://github.com/user-attachments/assets/8f1348db-0f0b-44b4-8763-2ba180267b64" width="300">  
+
+## Employee Section
+
+### Employee Dashboard  
+<img src="https://github.com/user-attachments/assets/83ac2263-d2d2-47fb-b4cf-7434a235d09b" width="300">  
+
+### Employee Profile  
+<img src="https://github.com/user-attachments/assets/b6596e06-e549-49f1-a3f2-f6eb7f7cda12" width="300">  
+
+### Employee Clock-In and Out  
+<img src="https://github.com/user-attachments/assets/28ddb1a7-10a6-4373-9905-701ec00b6165" width="300">  
+<img src="https://github.com/user-attachments/assets/e065e0cf-1dec-4b04-9950-7b7b6594f981" width="300">  
+<img src="https://github.com/user-attachments/assets/a1a316b3-7a49-4d80-9959-1756ec83362c" width="300">  
+<img src="https://github.com/user-attachments/assets/ab8e1322-55e1-4eab-be75-8087920e0699" width="300">  
+
+### Share the Image with Location  
+<img src="https://github.com/user-attachments/assets/eb485cdf-9cfe-422d-96f2-b33b3921acad" width="300">  
+
+### Change or Set a Manager  
+<img src="https://github.com/user-attachments/assets/39139b6d-25e9-4b2e-8532-3e2967168c6e" width="300">  
 
 
 
