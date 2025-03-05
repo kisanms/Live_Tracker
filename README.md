@@ -285,7 +285,7 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
 
 ## 📦 Build Information
 
-- Latest Build: [Live_Tracker Build 796e6d8a](https://expo.dev/accounts/deepkm/projects/Live_Tracker/builds/796e6d8a-0f8d-491a-b746-b439c55b56fe)
+- Latest Build: [Live_Tracker Build 8bb217af](https://expo.dev/accounts/deepkm/projects/Live_Tracker/builds/8bb217af-f251-4598-b39f-a55a92e7505d)
 - Build Status: Successful
 - Platform: Android
 - Key Features: Location tracking, Role-based access
