@@ -322,3 +322,95 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
 - Role-based access control implemented
 - Location data encryption pending
 - User data protection measures in place
+
+## 📷 Image Explaination
+
+## Authentication
+
+### Onboard Slider  
+<img src="https://github.com/user-attachments/assets/e5162cd3-a6c1-427f-9ee8-1f1741d6bd63" width="300"/>
+
+### Company Register Page  
+<img src="https://github.com/user-attachments/assets/cbccc8fe-39e3-41da-90a9-6c84f3b4b142" width="300"/>
+
+### SignUp Page  
+<img src="https://github.com/user-attachments/assets/f9e9b910-e9ca-4d4b-b679-9c3f4175f225" width="300"/>
+
+#### Roles  
+<img src="https://github.com/user-attachments/assets/604d6f0a-4d37-486d-933a-aca1c78e7a4b" width="300"/>
+
+#### Company Name  
+<img src="https://github.com/user-attachments/assets/04f63a9e-924f-4772-8e29-70e889d3e7a9" width="300"/>
+
+### SignIn Page  
+<img src="https://github.com/user-attachments/assets/2d3e9856-9974-4264-9dcb-0921b12c499f" width="300"/>
+
+### Forget Password Page  
+<img src="https://github.com/user-attachments/assets/d1c3dc11-ca25-4ed8-813e-41f479c32ced" width="300"/>
+
+---
+
+## Admin Part
+
+- **The user who registered the company became the Admin.**
+
+### Admin Dashboard  
+<img src="https://github.com/user-attachments/assets/3e71570b-b879-4760-8f0e-10574ff60938" width="300"/>
+
+### Admin Profile Page  
+<img src="https://github.com/user-attachments/assets/1496233c-7288-466c-92c5-81a46976d696" width="300"/>
+<img src="https://github.com/user-attachments/assets/e7cd3883-8062-4b17-b105-81c74ba661b8" width="300"/>
+
+### Admin Location Page  
+<img src="https://github.com/user-attachments/assets/cb7d9d40-75c1-491e-90a9-ae220c95c7d8" width="300"/>
+
+### Generate a Key for Manager Auth  
+<img src="https://github.com/user-attachments/assets/26765343-975f-45bf-beb5-bb7c562d563b" width="300"/>  
+<img src="https://github.com/user-attachments/assets/65e85ef3-6437-4939-9678-4836b0d8216d" width="300"/>
+
+### Manager List Page  
+<img src="https://github.com/user-attachments/assets/919846d1-a291-4e2d-b72b-7864a73be806" width="300"/>
+
+### Manager Location  
+<img src="https://github.com/user-attachments/assets/8723e8c1-2e60-40c2-9842-2a53db1a0c7d" width="300"/>
+
+### Manager Profile  
+<img src="https://github.com/user-attachments/assets/a3cee123-cbfa-4ef5-b2bf-8f57ac4c3f24" width="300"/>
+
+### Manager Under Employee  
+<img src="https://github.com/user-attachments/assets/314d6992-18f2-4e96-a736-d73525772dd6" width="300"/>
+
+### Employee List  
+<img src="https://github.com/user-attachments/assets/317d76f2-8edd-4758-804f-2e90b190bdb7" width="300"/>
+
+### Employee Profile  
+<img src="https://github.com/user-attachments/assets/77e67525-7b56-41b1-8ed5-61b784106813" width="300"/>
+
+### Employee Location  
+<img src="https://github.com/user-attachments/assets/a63463cf-ce1f-4d95-a705-a3384bc8ffbd" width="300"/>
+
+### All Staff Location with Images  
+<img src="https://github.com/user-attachments/assets/83cc3d7a-f766-410a-920f-2f22c0ac9835" width="300"/>  
+<img src="https://github.com/user-attachments/assets/7597a342-ac49-414b-b117-977cd66610c2" width="300"/>  
+<img src="https://github.com/user-attachments/assets/6afaad56-518c-4166-9c8f-19e9cc414122" width="300"/>  
+<img src="https://github.com/user-attachments/assets/2e8483fe-e532-4d66-8f91-b5303e3cb3e8" width="300"/>  
+<img src="https://github.com/user-attachments/assets/29a7b370-5375-4124-ab9c-eca1cdbc55fc" width="300"/>
+
+### Work Hour Data  
+<img src="https://github.com/user-attachments/assets/fc9e3d08-dfd2-4151-a322-0efcd4579af2" width="300"/>
+
+### Work Hour Data Detail Table Format  
+<img src="https://github.com/user-attachments/assets/337ecd98-5bff-4892-8fb2-ed143eba7a90" width="300"/>
+
+### Current Movement Location Data  
+<img src="https://github.com/user-attachments/assets/ecba1b10-f54f-40e3-8f76-9b0954c8f6f6" width="300"/>  
+<img src="https://github.com/user-attachments/assets/0fd7bd19-48eb-4b69-9f43-10c61c6312be" width="300"/>  
+<img src="https://github.com/user-attachments/assets/d7817726-9c9b-496a-a205-7e654cb3c939" width="300"/>  
+<img src="https://github.com/user-attachments/assets/ba658a7d-46b2-4f98-862c-d9aa0d77ad31" width="300"/>
+
+  
+
+
+
+
+
