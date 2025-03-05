@@ -237,6 +237,8 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
 
 - **March 2**
 - doing changes and make the ui more performance oriented
+- **March 3**
+- add all countries in playstore
 
 ## 🎉 Features Implementation
 
