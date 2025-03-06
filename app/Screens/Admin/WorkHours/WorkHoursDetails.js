@@ -8,6 +8,7 @@ import {
   FlatList,
   TouchableOpacity,
   StatusBar,
+  Picker,
 } from "react-native";
 import { db } from "../../../firebase";
 import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
@@ -17,6 +18,8 @@ import {
   widthPercentageToDP as wp,
 } from "react-native-responsive-screen";
 import { Ionicons } from "@expo/vector-icons";
+import * as Print from "expo-print";
+import * as Sharing from "expo-sharing";
 
 const WorkHoursDetails = ({ route, navigation }) => {
   const { userId, userName, userRole } = route.params;
@@ -24,10 +27,11 @@ const WorkHoursDetails = ({ route, navigation }) => {
   const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
 
   useEffect(() => {
     fetchWorkHoursData();
-  }, [userId]);
+  }, [userId, selectedMonth]);
 
   const formatDate = (date) => {
     const d = new Date(date);
@@ -36,12 +40,12 @@ const WorkHoursDetails = ({ route, navigation }) => {
     const year = d.getFullYear();
     return `${day}-${month}-${year}`;
   };
+
   const fetchWorkHoursData = async () => {
     try {
       const workHoursRef = collection(db, "workHours");
       let workHoursQuery;
 
-      // Different queries for managers and employees
       if (userRole === "manager") {
         workHoursQuery = query(
           workHoursRef,
@@ -59,9 +63,11 @@ const WorkHoursDetails = ({ route, navigation }) => {
       const querySnapshot = await getDocs(workHoursQuery);
       const data = querySnapshot.docs.map((doc) => {
         const record = doc.data();
+        const dateObj = record.date.toDate();
+        const month = dateObj.getMonth() + 1;
         return {
           id: doc.id,
-          dateObj: record.date.toDate(),
+          dateObj,
           date: formatDate(record.date.toDate()),
           clockInTime: record.clockInTime.toDate(),
           clockOutTime: record.clockOutTime.toDate(),
@@ -70,11 +76,15 @@ const WorkHoursDetails = ({ route, navigation }) => {
           userEmail: record.managerEmail || record.employeeEmail,
           location: record.lastLocation || null,
           clockOutLocation: record.lastClockOutLocation || null,
+          month,
         };
       });
 
+      const filteredByMonth = data.filter(
+        (item) => item.month === selectedMonth
+      );
       setWorkHoursData(data);
-      setFilteredData(data);
+      setFilteredData(filteredByMonth);
     } catch (error) {
       console.error("Error fetching work hours:", error);
     } finally {
@@ -93,7 +103,7 @@ const WorkHoursDetails = ({ route, navigation }) => {
 
   const handleSearch = (text) => {
     setSearchQuery(text);
-    const filtered = workHoursData.filter(
+    const filtered = filteredData.filter(
       (item) =>
         item.date.toLowerCase().includes(text.toLowerCase()) ||
         item.duration.toString().includes(text.toLowerCase()) ||
@@ -118,7 +128,6 @@ const WorkHoursDetails = ({ route, navigation }) => {
     <TouchableOpacity
       style={styles.tableRow}
       onPress={() => {
-        // Handle location view if needed
         if (item.location || item.clockOutLocation) {
           // Implement location view logic
         }
@@ -134,6 +143,50 @@ const WorkHoursDetails = ({ route, navigation }) => {
       <Text style={[styles.cell, { flex: 0.8 }]}>{item.duration}h</Text>
     </TouchableOpacity>
   );
+
+  const generatePDF = async () => {
+    const html = `
+      <h1>Work Hours Report - ${userName} (${userRole})</h1>
+      <h2>Month: ${selectedMonth}</h2>
+      <table border="1" style="width:100%; border-collapse: collapse;">
+        <tr>
+          <th>Date</th>
+          <th>Clock In</th>
+          <th>Clock Out</th>
+          <th>Hours</th>
+        </tr>
+        ${filteredData
+          .map(
+            (item) => `
+          <tr>
+            <td>${item.date}</td>
+            <td>${formatTime(item.clockInTime)}</td>
+            <td>${formatTime(item.clockOutTime)}</td>
+            <td>${item.duration}h</td>
+          </tr>
+        `
+          )
+          .join("")}
+      </table>
+    `;
+
+    try {
+      const { uri } = await Print.printToFileAsync({ html });
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri, {
+          mimeType: "application/pdf",
+          dialogTitle: "Download Work Hours Report",
+          UTI: "com.adobe.pdf",
+        });
+      } else {
+        console.log("Sharing is not available on this platform");
+        Alert.alert("Error", "Sharing is not available on this device.");
+      }
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      Alert.alert("Error", "Failed to generate PDF.");
+    }
+  };
 
   if (loading) {
     return (
@@ -173,6 +226,25 @@ const WorkHoursDetails = ({ route, navigation }) => {
           onChangeText={handleSearch}
         />
       </View>
+
+      {/* Month Picker */}
+      <View style={styles.pickerContainer}>
+        <Text style={styles.pickerLabel}>Select Month: </Text>
+        <Picker
+          selectedValue={selectedMonth}
+          style={styles.picker}
+          onValueChange={(itemValue) => setSelectedMonth(itemValue)}
+        >
+          {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
+            <Picker.Item key={month} label={`${month}`} value={month} />
+          ))}
+        </Picker>
+      </View>
+
+      {/* Download Button */}
+      <TouchableOpacity style={styles.downloadButton} onPress={generatePDF}>
+        <Text style={styles.downloadButtonText}>Download as PDF</Text>
+      </TouchableOpacity>
 
       <View style={styles.tableContainer}>
         {renderTableHeader()}
@@ -277,6 +349,37 @@ const styles = StyleSheet.create({
   noDataText: {
     color: COLORS.gray,
     fontSize: wp(3.5),
+  },
+  pickerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.white,
+    margin: wp(4),
+    padding: wp(3),
+    borderRadius: wp(2),
+    ...SHADOWS.small,
+  },
+  pickerLabel: {
+    fontSize: wp(3.5),
+    color: COLORS.black,
+    marginRight: wp(2),
+  },
+  picker: {
+    flex: 1,
+    height: hp(5),
+  },
+  downloadButton: {
+    backgroundColor: COLORS.primary,
+    padding: wp(3),
+    margin: wp(4),
+    borderRadius: wp(2),
+    alignItems: "center",
+    ...SHADOWS.small,
+  },
+  downloadButtonText: {
+    color: COLORS.white,
+    fontSize: wp(3.5),
+    fontWeight: "bold",
   },
 });
 
