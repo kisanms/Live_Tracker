@@ -5073,11 +5073,6 @@ expo-font@~13.0.1:
   dependencies:
     fontfaceobserver "^2.1.0"
 
-expo-haptics@~14.0.0:
-  version "14.0.0"
-  resolved "https://registry.npmjs.org/expo-haptics/-/expo-haptics-14.0.0.tgz"
-  integrity sha512-5tYJN+2axYF22BtG1elBQAV1aZPUOCtr9sItClfm4jDoekGiPCxZG/nylcA3DVh2bUHMSll4Y98qjFFFhwZ1Cw==
-
 expo-image-loader@~5.0.0:
   version "5.0.0"
   resolved "https://registry.npmjs.org/expo-image-loader/-/expo-image-loader-5.0.0.tgz"
@@ -5202,13 +5197,6 @@ expo-status-bar@~2.0.0:
   version "2.0.0"
   resolved "https://registry.npmjs.org/expo-status-bar/-/expo-status-bar-2.0.0.tgz"
   integrity sha512-vxxdpvpNDMTEc5uTiIrbTvySKKUsOACmfl8OZuUdjNle05oGqwtq3v5YObwym/njSByjoyuZX8UpXBZnxvarwQ==
-
-expo-symbols@~0.2.0:
-  version "0.2.0"
-  resolved "https://registry.npmjs.org/expo-symbols/-/expo-symbols-0.2.0.tgz"
-  integrity sha512-9ci+JBc03e3UvRcdal219FYg5ot7oFWMuyrUwIqI47IoIDUijKn10iuT7T6RjpLtBwHgGvKUK4tue/CiJ+8KeQ==
-  dependencies:
-    sf-symbols-typescript "^2.0.0"
 
 expo-system-ui@~4.0.6:
   version "4.0.6"
@@ -8690,11 +8678,6 @@ setprototypeof@1.2.0:
   version "1.2.0"
   resolved "https://registry.npmjs.org/setprototypeof/-/setprototypeof-1.2.0.tgz"
   integrity sha512-E5LDX7Wrp85Kil5bhZv46j8jOeboKq5JMmYM3gVGdGH8xFpPWXUMsNrlODCrkoxMEeNi/XZIwuRvY4XNwYMJpw==
-
-sf-symbols-typescript@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.npmjs.org/sf-symbols-typescript/-/sf-symbols-typescript-2.0.0.tgz"
-  integrity sha512-Fc8Uhhl2plqXMw7GQ8q83t/zj1xhNCJvteDNJUDULaH/4a/Eqw5aW1UYEznyEIgkokw7QYXuQ9hOw8jhBLXL0A==
 
 shallow-clone@^3.0.0:
   version "3.0.1"

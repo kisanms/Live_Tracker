@@ -146,8 +146,6 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "bold",
     color: COLORS.white,
-    flex: 1,
-    textAlign: "center",
   },
   listContainer: {
     padding: wp(4),
