@@ -8,7 +8,6 @@ import {
   FlatList,
   TouchableOpacity,
   StatusBar,
-  Picker,
 } from "react-native";
 import { db } from "../../../firebase";
 import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
@@ -20,6 +19,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
+import { Picker } from "@react-native-picker/picker";
 
 const WorkHoursDetails = ({ route, navigation }) => {
   const { userId, userName, userRole } = route.params;
