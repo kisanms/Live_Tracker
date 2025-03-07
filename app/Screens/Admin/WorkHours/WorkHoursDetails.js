@@ -19,7 +19,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
-import { Picker } from "@react-native-picker/picker";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 
 const WorkHoursDetails = ({ route, navigation }) => {
   const { userId, userName, userRole } = route.params;
@@ -27,11 +27,12 @@ const WorkHoursDetails = ({ route, navigation }) => {
   const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedDate, setSelectedDate] = useState(new Date()); // Default to today
+  const [isDatePickerVisible, setDatePickerVisible] = useState(false);
 
   useEffect(() => {
     fetchWorkHoursData();
-  }, [userId, selectedMonth]);
+  }, [userId, selectedDate]);
 
   const formatDate = (date) => {
     const d = new Date(date);
@@ -80,6 +81,8 @@ const WorkHoursDetails = ({ route, navigation }) => {
         };
       });
 
+      // Filter by the selected date's month
+      const selectedMonth = selectedDate.getMonth() + 1;
       const filteredByMonth = data.filter(
         (item) => item.month === selectedMonth
       );
@@ -147,7 +150,9 @@ const WorkHoursDetails = ({ route, navigation }) => {
   const generatePDF = async () => {
     const html = `
       <h1>Work Hours Report - ${userName} (${userRole})</h1>
-      <h2>Month: ${selectedMonth}</h2>
+      <h2>Month: ${
+        selectedDate.getMonth() + 1
+      } - ${selectedDate.getFullYear()}</h2>
       <table border="1" style="width:100%; border-collapse: collapse;">
         <tr>
           <th>Date</th>
@@ -188,6 +193,19 @@ const WorkHoursDetails = ({ route, navigation }) => {
     }
   };
 
+  const showDatePicker = () => {
+    setDatePickerVisible(true);
+  };
+
+  const hideDatePicker = () => {
+    setDatePickerVisible(false);
+  };
+
+  const handleConfirm = (date) => {
+    setSelectedDate(date);
+    hideDatePicker();
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -200,15 +218,16 @@ const WorkHoursDetails = ({ route, navigation }) => {
     <View style={styles.container}>
       <StatusBar backgroundColor={COLORS.white} barStyle="dark-content" />
 
+      {/* Compact Header */}
       <View style={styles.header}>
-        <View style={styles.headerContainer}>
+        <View style={styles.headerRow}>
           <TouchableOpacity
             onPress={() => navigation.goBack()}
             style={styles.backButton}
           >
-            <Ionicons name="arrow-back" size={24} color="black" />
+            <Ionicons name="arrow-back" size={20} color={COLORS.black} />
           </TouchableOpacity>
-          <View>
+          <View style={styles.titleContainer}>
             <Text style={styles.title}>Work Hours Details</Text>
             <Text style={styles.subtitle}>
               {userName} ({userRole})
@@ -217,34 +236,36 @@ const WorkHoursDetails = ({ route, navigation }) => {
         </View>
       </View>
 
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color={COLORS.gray} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search by date, time, or duration..."
-          value={searchQuery}
-          onChangeText={handleSearch}
-        />
+      {/* Search and Date Picker Button */}
+      <View style={styles.filterRow}>
+        <View style={styles.searchContainer}>
+          <Ionicons name="search" size={18} color={COLORS.gray} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search by date, time, or duration..."
+            value={searchQuery}
+            onChangeText={handleSearch}
+          />
+        </View>
+        <TouchableOpacity style={styles.dateButton} onPress={showDatePicker}>
+          <Text style={styles.dateButtonText}>{formatDate(selectedDate)}</Text>
+          <Ionicons name="calendar" size={18} color={COLORS.primary} />
+        </TouchableOpacity>
       </View>
 
-      {/* Month Picker */}
-      <View style={styles.pickerContainer}>
-        <Text style={styles.pickerLabel}>Select Month: </Text>
-        <Picker
-          selectedValue={selectedMonth}
-          style={styles.picker}
-          onValueChange={(itemValue) => setSelectedMonth(itemValue)}
-        >
-          {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
-            <Picker.Item key={month} label={`${month}`} value={month} />
-          ))}
-        </Picker>
-      </View>
-
-      {/* Download Button */}
-      <TouchableOpacity style={styles.downloadButton} onPress={generatePDF}>
-        <Text style={styles.downloadButtonText}>Download as PDF</Text>
+      {/* Floating Download Button */}
+      <TouchableOpacity style={styles.fab} onPress={generatePDF}>
+        <Ionicons name="download" size={24} color={COLORS.white} />
       </TouchableOpacity>
+
+      {/* Date Picker Modal */}
+      <DateTimePickerModal
+        isVisible={isDatePickerVisible}
+        mode="date"
+        onConfirm={handleConfirm}
+        onCancel={hideDatePicker}
+        date={selectedDate}
+      />
 
       <View style={styles.tableContainer}>
         {renderTableHeader()}
@@ -276,110 +297,114 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: COLORS.white,
-    padding: wp(5),
-    paddingTop: hp(6),
-    borderBottomRightRadius: wp(8),
-    borderBottomLeftRadius: wp(8),
-    ...SHADOWS.medium,
+    padding: wp(3),
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.lightGray,
+    ...SHADOWS.small,
   },
-  headerContainer: {
+  headerRow: {
     flexDirection: "row",
     alignItems: "center",
   },
   backButton: {
     marginRight: wp(2),
   },
+  titleContainer: {
+    flex: 1,
+  },
   title: {
-    fontSize: wp(6.5),
+    fontSize: wp(5),
     fontWeight: "bold",
     color: COLORS.black,
   },
   subtitle: {
-    fontSize: wp(3.5),
+    fontSize: wp(3),
     color: COLORS.gray,
   },
+  filterRow: {
+    flexDirection: "row",
+    margin: wp(2),
+    marginTop: wp(2),
+  },
   searchContainer: {
+    flex: 2,
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: COLORS.white,
-    margin: wp(4),
-    padding: wp(3),
-    borderRadius: wp(2),
+    padding: wp(2),
+    borderRadius: wp(1.5),
+    marginRight: wp(2),
     ...SHADOWS.small,
   },
   searchInput: {
     flex: 1,
-    marginLeft: wp(2),
-    fontSize: wp(3.5),
+    marginLeft: wp(1.5),
+    fontSize: wp(3),
+  },
+  dateButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.white,
+    padding: wp(2),
+    borderRadius: wp(1.5),
+    ...SHADOWS.small,
+    justifyContent: "space-between",
+  },
+  dateButtonText: {
+    fontSize: wp(3),
+    color: COLORS.black,
   },
   tableContainer: {
     flex: 1,
-    margin: wp(4),
+    margin: wp(2),
     marginTop: 0,
     backgroundColor: COLORS.white,
-    borderRadius: wp(2),
+    borderRadius: wp(1.5),
     ...SHADOWS.medium,
   },
   tableHeader: {
     flexDirection: "row",
-    padding: wp(3),
+    padding: wp(2),
     backgroundColor: COLORS.primary,
-    borderTopLeftRadius: wp(2),
-    borderTopRightRadius: wp(2),
+    borderTopLeftRadius: wp(1.5),
+    borderTopRightRadius: wp(1.5),
   },
   headerCell: {
     color: COLORS.white,
     fontWeight: "bold",
-    fontSize: wp(3.5),
+    fontSize: wp(3),
   },
   tableRow: {
     flexDirection: "row",
-    padding: wp(3),
-    borderBottomWidth: 1,
+    padding: wp(2),
+    borderBottomWidth: 0.5,
     borderBottomColor: COLORS.lightGray,
   },
   cell: {
-    fontSize: wp(3.2),
+    fontSize: wp(2.8),
     color: COLORS.black,
   },
   noDataContainer: {
-    padding: wp(4),
+    padding: wp(2),
     alignItems: "center",
   },
   noDataText: {
     color: COLORS.gray,
-    fontSize: wp(3.5),
+    fontSize: wp(3),
   },
-  pickerContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: COLORS.white,
-    margin: wp(4),
-    padding: wp(3),
-    borderRadius: wp(2),
-    ...SHADOWS.small,
-  },
-  pickerLabel: {
-    fontSize: wp(3.5),
-    color: COLORS.black,
-    marginRight: wp(2),
-  },
-  picker: {
-    flex: 1,
-    height: hp(5),
-  },
-  downloadButton: {
+  fab: {
+    position: "absolute",
+    bottom: hp(2),
+    right: wp(2),
     backgroundColor: COLORS.primary,
-    padding: wp(3),
-    margin: wp(4),
-    borderRadius: wp(2),
+    width: wp(12),
+    height: wp(12),
+    borderRadius: wp(6),
+    justifyContent: "center",
     alignItems: "center",
-    ...SHADOWS.small,
-  },
-  downloadButtonText: {
-    color: COLORS.white,
-    fontSize: wp(3.5),
-    fontWeight: "bold",
+    ...SHADOWS.medium,
+    elevation: 8,
   },
 });
 
