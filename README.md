@@ -240,8 +240,11 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
 - **March 3**
 - add all countries in playstore
 - **March 4**
-- at the time of sign Up company name list should show so user can select from there easily\
+- at the time of sign Up company name list should show so user can select from there easily
 - chnages in admin loc noti (it should show staff inside that there current move loc details)
+- **March 5**
+- chnages in manager loc noti (it should show staff inside that there current move loc details)
+- Performance issue solving
 
 ## 🎉 Features Implementation
 
