@@ -245,6 +245,9 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
 - **March 5**
 - chnages in manager loc noti (it should show staff inside that there current move loc details)
 - Performance issue solving
+- **March 6**
+- sorted feature by date , month and time in work hour details page
+- expo-print and expo-share
 
 ## 🎉 Features Implementation
 
