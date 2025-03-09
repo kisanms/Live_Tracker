@@ -466,4 +466,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default WorkHoursDetail;
+export default WorkHoursDetails;
