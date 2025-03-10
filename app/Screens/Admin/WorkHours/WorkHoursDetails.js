@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   StatusBar,
   Platform,
+  Alert,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { db } from "../../../firebase";
@@ -21,6 +22,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
+import * as FileSystem from "expo-file-system"; // Import expo-file-system
 
 const WorkHoursDetails = ({ route, navigation }) => {
   const { userId, userName, userRole } = route.params;
@@ -81,7 +83,6 @@ const WorkHoursDetails = ({ route, navigation }) => {
         };
       });
 
-      // Filter by selected month and year
       const selectedMonth = selectedDate.getMonth() + 1;
       const selectedYear = selectedDate.getFullYear();
       const filteredByMonthAndYear = data.filter(
@@ -203,16 +204,44 @@ const WorkHoursDetails = ({ route, navigation }) => {
     `;
 
     try {
+      // Generate the PDF file
       const { uri } = await Print.printToFileAsync({ html });
-      await Sharing.shareAsync(uri, {
-        mimeType: "application/pdf",
-        dialogTitle: `Work Hours - ${selectedDate.toLocaleString("default", {
-          month: "long",
-        })} ${selectedDate.getFullYear()}`,
-        UTI: "com.adobe.pdf",
+
+      // Define the directory and file name
+      const directory = `${FileSystem.documentDirectory}Active Tracker`;
+      const fileName = `WorkHours_${selectedDate.toLocaleString("default", {
+        month: "long",
+      })}_${selectedDate.getFullYear()}.pdf`;
+      const filePath = `${directory}/${fileName}`;
+
+      // Create the "Active Tracker" directory if it doesn't exist
+      const dirInfo = await FileSystem.getInfoAsync(directory);
+      if (!dirInfo.exists) {
+        await FileSystem.makeDirectoryAsync(directory, { intermediates: true });
+      }
+
+      // Move the file to the local storage
+      await FileSystem.moveAsync({
+        from: uri,
+        to: filePath,
       });
+
+      // Optional: Show a success message
+      Alert.alert("Success", `PDF saved to ${filePath}`);
+
+      // Optionally, allow sharing if needed
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(filePath, {
+          mimeType: "application/pdf",
+          dialogTitle: `Work Hours - ${selectedDate.toLocaleString("default", {
+            month: "long",
+          })} ${selectedDate.getFullYear()}`,
+          UTI: "com.adobe.pdf",
+        });
+      }
     } catch (error) {
-      console.error("Error generating PDF:", error);
+      console.error("Error generating or saving PDF:", error);
+      Alert.alert("Error", "Failed to save PDF.");
     } finally {
       setIsDownloading(false);
     }

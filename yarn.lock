@@ -4502,6 +4502,13 @@ expo-device@~7.0.2:
   dependencies:
     ua-parser-js "^0.7.33"
 
+expo-file-system@~18.0.11:
+  version "18.0.11"
+  resolved "https://registry.yarnpkg.com/expo-file-system/-/expo-file-system-18.0.11.tgz#4e602d6d0a3928810b98666ab11872fafe411170"
+  integrity sha512-yDwYfEzWgPXsBZHJW2RJ8Q66ceiFN9Wa5D20pp3fjXVkzPBDwxnYwiPWk4pVmCa5g4X5KYMoMne1pUrsL4OEpg==
+  dependencies:
+    web-streams-polyfill "^3.3.2"
+
 expo-file-system@~18.0.6:
   version "18.0.6"
   resolved "https://registry.npmjs.org/expo-file-system/-/expo-file-system-18.0.6.tgz"
