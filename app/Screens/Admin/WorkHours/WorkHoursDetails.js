@@ -22,8 +22,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import * as Print from "expo-print";
 import * as FileSystem from "expo-file-system";
-import * as MediaLibrary from "expo-media-library"; // For saving to Downloads
-import { Linking } from "react-native"; // For opening the PDF
+import * as Sharing from "expo-sharing";
 
 const WorkHoursDetails = ({ route, navigation }) => {
   const { userId, userName, userRole } = route.params;
@@ -34,20 +33,9 @@ const WorkHoursDetails = ({ route, navigation }) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [pdfFilePath, setPdfFilePath] = useState(null); // Store the saved PDF path
 
   useEffect(() => {
     fetchWorkHoursData();
-    (async () => {
-      // Request media library permission for Android
-      const { status } = await MediaLibrary.requestPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert(
-          "Permission Denied",
-          "Media library access is required to save to Downloads."
-        );
-      }
-    })();
   }, [userId, selectedDate]);
 
   const formatDate = (date) => {
@@ -216,54 +204,37 @@ const WorkHoursDetails = ({ route, navigation }) => {
     `;
 
     try {
-      // Generate the PDF file
       const { uri } = await Print.printToFileAsync({ html });
 
-      // Define the file name
-      const fileName = `WorkHours_${selectedDate.toLocaleString("default", {
-        month: "long",
-      })}_${selectedDate.getFullYear()}.pdf`;
-
-      // Save to Downloads folder using MediaLibrary
-      const asset = await MediaLibrary.createAssetAsync(uri);
-      const albumName = "Downloads";
-      const album = await MediaLibrary.getAlbumAsync(albumName);
-      if (album === null) {
-        await MediaLibrary.createAlbumAsync(albumName, asset, false);
-      } else {
-        await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
+      if (!uri || typeof uri !== "string") {
+        throw new Error("Invalid URI received from printToFileAsync");
       }
 
-      // Update the file path for opening
-      const downloadPath = `${FileSystem.documentDirectory}Active Tracker/${fileName}`;
+      // Define the desired file name
+      const fileName = "Work Hour Details.pdf";
+      const tempPath = `${FileSystem.cacheDirectory}${fileName}`;
+
       await FileSystem.moveAsync({
         from: uri,
-        to: downloadPath,
+        to: tempPath,
       });
-      setPdfFilePath(downloadPath);
 
-      // Show a success message
-      Alert.alert("Success", `PDF saved to Downloads as ${fileName}`);
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(tempPath, {
+          mimeType: "application/pdf",
+          dialogTitle: `Work Hours - ${selectedDate.toLocaleString("default", {
+            month: "long",
+          })} ${selectedDate.getFullYear()}`,
+          UTI: "com.adobe.pdf",
+        });
+      } else {
+        throw new Error("Sharing is not available on this device");
+      }
     } catch (error) {
-      console.error("Error generating or saving PDF:", error);
-      Alert.alert("Error", "Failed to save PDF.");
+      console.error("Error in generatePDF:", error.message);
+      Alert.alert("Error", `Failed to generate or share PDF: ${error.message}`);
     } finally {
       setIsDownloading(false);
-    }
-  };
-
-  const openPDF = async () => {
-    if (pdfFilePath) {
-      try {
-        await Linking.openURL(`file://${pdfFilePath}`);
-      } catch (error) {
-        Alert.alert(
-          "Error",
-          "Failed to open PDF. Please check if a PDF viewer is installed."
-        );
-      }
-    } else {
-      Alert.alert("Error", "No PDF file available to open.");
     }
   };
 
@@ -351,7 +322,7 @@ const WorkHoursDetails = ({ route, navigation }) => {
               <Text style={styles.noDataText}>No records for this month</Text>
             </View>
           )}
-          style={{ marginBottom: hp(15) }} // Extra space for two buttons
+          style={{ marginBottom: hp(10) }}
         />
       </View>
 
@@ -376,15 +347,6 @@ const WorkHoursDetails = ({ route, navigation }) => {
             <Text style={styles.downloadButtonText}>Download PDF</Text>
           </>
         )}
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[styles.openButton, !pdfFilePath && styles.openButtonDisabled]}
-        onPress={openPDF}
-        disabled={!pdfFilePath}
-      >
-        <Ionicons name="open" size={22} color={COLORS.white} />
-        <Text style={styles.openButtonText}>Open PDF</Text>
       </TouchableOpacity>
     </View>
   );
@@ -516,29 +478,7 @@ const styles = StyleSheet.create({
   downloadButtonDisabled: {
     backgroundColor: "#A9CCE3",
   },
-  openButton: {
-    position: "absolute",
-    bottom: hp(2),
-    left: wp(3),
-    backgroundColor: "#4A90E2",
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: hp(1.2),
-    paddingHorizontal: wp(4),
-    borderRadius: 25,
-    ...SHADOWS.medium,
-    elevation: 5,
-  },
-  openButtonDisabled: {
-    backgroundColor: "#A9CCE3",
-  },
   downloadButtonText: {
-    color: COLORS.white,
-    fontSize: wp(4),
-    fontWeight: "600",
-    marginLeft: wp(2),
-  },
-  openButtonText: {
     color: COLORS.white,
     fontSize: wp(4),
     fontWeight: "600",
