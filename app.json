@@ -54,10 +54,10 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/icon small.png",
+          "image": "./assets/images/iPhone 16 Frame (1).png",
           "imageWidth": 200,
           "resizeMode": "cover",
-          "backgroundColor": "#2196f3"
+          "backgroundColor": "#ffffff"
         }
       ],
       [
