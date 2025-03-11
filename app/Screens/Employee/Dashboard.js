@@ -17,6 +17,7 @@ import {
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 import { Ionicons } from "@expo/vector-icons";
+import * as Notifications from "expo-notifications";
 import { auth, db } from "../../firebase";
 import { signOut } from "firebase/auth";
 import {
@@ -62,6 +63,16 @@ const EmployeeDashboard = ({ navigation }) => {
   });
 
   useEffect(() => {
+    const setupNotifications = async () => {
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status === "granted") {
+        const token = (await Notifications.getExpoPushTokenAsync()).data;
+        await updateDoc(doc(db, "users", auth.currentUser.uid), {
+          expoPushToken: token,
+        });
+      }
+    };
+    setupNotifications();
     handleDataCleanup();
   }, []);
 
@@ -517,6 +528,13 @@ const EmployeeDashboard = ({ navigation }) => {
           <Ionicons name="camera" size={24} color="#4A90E2" />
           <Text style={styles.actionText}>Share Location</Text>
         </TouchableOpacity>
+        {/* <TouchableOpacity
+          style={[styles.actionButton, { width: "48%" }]}
+          onPress={() => navigation.navigate("TaskList")}
+        >
+          <Ionicons name="checkbox" size={24} color="#4A90E2" />
+          <Text style={styles.actionText}>My Tasks</Text>
+        </TouchableOpacity> */}
         <TouchableOpacity
           style={[styles.actionButton, { width: "48%" }]}
           onPress={() => setShowChangeManager(true)}

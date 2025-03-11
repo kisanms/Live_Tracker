@@ -37,12 +37,15 @@ import EmployeeWorkHoursDetails from "./Screens/Manager/WorkHour/EmployeeWorkHou
 import EmployeeImages from "./Screens/Manager/EmployeesLoc/EmployeeImages";
 import EmployeeImageDetails from "./Screens/Manager/EmployeesLoc/EmployeeImageDetails";
 import EmployeeLocNotiDetails from "./Screens/Manager/EmployeeLocNotiDetails";
+import TaskAnalyticsScreen from "./Screens/Manager/Task/TaskAnalyticsScreen";
+import TaskAssignmentScreen from "./Screens/Manager/Task/TaskAssignmentScreen";
 
 // Employee Screens
 import EmployeeDashboard from "./Screens/Employee/Dashboard";
 import EmployeeProfile from "./Screens/Employee/Profile";
 import Maps from "./Screens/Maps";
 import LocationPhotoCapture from "./Screens/Employee/LocationPhotoCapture";
+import TaskListScreen from "./Screens/Employee/EmpTask/TaskListScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -173,10 +176,13 @@ const RootLayout = ({ initialUser }) => {
         name="employeeImagesDetails"
         component={EmployeeImageDetails}
       />
+      <Stack.Screen name="TaskAnalytics" component={TaskAnalyticsScreen} />
+      <Stack.Screen name="TaskAssignment" component={TaskAssignmentScreen} />
 
       {/* Employee Portal Screens */}
       <Stack.Screen name="employeeDashboard" component={EmployeeDashboard} />
       <Stack.Screen name="employeeProfile" component={EmployeeProfile} />
+      <Stack.Screen name="TaskList" component={TaskListScreen} />
       <Stack.Screen
         name="LocationPhotoCapture"
         component={LocationPhotoCapture}

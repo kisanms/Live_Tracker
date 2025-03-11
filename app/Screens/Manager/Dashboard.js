@@ -30,7 +30,7 @@ import * as Location from "expo-location";
 import {
   startLocationTracking,
   stopLocationTracking,
-} from "../../services/LocationService.js"; // Import your location service
+} from "../../services/LocationService.js";
 
 const ManagerDashboard = ({ navigation }) => {
   const [managerData, setManagerData] = useState(null);
@@ -54,12 +54,9 @@ const ManagerDashboard = ({ navigation }) => {
         const userData = userDoc.data();
         setManagerData(userData);
 
-        // Add this clock-in status check
         if (userData.clockInTime) {
           const clockInDate = userData.clockInTime.toDate();
           const today = new Date();
-
-          // Check if the clock-in was on the same day
           if (
             clockInDate.getDate() === today.getDate() &&
             clockInDate.getMonth() === today.getMonth() &&
@@ -147,34 +144,25 @@ const ManagerDashboard = ({ navigation }) => {
   const handlePersistentClockIn = async () => {
     try {
       const currentTime = new Date();
-
-      // Check for recent clock-ins first
       const persistentRef = collection(db, "persistentClockIns");
       const recentClockInsQuery = query(
         persistentRef,
         where("managerId", "==", auth.currentUser.uid),
         where("status", "==", "active"),
-        // Add a time range check (last 5 minutes)
         where("clockInTime", ">=", new Date(currentTime.getTime() - 5 * 60000))
       );
 
       const recentClockIns = await getDocs(recentClockInsQuery);
-
-      // If recent clock-in exists, don't create a new one
       if (!recentClockIns.empty) {
         console.log("Recent clock-in already exists");
         return;
       }
 
-      // Get location only if we need to create a new entry
       const location = await Location.getCurrentPositionAsync({});
       const userDocRef = doc(db, "users", auth.currentUser.uid);
 
-      // Create new clock-in with transaction to ensure atomicity
       await runTransaction(db, async (transaction) => {
-        // Create persistent clock-in
         const newClockInRef = doc(collection(db, "persistentClockIns"));
-
         transaction.set(newClockInRef, {
           managerId: auth.currentUser.uid,
           managerName: managerData.name,
@@ -191,7 +179,6 @@ const ManagerDashboard = ({ navigation }) => {
           },
         });
 
-        // Update user document
         transaction.update(userDocRef, {
           clockInTime: currentTime,
           currentStatus: "Active",
@@ -205,7 +192,7 @@ const ManagerDashboard = ({ navigation }) => {
       Alert.alert("Success", "Clock-in data securely stored.");
     } catch (error) {
       console.error("Persistent clock-in error:", error);
-      throw error; // Re-throw to be handled by the caller
+      throw error;
     }
   };
 
@@ -215,7 +202,6 @@ const ManagerDashboard = ({ navigation }) => {
       const userDocRef = doc(db, "users", auth.currentUser.uid);
 
       if (!isClockedIn) {
-        // Clock In Logic
         const servicesEnabled = await Location.hasServicesEnabledAsync();
         if (!servicesEnabled) {
           Alert.alert(
@@ -238,41 +224,33 @@ const ManagerDashboard = ({ navigation }) => {
           return;
         }
 
-        // Start location tracking
         await startLocationTracking();
 
         try {
-          // Handle clock in with persistent storage
-          await handlePersistentClockIn(); // This now handles both user doc update and persistent storage
-
+          await handlePersistentClockIn();
           setClockInTime(currentTime);
           setClockOutTime(null);
           setIsClockedIn(true);
         } catch (error) {
-          // If clock-in fails, make sure to stop location tracking
           await stopLocationTracking();
           throw error;
         }
       } else {
-        // Clock Out Logic
         if (!clockInTime) {
           Alert.alert("Error", "No clock-in time found");
           return;
         }
 
         try {
-          // Fetch current location before clocking out
           const location = await Location.getCurrentPositionAsync({});
           const lastLocation = {
             latitude: location.coords.latitude,
             longitude: location.coords.longitude,
           };
 
-          const workDuration = (currentTime - clockInTime) / (1000 * 60 * 60); // hours
+          const workDuration = (currentTime - clockInTime) / (1000 * 60 * 60);
 
-          // Use transaction for clock out to ensure all updates happen together
           await runTransaction(db, async (transaction) => {
-            // Add work hours record
             const workHoursRef = doc(collection(db, "workHours"));
             transaction.set(workHoursRef, {
               managerId: auth.currentUser.uid,
@@ -285,7 +263,6 @@ const ManagerDashboard = ({ navigation }) => {
               lastLocation: lastLocation,
             });
 
-            // Update user document
             transaction.update(userDocRef, {
               clockOutTime: currentTime,
               currentStatus: "Inactive",
@@ -295,7 +272,6 @@ const ManagerDashboard = ({ navigation }) => {
             });
           });
 
-          // Stop location tracking after successful database updates
           await stopLocationTracking();
           Alert.alert("Success", "Clock-out successfully.");
 
@@ -355,7 +331,7 @@ const ManagerDashboard = ({ navigation }) => {
       userRole: "manager",
       managerName: managerData.name,
       managerEmail: managerData.email,
-      companyName: managerData.companyName, // Add company name
+      companyName: managerData.companyName,
     });
   };
 
@@ -365,12 +341,14 @@ const ManagerDashboard = ({ navigation }) => {
       count: teamCount,
       icon: "people",
       gradient: ["#4A90E2", "#357ABD"],
+      onPress: () => navigation.navigate("managerEmployeeList"),
     },
     {
       title: "Active Now",
       count: activeCount,
       icon: "radio-button-on",
       gradient: ["#2ECC71", "#27AE60"],
+      onPress: () => navigation.navigate("allEmpWorkHour"),
     },
   ];
 
@@ -424,13 +402,17 @@ const ManagerDashboard = ({ navigation }) => {
 
       <View style={styles.statsContainer}>
         {teamStats.map((stat, index) => (
-          <View key={index} style={styles.statCard}>
+          <TouchableOpacity
+            key={index}
+            style={styles.statCard}
+            onPress={stat.onPress}
+          >
             <View style={styles.statIconContainer}>
               <Ionicons name={stat.icon} size={28} color="#FFF" />
             </View>
             <Text style={styles.statCount}>{stat.count}</Text>
             <Text style={styles.statTitle}>{stat.title}</Text>
-          </View>
+          </TouchableOpacity>
         ))}
       </View>
 
@@ -463,16 +445,6 @@ const ManagerDashboard = ({ navigation }) => {
 
           <TouchableOpacity
             style={styles.actionButton}
-            onPress={() => navigation.navigate("managerEmployeeList")}
-          >
-            <View style={styles.actionIconContainer}>
-              <Ionicons name="people" size={24} color="#4A90E2" />
-            </View>
-            <Text style={styles.actionText}>Team List</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.actionButton}
             onPress={() => navigation.navigate("EmpLocNoti")}
           >
             <View style={styles.actionIconContainer}>
@@ -500,16 +472,24 @@ const ManagerDashboard = ({ navigation }) => {
             </View>
             <Text style={styles.actionText}>Share Location</Text>
           </TouchableOpacity>
-
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={styles.actionButton}
-            onPress={() => navigation.navigate("allEmpWorkHour")}
+            onPress={() => navigation.navigate("TaskAssignment")}
           >
             <View style={styles.actionIconContainer}>
-              <Ionicons name="time" size={24} color="#4A90E2" />
+              <Ionicons name="checkbox" size={24} color="#4A90E2" />
             </View>
-            <Text style={styles.actionText}>Work Hour</Text>
+            <Text style={styles.actionText}>Assign Task</Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => navigation.navigate("TaskAnalytics")}
+          >
+            <View style={styles.actionIconContainer}>
+              <Ionicons name="bar-chart" size={24} color="#4A90E2" />
+            </View>
+            <Text style={styles.actionText}>TaskAnalytics</Text>
+          </TouchableOpacity> */}
         </View>
       </View>
     </ScrollView>
@@ -654,15 +634,19 @@ const styles = StyleSheet.create({
     width: "48%",
     elevation: 2,
   },
-  headerRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
+  actionButtonActive: {
+    backgroundColor: "#E6F0FA",
   },
-  logoutButton: {
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: "#F5F7FA",
+  actionIconContainer: {
+    marginBottom: 8,
+  },
+  actionText: {
+    fontSize: 14,
+    color: "#1A1A1A",
+    fontWeight: "600",
+  },
+  actionTextActive: {
+    color: "#4A90E2",
   },
 });
 
