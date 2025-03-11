@@ -2,7 +2,7 @@
   "expo": {
     "name": "Active Tracker",
     "slug": "Live_Tracker",
-    "version": "5.1.4",
+    "version": "5.1.5",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
@@ -55,7 +55,7 @@
         "expo-splash-screen",
         {
          "image": "./assets/images/splash.png",
-          "imageWidth": 200,
+          "imageWidth": 400,
           "resizeMode": "cover",
           "backgroundColor": "#2196f3"
         }
