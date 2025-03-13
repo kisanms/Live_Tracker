@@ -10,8 +10,10 @@ import {
   TextInput,
   RefreshControl,
   Platform,
+  Modal,
+  Switch,
+  BackHandler,
 } from "react-native";
-
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -35,8 +37,19 @@ import {
   startLocationTracking,
   stopLocationTracking,
 } from "../../services/LocationService.js";
-import * as Location from "expo-location"; // Ensure this import is present
+import * as Location from "expo-location";
 import { SHADOWS } from "../../constants/theme.js";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import * as Notifications from "expo-notifications";
+
+// Notification handler configuration
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 const EmployeeDashboard = ({ navigation }) => {
   const [employeeName, setEmployeeName] = useState("");
@@ -53,6 +66,12 @@ const EmployeeDashboard = ({ navigation }) => {
   const [clockOutTime, setClockOutTime] = useState(null);
   const [isClockedIn, setIsClockedIn] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [showDateTimePicker, setShowDateTimePicker] = useState(false); // New state for DateTimePicker visibility
+  const [scheduledClockOutTime, setScheduledClockOutTime] = useState(null);
+  const [selectedTime, setSelectedTime] = useState(new Date());
+  const [autoClockOutEnabled, setAutoClockOutEnabled] = useState(false);
+  const [reminderEnabled, setReminderEnabled] = useState(false);
 
   const currentDate = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -61,8 +80,31 @@ const EmployeeDashboard = ({ navigation }) => {
     day: "numeric",
   });
 
+  // Handle back button on Android to close the modal
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        if (showScheduleModal) {
+          setShowScheduleModal(false);
+          setShowDateTimePicker(false);
+          return true; // Prevent default back button behavior
+        }
+        return false;
+      }
+    );
+
+    return () => backHandler.remove();
+  }, [showScheduleModal]);
+
   useEffect(() => {
     handleDataCleanup();
+    (async () => {
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Error", "Notification permissions are required");
+      }
+    })();
   }, []);
 
   useEffect(() => {
@@ -76,10 +118,13 @@ const EmployeeDashboard = ({ navigation }) => {
           setCompanyName(userData.companyName);
           setProfileImage(userData.profileImage);
 
+          if (userData.scheduledClockOutTime) {
+            setScheduledClockOutTime(userData.scheduledClockOutTime.toDate());
+          }
+
           if (userData.clockInTime) {
             const clockInDate = userData.clockInTime.toDate();
             const today = new Date();
-
             if (
               clockInDate.getDate() === today.getDate() &&
               clockInDate.getMonth() === today.getMonth() &&
@@ -213,6 +258,7 @@ const EmployeeDashboard = ({ navigation }) => {
       companyName,
     });
   };
+
   const handleChangeManager = async () => {
     if (!newManagerEmail.trim()) {
       Alert.alert("Error", "Please enter new manager's email");
@@ -289,34 +335,24 @@ const EmployeeDashboard = ({ navigation }) => {
   const handlePersistentClockIn = async () => {
     try {
       const currentTime = new Date();
-
-      // Check for recent clock-ins first
       const persistentRef = collection(db, "persistentClockIns");
       const recentClockInsQuery = query(
         persistentRef,
         where("employeeId", "==", auth.currentUser.uid),
         where("status", "==", "active"),
-        // Add a time range check (last 5 minutes)
         where("clockInTime", ">=", new Date(currentTime.getTime() - 5 * 60000))
       );
 
       const recentClockIns = await getDocs(recentClockInsQuery);
-
-      // If recent clock-in exists, don't create a new one
       if (!recentClockIns.empty) {
-        // console.log("Recent clock-in already exists");
         return;
       }
 
-      // Get location only if we need to create a new entry
       const location = await Location.getCurrentPositionAsync({});
       const userDocRef = doc(db, "users", auth.currentUser.uid);
 
-      // Create new clock-in with transaction to ensure atomicity
       await runTransaction(db, async (transaction) => {
-        // Create persistent clock-in
         const newClockInRef = doc(collection(db, "persistentClockIns"));
-
         transaction.set(newClockInRef, {
           employeeId: auth.currentUser.uid,
           employeeName: employeeName,
@@ -334,7 +370,6 @@ const EmployeeDashboard = ({ navigation }) => {
           },
         });
 
-        // Update user document
         transaction.update(userDocRef, {
           clockInTime: currentTime,
           currentStatus: "Active",
@@ -346,7 +381,55 @@ const EmployeeDashboard = ({ navigation }) => {
       Alert.alert("Success", "Clock-in data securely stored.");
     } catch (error) {
       console.error("Persistent clock-in error:", error);
-      throw error; // Re-throw to be handled by the caller
+      throw error;
+    }
+  };
+
+  const scheduleClockOutReminder = async (time) => {
+    if (!reminderEnabled) return;
+
+    const reminderTime = new Date(time.getTime() - 15 * 60000); // 15 minutes before
+
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "Clock Out Reminder",
+        body: "Don't forget to clock out! Scheduled time is in 15 minutes.",
+        data: { type: "clockOutReminder" },
+      },
+      trigger: { date: reminderTime },
+    });
+  };
+
+  const scheduleAutomaticClockOut = async (time) => {
+    try {
+      const userDocRef = doc(db, "users", auth.currentUser.uid);
+      await updateDoc(userDocRef, {
+        scheduledClockOutTime: time,
+      });
+
+      setScheduledClockOutTime(time);
+      await scheduleClockOutReminder(time);
+
+      if (autoClockOutEnabled && isClockedIn) {
+        const timeDifference = time.getTime() - new Date().getTime();
+        if (timeDifference > 0) {
+          setTimeout(async () => {
+            if (isClockedIn) {
+              await handleClockInOut();
+            }
+          }, timeDifference);
+        }
+      }
+
+      Alert.alert(
+        "Success",
+        `Clock out ${
+          autoClockOutEnabled ? "automatically " : ""
+        }scheduled for ${time.toLocaleTimeString()}`
+      );
+    } catch (error) {
+      console.error("Error scheduling clock out:", error);
+      Alert.alert("Error", "Failed to schedule clock out");
     }
   };
 
@@ -356,7 +439,6 @@ const EmployeeDashboard = ({ navigation }) => {
       const userDocRef = doc(db, "users", auth.currentUser.uid);
 
       if (!isClockedIn) {
-        // Clock In Logic
         const servicesEnabled = await Location.hasServicesEnabledAsync();
         if (!servicesEnabled) {
           Alert.alert(
@@ -379,67 +461,54 @@ const EmployeeDashboard = ({ navigation }) => {
           return;
         }
 
-        // Start location tracking
         await startLocationTracking();
-
-        // Handle clock in with persistent storage
-        await handlePersistentClockIn(); // This now handles both user doc update and persistent storage
+        await handlePersistentClockIn();
 
         setClockInTime(currentTime);
         setClockOutTime(null);
         setIsClockedIn(true);
       } else {
-        // Clock Out Logic
         if (!clockInTime) {
           Alert.alert("Error", "No clock-in time found");
           return;
         }
 
-        try {
-          // Fetch current location before clocking out
-          const location = await Location.getCurrentPositionAsync({});
-          const lastLocation = {
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-          };
+        const location = await Location.getCurrentPositionAsync({});
+        const lastLocation = {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        };
 
-          const workDuration = (currentTime - clockInTime) / (1000 * 60 * 60); // hours
+        const workDuration = (currentTime - clockInTime) / (1000 * 60 * 60);
 
-          // Use transaction for clock out to ensure all updates happen together
-          await runTransaction(db, async (transaction) => {
-            // Add work hours record
-            const workHoursRef = doc(collection(db, "workHours"));
-            transaction.set(workHoursRef, {
-              employeeId: auth.currentUser.uid,
-              employeeName: employeeName,
-              employeeEmail: employeeEmail,
-              clockInTime: clockInTime,
-              clockOutTime: currentTime,
-              duration: workDuration,
-              date: serverTimestamp(),
-              lastLocation: lastLocation,
-            });
-
-            // Update user document
-            transaction.update(userDocRef, {
-              clockOutTime: currentTime,
-              currentStatus: "Inactive",
-              lastShiftDuration: workDuration,
-              clockInTime: null,
-              lastClockOutLocation: lastLocation,
-            });
+        await runTransaction(db, async (transaction) => {
+          const workHoursRef = doc(collection(db, "workHours"));
+          transaction.set(workHoursRef, {
+            employeeId: auth.currentUser.uid,
+            employeeName: employeeName,
+            employeeEmail: employeeEmail,
+            clockInTime: clockInTime,
+            clockOutTime: currentTime,
+            duration: workDuration,
+            date: serverTimestamp(),
+            lastLocation: lastLocation,
           });
 
-          // Stop location tracking after successful database updates
-          await stopLocationTracking();
+          transaction.update(userDocRef, {
+            clockOutTime: currentTime,
+            currentStatus: "Inactive",
+            lastShiftDuration: workDuration,
+            clockInTime: null,
+            lastClockOutLocation: lastLocation,
+            scheduledClockOutTime: null,
+          });
+        });
 
-          setIsClockedIn(false);
-          setClockOutTime(currentTime);
-          Alert.alert("Success", "Clock-out successfully.");
-        } catch (error) {
-          console.error("Clock out transaction failed:", error);
-          Alert.alert("Error", "Failed to clock out. Please try again.");
-        }
+        await stopLocationTracking();
+        setIsClockedIn(false);
+        setClockOutTime(currentTime);
+        setScheduledClockOutTime(null);
+        Alert.alert("Success", "Clock-out successfully.");
       }
     } catch (error) {
       console.error("Clock in/out error:", error);
@@ -468,11 +537,13 @@ const EmployeeDashboard = ({ navigation }) => {
             clockOutTime: null,
             currentStatus: "Not Clocked In",
             lastShiftDuration: null,
+            scheduledClockOutTime: null,
           });
 
           setClockInTime(null);
           setClockOutTime(null);
           setIsClockedIn(false);
+          setScheduledClockOutTime(null);
         }
       }
     } catch (error) {
@@ -562,6 +633,111 @@ const EmployeeDashboard = ({ navigation }) => {
     </View>
   );
 
+  const renderScheduleModal = () => (
+    <Modal
+      visible={showScheduleModal}
+      transparent={true}
+      animationType="slide"
+      onRequestClose={() => {
+        setShowScheduleModal(false);
+        setShowDateTimePicker(false);
+      }}
+    >
+      <View style={styles.modalContainer}>
+        <View style={styles.modalContent}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.sectionTitle}>Clock Settings</Text>
+            <TouchableOpacity
+              onPress={() => {
+                setShowScheduleModal(false);
+                setShowDateTimePicker(false);
+              }}
+            >
+              <Ionicons name="close" size={24} color="#666" />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.switchContainer}>
+            <View style={styles.switchTextContainer}>
+              <Text style={styles.switchLabel}>Auto Clock-Out</Text>
+              <Text style={styles.switchDescription}>
+                Automatically clock out at set time
+              </Text>
+            </View>
+            <Switch
+              onValueChange={(value) => setAutoClockOutEnabled(value)}
+              value={autoClockOutEnabled}
+            />
+          </View>
+          <View style={styles.switchContainer}>
+            <View style={styles.switchTextContainer}>
+              <Text style={styles.switchLabel}>Clock-Out Reminder</Text>
+              <Text style={styles.switchDescription}>
+                Get reminded to clock out
+              </Text>
+            </View>
+            <Switch
+              onValueChange={(value) => setReminderEnabled(value)}
+              value={reminderEnabled}
+            />
+          </View>
+          {(autoClockOutEnabled || reminderEnabled) && (
+            <TouchableOpacity
+              style={styles.timePickerButton}
+              onPress={() => setShowDateTimePicker(true)}
+            >
+              <Text style={styles.timePickerText}>
+                {selectedTime.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </Text>
+            </TouchableOpacity>
+          )}
+          {showDateTimePicker && (
+            <DateTimePicker
+              value={selectedTime}
+              mode="time"
+              display={Platform.OS === "ios" ? "spinner" : "default"}
+              onChange={(event, date) => {
+                setShowDateTimePicker(Platform.OS === "ios"); // Keep picker visible on iOS until dismissed
+                if (date) {
+                  setSelectedTime(date);
+                  if (autoClockOutEnabled || reminderEnabled) {
+                    scheduleAutomaticClockOut(date);
+                  }
+                }
+              }}
+            />
+          )}
+          <View style={styles.modalButtons}>
+            <TouchableOpacity
+              style={styles.verifyButton}
+              onPress={() => {
+                if (autoClockOutEnabled || reminderEnabled) {
+                  scheduleAutomaticClockOut(selectedTime);
+                }
+                setShowScheduleModal(false);
+                setShowDateTimePicker(false);
+              }}
+              disabled={!autoClockOutEnabled && !reminderEnabled}
+            >
+              <Text style={styles.verifyButtonText}>Save</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.verifyButton, { backgroundColor: "#666" }]}
+              onPress={() => {
+                setShowScheduleModal(false);
+                setShowDateTimePicker(false);
+              }}
+            >
+              <Text style={styles.verifyButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+
   return (
     <ScrollView
       style={styles.container}
@@ -580,6 +756,17 @@ const EmployeeDashboard = ({ navigation }) => {
           <Text style={styles.employeeName}>{employeeName || "Employee"}</Text>
         </View>
         <View style={styles.headerRight}>
+          <TouchableOpacity
+            style={styles.logoutButton}
+            onPress={() => isClockedIn && setShowScheduleModal(true)}
+            disabled={!isClockedIn}
+          >
+            <Ionicons
+              name="alarm-outline"
+              size={24}
+              color={isClockedIn ? "#4A90E2" : "#ccc"}
+            />
+          </TouchableOpacity>
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Ionicons name="log-out-outline" size={24} color="#4A90E2" />
           </TouchableOpacity>
@@ -607,6 +794,11 @@ const EmployeeDashboard = ({ navigation }) => {
           {isClockedIn && clockInTime && (
             <Text style={styles.clockTime}>
               Since {clockInTime.toLocaleTimeString()}
+            </Text>
+          )}
+          {isClockedIn && scheduledClockOutTime && (
+            <Text style={styles.clockTime}>
+              Scheduled Out: {scheduledClockOutTime.toLocaleTimeString()}
             </Text>
           )}
         </View>
@@ -659,6 +851,7 @@ const EmployeeDashboard = ({ navigation }) => {
             : null}
         </>
       )}
+      {renderScheduleModal()}
     </ScrollView>
   );
 };
@@ -872,6 +1065,64 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     padding: 5,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 15,
+    width: wp(80),
+    alignItems: "center",
+    elevation: 5,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
+    marginBottom: 20,
+  },
+  switchContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
+    marginBottom: 15,
+  },
+  switchTextContainer: {
+    flex: 1,
+  },
+  switchLabel: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#1A1A1A",
+  },
+  switchDescription: {
+    fontSize: 12,
+    color: "#666",
+  },
+  timePickerButton: {
+    backgroundColor: "#F5F7FA",
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 15,
+    width: "100%",
+    alignItems: "center",
+  },
+  timePickerText: {
+    fontSize: 16,
+    color: "#1A1A1A",
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    marginTop: 20,
   },
 });
 
