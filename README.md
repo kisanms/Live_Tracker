@@ -259,8 +259,7 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
 - **March 12**
 - automatically clock out feature added testing phase in employee
 - **March 13**
-- automatically clock out feature added testing phase in employee
-
+- clock out automatically functioning now
 ## 🎉 Features Implementation
 
 ### Admin Dashboard
