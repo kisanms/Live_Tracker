@@ -53,10 +53,11 @@ Notifications.setNotificationHandler({
   }),
 });
 
-// Define a unique task name for the background notification
+// Define unique task names
 const BACKGROUND_NOTIFICATION_TASK = "BACKGROUND_NOTIFICATION_TASK";
+const BACKGROUND_CLOCK_OUT_TASK = "BACKGROUND_CLOCK_OUT_TASK";
 
-// Define the background task
+// Define the background notification task
 TaskManager.defineTask(BACKGROUND_NOTIFICATION_TASK, async () => {
   try {
     const userDocRef = doc(db, "users", auth.currentUser.uid);
@@ -68,14 +69,14 @@ TaskManager.defineTask(BACKGROUND_NOTIFICATION_TASK, async () => {
       const now = new Date();
       const timeDifference = reminderTime.getTime() - now.getTime();
 
-      if (timeDifference > 0 && timeDifference <= 15 * 60000) {
+      if (timeDifference > 0 && timeDifference <= 5 * 60000) {
         await Notifications.scheduleNotificationAsync({
           content: {
             title: "Clock Out Reminder",
             body: "Don't forget to clock out! Scheduled time is in 15 minutes.",
             data: { type: "clockOutReminder" },
           },
-          trigger: null, // Trigger immediately in background
+          trigger: null,
         });
 
         await updateDoc(userDocRef, {
@@ -86,22 +87,102 @@ TaskManager.defineTask(BACKGROUND_NOTIFICATION_TASK, async () => {
 
     return BackgroundFetch.BackgroundFetchResult.NewData;
   } catch (error) {
-    console.error("Background task error:", error);
+    console.error("Background notification task error:", error);
     return BackgroundFetch.BackgroundFetchResult.Failed;
   }
 });
 
-// Register the background task
+// Define the background clock-out task
+TaskManager.defineTask(BACKGROUND_CLOCK_OUT_TASK, async () => {
+  try {
+    const userDocRef = doc(db, "users", auth.currentUser.uid);
+    const userDoc = await getDoc(userDocRef);
+    const userData = userDoc.data();
+
+    if (!userData.isClockedIn || !userData.scheduledClockOutTime) {
+      return BackgroundFetch.BackgroundFetchResult.NoData;
+    }
+
+    const scheduledTime = userData.scheduledClockOutTime.toDate();
+    const now = new Date();
+    const timeDifference = scheduledTime.getTime() - now.getTime();
+
+    if (timeDifference <= 0 && userData.isClockedIn) {
+      const location = await Location.getCurrentPositionAsync({});
+      const lastLocation = {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      };
+      const workDuration =
+        (now - userData.clockInTime.toDate()) / (1000 * 60 * 60);
+
+      await runTransaction(db, async (transaction) => {
+        const workHoursRef = doc(collection(db, "workHours"));
+        transaction.set(workHoursRef, {
+          employeeId: auth.currentUser.uid,
+          employeeName: userData.name,
+          employeeEmail: userData.email,
+          clockInTime: userData.clockInTime,
+          clockOutTime: now,
+          duration: workDuration,
+          date: serverTimestamp(),
+          lastLocation: lastLocation,
+        });
+
+        transaction.update(userDocRef, {
+          clockOutTime: now,
+          currentStatus: "Inactive",
+          lastShiftDuration: workDuration,
+          clockInTime: null,
+          lastClockOutLocation: lastLocation,
+          scheduledClockOutTime: null,
+          isClockedIn: false,
+        });
+      });
+
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "Automatic Clock-Out",
+          body: "You have been automatically clocked out.",
+          data: { type: "clockOut" },
+        },
+        trigger: null,
+      });
+
+      return BackgroundFetch.BackgroundFetchResult.NewData;
+    }
+
+    return BackgroundFetch.BackgroundFetchResult.NoData;
+  } catch (error) {
+    console.error("Background clock-out task error:", error);
+    return BackgroundFetch.BackgroundFetchResult.Failed;
+  }
+});
+
+// Register the background tasks
 const registerBackgroundTask = async () => {
   try {
     await BackgroundFetch.registerTaskAsync(BACKGROUND_NOTIFICATION_TASK, {
-      minimumInterval: 15 * 60, // Minimum interval in seconds (15 minutes)
-      stopOnTerminate: false, // Continue running after app is terminated
-      startOnBoot: true, // Start task on device reboot
+      minimumInterval: 15 * 60,
+      stopOnTerminate: false,
+      startOnBoot: true,
     });
-    console.log("Background task registered successfully");
+    console.log("Notification background task registered successfully");
   } catch (error) {
-    console.error("Error registering background task:", error);
+    console.error("Error registering notification background task:", error);
+  }
+};
+
+const registerClockOutBackgroundTask = async () => {
+  try {
+    await BackgroundFetch.registerTaskAsync(BACKGROUND_CLOCK_OUT_TASK, {
+      minimumInterval: 60, // Check every minute
+      stopOnTerminate: false,
+      startOnBoot: true,
+    });
+    console.log("Clock-out background task registered successfully");
+  } catch (error) {
+    console.error("Error registering clock-out background task:", error);
   }
 };
 
@@ -134,7 +215,6 @@ const EmployeeDashboard = ({ navigation }) => {
     day: "numeric",
   });
 
-  // Handle back button on Android to close the modal
   useEffect(() => {
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
@@ -160,6 +240,7 @@ const EmployeeDashboard = ({ navigation }) => {
       }
 
       await registerBackgroundTask();
+      await registerClockOutBackgroundTask();
 
       if (Platform.OS === "ios") {
         const backgroundStatus = await BackgroundFetch.getStatusAsync();
@@ -184,7 +265,13 @@ const EmployeeDashboard = ({ navigation }) => {
           setProfileImage(userData.profileImage);
 
           if (userData.scheduledClockOutTime) {
-            setScheduledClockOutTime(userData.scheduledClockOutTime.toDate());
+            const scheduledTime = userData.scheduledClockOutTime.toDate();
+            setScheduledClockOutTime(scheduledTime);
+
+            const now = new Date();
+            if (userData.isClockedIn && scheduledTime < now) {
+              await handleClockInOut();
+            }
           }
 
           if (userData.clockInTime) {
@@ -440,6 +527,7 @@ const EmployeeDashboard = ({ navigation }) => {
           currentStatus: "Active",
           clockOutTime: null,
           lastPersistentClockIn: currentTime,
+          isClockedIn: true,
         });
       });
 
@@ -454,7 +542,7 @@ const EmployeeDashboard = ({ navigation }) => {
     if (!reminderEnabled) return;
 
     try {
-      const reminderTime = new Date(time.getTime() - 15 * 60000); // 15 minutes before
+      const reminderTime = new Date(time.getTime() - 2 * 60000);
       const now = new Date();
       const timeDifference = reminderTime.getTime() - now.getTime();
 
@@ -493,21 +581,11 @@ const EmployeeDashboard = ({ navigation }) => {
       const userDocRef = doc(db, "users", auth.currentUser.uid);
       await updateDoc(userDocRef, {
         scheduledClockOutTime: time,
+        isClockedIn: true,
       });
 
       setScheduledClockOutTime(time);
       await scheduleClockOutReminder(time);
-
-      if (autoClockOutEnabled && isClockedIn) {
-        const timeDifference = time.getTime() - new Date().getTime();
-        if (timeDifference > 0) {
-          setTimeout(async () => {
-            if (isClockedIn) {
-              await handleClockInOut();
-            }
-          }, timeDifference);
-        }
-      }
 
       Alert.alert(
         "Success",
@@ -589,6 +667,7 @@ const EmployeeDashboard = ({ navigation }) => {
             clockInTime: null,
             lastClockOutLocation: lastLocation,
             scheduledClockOutTime: null,
+            isClockedIn: false,
           });
         });
 
@@ -626,6 +705,7 @@ const EmployeeDashboard = ({ navigation }) => {
             currentStatus: "Not Clocked In",
             lastShiftDuration: null,
             scheduledClockOutTime: null,
+            isClockedIn: false,
           });
 
           setClockInTime(null);
