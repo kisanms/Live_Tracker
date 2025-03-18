@@ -10,8 +10,6 @@ import {
   TextInput,
   RefreshControl,
   Platform,
-  Modal,
-  Switch,
   BackHandler,
 } from "react-native";
 import {
@@ -38,11 +36,14 @@ import {
   stopLocationTracking,
 } from "../../services/LocationService.js";
 import * as Location from "expo-location";
+import * as Battery from "expo-battery";
 import { SHADOWS } from "../../constants/theme.js";
-import DateTimePicker from "@react-native-community/datetimepicker";
 import * as Notifications from "expo-notifications";
-import * as TaskManager from "expo-task-manager";
-import * as BackgroundFetch from "expo-background-fetch";
+import ClockSettingsModal from "../../components/ClockSettingsModal";
+import {
+  registerBackgroundTasks,
+  checkBackgroundTasksStatus,
+} from "../../services/BackgroundService";
 
 // Notification handler configuration
 Notifications.setNotificationHandler({
@@ -52,139 +53,6 @@ Notifications.setNotificationHandler({
     shouldSetBadge: false,
   }),
 });
-
-// Define unique task names
-const BACKGROUND_NOTIFICATION_TASK = "BACKGROUND_NOTIFICATION_TASK";
-const BACKGROUND_CLOCK_OUT_TASK = "BACKGROUND_CLOCK_OUT_TASK";
-
-// Define the background notification task
-TaskManager.defineTask(BACKGROUND_NOTIFICATION_TASK, async () => {
-  try {
-    const userDocRef = doc(db, "users", auth.currentUser.uid);
-    const userDoc = await getDoc(userDocRef);
-    const userData = userDoc.data();
-
-    if (userData.scheduledReminder && userData.scheduledReminder.enabled) {
-      const reminderTime = userData.scheduledReminder.time.toDate();
-      const now = new Date();
-      const timeDifference = reminderTime.getTime() - now.getTime();
-
-      if (timeDifference > 0 && timeDifference <= 5 * 60000) {
-        await Notifications.scheduleNotificationAsync({
-          content: {
-            title: "Clock Out Reminder",
-            body: "Don't forget to clock out! Scheduled time is in 15 minutes.",
-            data: { type: "clockOutReminder" },
-          },
-          trigger: null,
-        });
-
-        await updateDoc(userDocRef, {
-          "scheduledReminder.enabled": false,
-        });
-      }
-    }
-
-    return BackgroundFetch.BackgroundFetchResult.NewData;
-  } catch (error) {
-    console.error("Background notification task error:", error);
-    return BackgroundFetch.BackgroundFetchResult.Failed;
-  }
-});
-
-// Define the background clock-out task
-TaskManager.defineTask(BACKGROUND_CLOCK_OUT_TASK, async () => {
-  try {
-    const userDocRef = doc(db, "users", auth.currentUser.uid);
-    const userDoc = await getDoc(userDocRef);
-    const userData = userDoc.data();
-
-    if (!userData.isClockedIn || !userData.scheduledClockOutTime) {
-      return BackgroundFetch.BackgroundFetchResult.NoData;
-    }
-
-    const scheduledTime = userData.scheduledClockOutTime.toDate();
-    const now = new Date();
-    const timeDifference = scheduledTime.getTime() - now.getTime();
-
-    if (timeDifference <= 0 && userData.isClockedIn) {
-      const location = await Location.getCurrentPositionAsync({});
-      const lastLocation = {
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      };
-      const workDuration =
-        (now - userData.clockInTime.toDate()) / (1000 * 60 * 60);
-
-      await runTransaction(db, async (transaction) => {
-        const workHoursRef = doc(collection(db, "workHours"));
-        transaction.set(workHoursRef, {
-          employeeId: auth.currentUser.uid,
-          employeeName: userData.name,
-          employeeEmail: userData.email,
-          clockInTime: userData.clockInTime,
-          clockOutTime: now,
-          duration: workDuration,
-          date: serverTimestamp(),
-          lastLocation: lastLocation,
-        });
-
-        transaction.update(userDocRef, {
-          clockOutTime: now,
-          currentStatus: "Inactive",
-          lastShiftDuration: workDuration,
-          clockInTime: null,
-          lastClockOutLocation: lastLocation,
-          scheduledClockOutTime: null,
-          isClockedIn: false,
-        });
-      });
-
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: "Automatic Clock-Out",
-          body: "You have been automatically clocked out.",
-          data: { type: "clockOut" },
-        },
-        trigger: null,
-      });
-
-      return BackgroundFetch.BackgroundFetchResult.NewData;
-    }
-
-    return BackgroundFetch.BackgroundFetchResult.NoData;
-  } catch (error) {
-    console.error("Background clock-out task error:", error);
-    return BackgroundFetch.BackgroundFetchResult.Failed;
-  }
-});
-
-// Register the background tasks
-const registerBackgroundTask = async () => {
-  try {
-    await BackgroundFetch.registerTaskAsync(BACKGROUND_NOTIFICATION_TASK, {
-      minimumInterval: 15 * 60,
-      stopOnTerminate: false,
-      startOnBoot: true,
-    });
-    console.log("Notification background task registered successfully");
-  } catch (error) {
-    console.error("Error registering notification background task:", error);
-  }
-};
-
-const registerClockOutBackgroundTask = async () => {
-  try {
-    await BackgroundFetch.registerTaskAsync(BACKGROUND_CLOCK_OUT_TASK, {
-      minimumInterval: 60, // Check every minute
-      stopOnTerminate: false,
-      startOnBoot: true,
-    });
-    console.log("Clock-out background task registered successfully");
-  } catch (error) {
-    console.error("Error registering clock-out background task:", error);
-  }
-};
 
 const EmployeeDashboard = ({ navigation }) => {
   const [employeeName, setEmployeeName] = useState("");
@@ -202,9 +70,7 @@ const EmployeeDashboard = ({ navigation }) => {
   const [isClockedIn, setIsClockedIn] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
-  const [showDateTimePicker, setShowDateTimePicker] = useState(false);
   const [scheduledClockOutTime, setScheduledClockOutTime] = useState(null);
-  const [selectedTime, setSelectedTime] = useState(new Date());
   const [autoClockOutEnabled, setAutoClockOutEnabled] = useState(false);
   const [reminderEnabled, setReminderEnabled] = useState(false);
 
@@ -215,13 +81,14 @@ const EmployeeDashboard = ({ navigation }) => {
     day: "numeric",
   });
 
+  const userDocRef = doc(db, "users", auth.currentUser?.uid || "");
+
   useEffect(() => {
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
       () => {
         if (showScheduleModal) {
           setShowScheduleModal(false);
-          setShowDateTimePicker(false);
           return true;
         }
         return false;
@@ -232,44 +99,66 @@ const EmployeeDashboard = ({ navigation }) => {
   }, [showScheduleModal]);
 
   useEffect(() => {
-    handleDataCleanup();
-    (async () => {
-      const { status } = await Notifications.requestPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert("Error", "Notification permissions are required");
-      }
-
-      await registerBackgroundTask();
-      await registerClockOutBackgroundTask();
-
-      if (Platform.OS === "ios") {
-        const backgroundStatus = await BackgroundFetch.getStatusAsync();
-        if (
-          backgroundStatus !== BackgroundFetch.BackgroundFetchStatus.Available
-        ) {
-          console.log("Background fetch not available on this device");
+    const subscription = Notifications.addNotificationReceivedListener(
+      (notification) => {
+        const { type } = notification.request.content.data;
+        if (type === "autoClockOut" && isClockedIn && autoClockOutEnabled) {
+          handleClockInOut();
         }
       }
-    })();
+    );
+
+    return () => subscription.remove();
+  }, [isClockedIn, autoClockOutEnabled]);
+
+  useEffect(() => {
+    handleDataCleanup();
+    const setupBackgroundTasks = async () => {
+      try {
+        const { status } = await Notifications.requestPermissionsAsync();
+        if (status !== "granted") {
+          Alert.alert("Error", "Notification permissions are required");
+        }
+
+        const isOptimized = await Battery.isBatteryOptimizationEnabledAsync();
+        if (isOptimized) {
+          await Battery.requestBatteryOptimizationDisablementAsync();
+        }
+
+        const taskStatus = await checkBackgroundTasksStatus();
+        if (!taskStatus.notificationTask || !taskStatus.clockOutTask) {
+          await registerBackgroundTasks();
+        }
+      } catch (error) {
+        console.error("Background tasks setup error:", error);
+      }
+    };
+    setupBackgroundTasks();
   }, []);
 
   useEffect(() => {
     const fetchEmployeeData = async () => {
       try {
-        const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+        const userDoc = await getDoc(userDocRef);
         if (userDoc.exists()) {
           const userData = userDoc.data();
           setEmployeeName(userData.name);
           setEmployeeEmail(userData.email);
           setCompanyName(userData.companyName);
           setProfileImage(userData.profileImage);
+          setAutoClockOutEnabled(userData.autoClockOutEnabled || false);
+          setReminderEnabled(userData.scheduledReminder?.enabled || false);
 
           if (userData.scheduledClockOutTime) {
             const scheduledTime = userData.scheduledClockOutTime.toDate();
             setScheduledClockOutTime(scheduledTime);
 
             const now = new Date();
-            if (userData.isClockedIn && scheduledTime < now) {
+            if (
+              userData.isClockedIn &&
+              scheduledTime < now &&
+              autoClockOutEnabled
+            ) {
               await handleClockInOut();
             }
           }
@@ -538,71 +427,9 @@ const EmployeeDashboard = ({ navigation }) => {
     }
   };
 
-  const scheduleClockOutReminder = async (time) => {
-    if (!reminderEnabled) return;
-
-    try {
-      const reminderTime = new Date(time.getTime() - 2 * 60000);
-      const now = new Date();
-      const timeDifference = reminderTime.getTime() - now.getTime();
-
-      if (timeDifference <= 0) {
-        console.log("Reminder time is in the past, skipping...");
-        return;
-      }
-
-      const notificationId = await Notifications.scheduleNotificationAsync({
-        content: {
-          title: "Clock Out Reminder",
-          body: "Don't forget to clock out! Scheduled time is in 15 minutes.",
-          data: { type: "clockOutReminder" },
-        },
-        trigger: { date: reminderTime },
-      });
-
-      console.log("Notification scheduled with ID:", notificationId);
-
-      const userDocRef = doc(db, "users", auth.currentUser.uid);
-      await updateDoc(userDocRef, {
-        scheduledReminder: {
-          time: reminderTime,
-          notificationId: notificationId,
-          enabled: true,
-        },
-      });
-    } catch (error) {
-      console.error("Error scheduling clock-out reminder:", error);
-      Alert.alert("Error", "Failed to schedule reminder");
-    }
-  };
-
-  const scheduleAutomaticClockOut = async (time) => {
-    try {
-      const userDocRef = doc(db, "users", auth.currentUser.uid);
-      await updateDoc(userDocRef, {
-        scheduledClockOutTime: time,
-        isClockedIn: true,
-      });
-
-      setScheduledClockOutTime(time);
-      await scheduleClockOutReminder(time);
-
-      Alert.alert(
-        "Success",
-        `Clock out ${
-          autoClockOutEnabled ? "automatically " : ""
-        }scheduled for ${time.toLocaleTimeString()}`
-      );
-    } catch (error) {
-      console.error("Error scheduling clock out:", error);
-      Alert.alert("Error", "Failed to schedule clock out");
-    }
-  };
-
   const handleClockInOut = async () => {
     try {
       const currentTime = new Date();
-      const userDocRef = doc(db, "users", auth.currentUser.uid);
 
       if (!isClockedIn) {
         const servicesEnabled = await Location.hasServicesEnabledAsync();
@@ -667,7 +494,9 @@ const EmployeeDashboard = ({ navigation }) => {
             clockInTime: null,
             lastClockOutLocation: lastLocation,
             scheduledClockOutTime: null,
+            scheduledReminder: { enabled: false },
             isClockedIn: false,
+            autoClockOutEnabled: false,
           });
         });
 
@@ -675,6 +504,8 @@ const EmployeeDashboard = ({ navigation }) => {
         setIsClockedIn(false);
         setClockOutTime(currentTime);
         setScheduledClockOutTime(null);
+        setAutoClockOutEnabled(false);
+        setReminderEnabled(false);
         Alert.alert("Success", "Clock-out successfully.");
       }
     } catch (error) {
@@ -706,17 +537,27 @@ const EmployeeDashboard = ({ navigation }) => {
             lastShiftDuration: null,
             scheduledClockOutTime: null,
             isClockedIn: false,
+            autoClockOutEnabled: false,
+            scheduledReminder: { enabled: false },
           });
 
           setClockInTime(null);
           setClockOutTime(null);
           setIsClockedIn(false);
           setScheduledClockOutTime(null);
+          setAutoClockOutEnabled(false);
+          setReminderEnabled(false);
         }
       }
     } catch (error) {
       console.error("Data cleanup error:", error);
     }
+  };
+
+  const handleClockSettingsSave = (settings) => {
+    setScheduledClockOutTime(settings.scheduledTime);
+    setAutoClockOutEnabled(settings.autoClockOutEnabled);
+    setReminderEnabled(settings.reminderEnabled);
   };
 
   const renderManagerVerification = () => (
@@ -802,108 +643,15 @@ const EmployeeDashboard = ({ navigation }) => {
   );
 
   const renderScheduleModal = () => (
-    <Modal
+    <ClockSettingsModal
       visible={showScheduleModal}
-      transparent={true}
-      animationType="slide"
-      onRequestClose={() => {
-        setShowScheduleModal(false);
-        setShowDateTimePicker(false);
-      }}
-    >
-      <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.sectionTitle}>Clock Settings</Text>
-            <TouchableOpacity
-              onPress={() => {
-                setShowScheduleModal(false);
-                setShowDateTimePicker(false);
-              }}
-            >
-              <Ionicons name="close" size={24} color="#666" />
-            </TouchableOpacity>
-          </View>
-          <View style={styles.switchContainer}>
-            <View style={styles.switchTextContainer}>
-              <Text style={styles.switchLabel}>Auto Clock-Out</Text>
-              <Text style={styles.switchDescription}>
-                Automatically clock out at set time
-              </Text>
-            </View>
-            <Switch
-              onValueChange={(value) => setAutoClockOutEnabled(value)}
-              value={autoClockOutEnabled}
-            />
-          </View>
-          <View style={styles.switchContainer}>
-            <View style={styles.switchTextContainer}>
-              <Text style={styles.switchLabel}>Clock-Out Reminder</Text>
-              <Text style={styles.switchDescription}>
-                Get reminded to clock out
-              </Text>
-            </View>
-            <Switch
-              onValueChange={(value) => setReminderEnabled(value)}
-              value={reminderEnabled}
-            />
-          </View>
-          {(autoClockOutEnabled || reminderEnabled) && (
-            <TouchableOpacity
-              style={styles.timePickerButton}
-              onPress={() => setShowDateTimePicker(true)}
-            >
-              <Text style={styles.timePickerText}>
-                {selectedTime.toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </Text>
-            </TouchableOpacity>
-          )}
-          {showDateTimePicker && (
-            <DateTimePicker
-              value={selectedTime}
-              mode="time"
-              display={Platform.OS === "ios" ? "spinner" : "default"}
-              onChange={(event, date) => {
-                setShowDateTimePicker(Platform.OS === "ios");
-                if (date) {
-                  setSelectedTime(date);
-                  if (autoClockOutEnabled || reminderEnabled) {
-                    scheduleAutomaticClockOut(date);
-                  }
-                }
-              }}
-            />
-          )}
-          <View style={styles.modalButtons}>
-            <TouchableOpacity
-              style={styles.verifyButton}
-              onPress={() => {
-                if (autoClockOutEnabled || reminderEnabled) {
-                  scheduleAutomaticClockOut(selectedTime);
-                }
-                setShowScheduleModal(false);
-                setShowDateTimePicker(false);
-              }}
-              disabled={!autoClockOutEnabled && !reminderEnabled}
-            >
-              <Text style={styles.verifyButtonText}>Save</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.verifyButton, { backgroundColor: "#666" }]}
-              onPress={() => {
-                setShowScheduleModal(false);
-                setShowDateTimePicker(false);
-              }}
-            >
-              <Text style={styles.verifyButtonText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    </Modal>
+      onClose={() => setShowScheduleModal(false)}
+      onSave={handleClockSettingsSave}
+      userDocRef={userDocRef}
+      initialAutoClockOut={autoClockOutEnabled}
+      initialReminder={reminderEnabled}
+      db={db}
+    />
   );
 
   return (
@@ -1218,64 +966,6 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     padding: 5,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
-  },
-  modalContent: {
-    backgroundColor: "#fff",
-    padding: 20,
-    borderRadius: 15,
-    width: wp(80),
-    alignItems: "center",
-    elevation: 5,
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    width: "100%",
-    marginBottom: 20,
-  },
-  switchContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    width: "100%",
-    marginBottom: 15,
-  },
-  switchTextContainer: {
-    flex: 1,
-  },
-  switchLabel: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#1A1A1A",
-  },
-  switchDescription: {
-    fontSize: 12,
-    color: "#666",
-  },
-  timePickerButton: {
-    backgroundColor: "#F5F7FA",
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 15,
-    width: "100%",
-    alignItems: "center",
-  },
-  timePickerText: {
-    fontSize: 16,
-    color: "#1A1A1A",
-  },
-  modalButtons: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
-    marginTop: 20,
   },
 });
 
