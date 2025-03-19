@@ -41,7 +41,8 @@
         "android.permission.FOREGROUND_SERVICE",
         "android.permission.POST_NOTIFICATIONS",
         "android.permission.RECORD_AUDIO",
-        "android.permission.CAMERA"
+        "android.permission.CAMERA",
+        "VIBRATE", "RECEIVE_BOOT_COMPLETED"
       ]
     },
     "web": {
@@ -79,7 +80,8 @@
         {
           "cameraPermission": "Allow $(PRODUCT_NAME) to use your camera."
         }
-      ]
+      ],
+      ["./notifee-plugin.js"]
     ],
     "experiments": {
       "typedRoutes": true
