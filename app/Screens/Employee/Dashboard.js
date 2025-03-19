@@ -10,8 +10,8 @@ import {
   TextInput,
   RefreshControl,
   Platform,
-  BackHandler,
 } from "react-native";
+
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -35,25 +35,8 @@ import {
   startLocationTracking,
   stopLocationTracking,
 } from "../../services/LocationService.js";
-import * as Location from "expo-location";
-import * as Battery from "expo-battery";
-import * as IntentLauncher from "expo-intent-launcher"; // Add this import
+import * as Location from "expo-location"; // Ensure this import is present
 import { SHADOWS } from "../../constants/theme.js";
-import * as Notifications from "expo-notifications";
-import ClockSettingsModal from "../../components/ClockSettingsModal";
-import {
-  registerBackgroundTasks,
-  checkBackgroundTasksStatus,
-} from "../../services/BackgroundService.js";
-
-// Notification handler configuration
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
 
 const EmployeeDashboard = ({ navigation }) => {
   const [employeeName, setEmployeeName] = useState("");
@@ -70,10 +53,6 @@ const EmployeeDashboard = ({ navigation }) => {
   const [clockOutTime, setClockOutTime] = useState(null);
   const [isClockedIn, setIsClockedIn] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [showScheduleModal, setShowScheduleModal] = useState(false);
-  const [scheduledClockOutTime, setScheduledClockOutTime] = useState(null);
-  const [autoClockOutEnabled, setAutoClockOutEnabled] = useState(false);
-  const [reminderEnabled, setReminderEnabled] = useState(false);
 
   const currentDate = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -82,119 +61,25 @@ const EmployeeDashboard = ({ navigation }) => {
     day: "numeric",
   });
 
-  const userDocRef = doc(db, "users", auth.currentUser?.uid || "");
-
-  // Function to request battery optimization exemption
-  const requestBatteryOptimizationPermission = async () => {
-    if (Platform.OS === "android") {
-      try {
-        const isOptimized = await Battery.isBatteryOptimizationEnabledAsync();
-        if (isOptimized) {
-          await IntentLauncher.startActivityAsync(
-            IntentLauncher.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
-            { data: `package:${IntentLauncher.getPackage()}` }
-          );
-          // Note: This opens the settings; the user must manually disable optimization
-          return true;
-        }
-      } catch (error) {
-        console.error("Battery optimization request failed:", error);
-        return false;
-      }
-    }
-    return true; // Return true for non-Android platforms
-  };
-
-  useEffect(() => {
-    const backHandler = BackHandler.addEventListener(
-      "hardwareBackPress",
-      () => {
-        if (showScheduleModal) {
-          setShowScheduleModal(false);
-          return true;
-        }
-        return false;
-      }
-    );
-
-    return () => backHandler.remove();
-  }, [showScheduleModal]);
-
-  useEffect(() => {
-    const subscription = Notifications.addNotificationReceivedListener(
-      (notification) => {
-        const { type } = notification.request.content.data;
-        if (type === "autoClockOut" && isClockedIn && autoClockOutEnabled) {
-          handleClockInOut();
-        }
-      }
-    );
-
-    return () => subscription.remove();
-  }, [isClockedIn, autoClockOutEnabled]);
-
   useEffect(() => {
     handleDataCleanup();
-    const setupBackgroundTasks = async () => {
-      try {
-        const { status } = await Notifications.requestPermissionsAsync();
-        if (status !== "granted") {
-          Alert.alert("Error", "Notification permissions are required");
-          return;
-        }
-
-        // Request battery optimization exemption
-        const batteryPermissionGranted =
-          await requestBatteryOptimizationPermission();
-        if (!batteryPermissionGranted) {
-          Alert.alert(
-            "Warning",
-            "Battery optimization may interfere with background tasks. Please disable it in settings."
-          );
-        }
-
-        const taskStatus = await checkBackgroundTasksStatus();
-        if (!taskStatus.notificationTask || !taskStatus.clockOutTask) {
-          await registerBackgroundTasks();
-        }
-      } catch (error) {
-        console.error("Background tasks setup error:", error);
-        Alert.alert("Error", "Failed to setup background tasks.");
-      }
-    };
-    setupBackgroundTasks();
   }, []);
 
   useEffect(() => {
     const fetchEmployeeData = async () => {
       try {
-        const userDoc = await getDoc(userDocRef);
+        const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
         if (userDoc.exists()) {
           const userData = userDoc.data();
           setEmployeeName(userData.name);
           setEmployeeEmail(userData.email);
           setCompanyName(userData.companyName);
           setProfileImage(userData.profileImage);
-          setAutoClockOutEnabled(userData.autoClockOutEnabled || false);
-          setReminderEnabled(userData.scheduledReminder?.enabled || false);
-
-          if (userData.scheduledClockOutTime) {
-            const scheduledTime = userData.scheduledClockOutTime.toDate();
-            setScheduledClockOutTime(scheduledTime);
-
-            const now = new Date();
-            if (
-              userData.isClockedIn &&
-              scheduledTime < now &&
-              autoClockOutEnabled
-            ) {
-              await handleClockInOut();
-            }
-          }
 
           if (userData.clockInTime) {
             const clockInDate = userData.clockInTime.toDate();
             const today = new Date();
+
             if (
               clockInDate.getDate() === today.getDate() &&
               clockInDate.getMonth() === today.getMonth() &&
@@ -328,7 +213,6 @@ const EmployeeDashboard = ({ navigation }) => {
       companyName,
     });
   };
-
   const handleChangeManager = async () => {
     if (!newManagerEmail.trim()) {
       Alert.alert("Error", "Please enter new manager's email");
@@ -405,24 +289,34 @@ const EmployeeDashboard = ({ navigation }) => {
   const handlePersistentClockIn = async () => {
     try {
       const currentTime = new Date();
+
+      // Check for recent clock-ins first
       const persistentRef = collection(db, "persistentClockIns");
       const recentClockInsQuery = query(
         persistentRef,
         where("employeeId", "==", auth.currentUser.uid),
         where("status", "==", "active"),
+        // Add a time range check (last 5 minutes)
         where("clockInTime", ">=", new Date(currentTime.getTime() - 5 * 60000))
       );
 
       const recentClockIns = await getDocs(recentClockInsQuery);
+
+      // If recent clock-in exists, don't create a new one
       if (!recentClockIns.empty) {
+        // console.log("Recent clock-in already exists");
         return;
       }
 
+      // Get location only if we need to create a new entry
       const location = await Location.getCurrentPositionAsync({});
       const userDocRef = doc(db, "users", auth.currentUser.uid);
 
+      // Create new clock-in with transaction to ensure atomicity
       await runTransaction(db, async (transaction) => {
+        // Create persistent clock-in
         const newClockInRef = doc(collection(db, "persistentClockIns"));
+
         transaction.set(newClockInRef, {
           employeeId: auth.currentUser.uid,
           employeeName: employeeName,
@@ -440,27 +334,29 @@ const EmployeeDashboard = ({ navigation }) => {
           },
         });
 
+        // Update user document
         transaction.update(userDocRef, {
           clockInTime: currentTime,
           currentStatus: "Active",
           clockOutTime: null,
           lastPersistentClockIn: currentTime,
-          isClockedIn: true,
         });
       });
 
       Alert.alert("Success", "Clock-in data securely stored.");
     } catch (error) {
       console.error("Persistent clock-in error:", error);
-      throw error;
+      throw error; // Re-throw to be handled by the caller
     }
   };
 
   const handleClockInOut = async () => {
     try {
       const currentTime = new Date();
+      const userDocRef = doc(db, "users", auth.currentUser.uid);
 
       if (!isClockedIn) {
+        // Clock In Logic
         const servicesEnabled = await Location.hasServicesEnabledAsync();
         if (!servicesEnabled) {
           Alert.alert(
@@ -483,59 +379,67 @@ const EmployeeDashboard = ({ navigation }) => {
           return;
         }
 
+        // Start location tracking
         await startLocationTracking();
-        await handlePersistentClockIn();
+
+        // Handle clock in with persistent storage
+        await handlePersistentClockIn(); // This now handles both user doc update and persistent storage
 
         setClockInTime(currentTime);
         setClockOutTime(null);
         setIsClockedIn(true);
       } else {
+        // Clock Out Logic
         if (!clockInTime) {
           Alert.alert("Error", "No clock-in time found");
           return;
         }
 
-        const location = await Location.getCurrentPositionAsync({});
-        const lastLocation = {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-        };
+        try {
+          // Fetch current location before clocking out
+          const location = await Location.getCurrentPositionAsync({});
+          const lastLocation = {
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+          };
 
-        const workDuration = (currentTime - clockInTime) / (1000 * 60 * 60);
+          const workDuration = (currentTime - clockInTime) / (1000 * 60 * 60); // hours
 
-        await runTransaction(db, async (transaction) => {
-          const workHoursRef = doc(collection(db, "workHours"));
-          transaction.set(workHoursRef, {
-            employeeId: auth.currentUser.uid,
-            employeeName: employeeName,
-            employeeEmail: employeeEmail,
-            clockInTime: clockInTime,
-            clockOutTime: currentTime,
-            duration: workDuration,
-            date: serverTimestamp(),
-            lastLocation: lastLocation,
+          // Use transaction for clock out to ensure all updates happen together
+          await runTransaction(db, async (transaction) => {
+            // Add work hours record
+            const workHoursRef = doc(collection(db, "workHours"));
+            transaction.set(workHoursRef, {
+              employeeId: auth.currentUser.uid,
+              employeeName: employeeName,
+              employeeEmail: employeeEmail,
+              clockInTime: clockInTime,
+              clockOutTime: currentTime,
+              duration: workDuration,
+              date: serverTimestamp(),
+              lastLocation: lastLocation,
+            });
+
+            // Update user document
+            transaction.update(userDocRef, {
+              clockOutTime: currentTime,
+              currentStatus: "Inactive",
+              lastShiftDuration: workDuration,
+              clockInTime: null,
+              lastClockOutLocation: lastLocation,
+            });
           });
 
-          transaction.update(userDocRef, {
-            clockOutTime: currentTime,
-            currentStatus: "Inactive",
-            lastShiftDuration: workDuration,
-            clockInTime: null,
-            lastClockOutLocation: lastLocation,
-            scheduledClockOutTime: null,
-            scheduledReminder: { enabled: false },
-            isClockedIn: false,
-            autoClockOutEnabled: false,
-          });
-        });
+          // Stop location tracking after successful database updates
+          await stopLocationTracking();
 
-        await stopLocationTracking();
-        setIsClockedIn(false);
-        setClockOutTime(currentTime);
-        setScheduledClockOutTime(null);
-        setAutoClockOutEnabled(false);
-        setReminderEnabled(false);
-        Alert.alert("Success", "Clock-out successfully.");
+          setIsClockedIn(false);
+          setClockOutTime(currentTime);
+          Alert.alert("Success", "Clock-out successfully.");
+        } catch (error) {
+          console.error("Clock out transaction failed:", error);
+          Alert.alert("Error", "Failed to clock out. Please try again.");
+        }
       }
     } catch (error) {
       console.error("Clock in/out error:", error);
@@ -564,29 +468,16 @@ const EmployeeDashboard = ({ navigation }) => {
             clockOutTime: null,
             currentStatus: "Not Clocked In",
             lastShiftDuration: null,
-            scheduledClockOutTime: null,
-            isClockedIn: false,
-            autoClockOutEnabled: false,
-            scheduledReminder: { enabled: false },
           });
 
           setClockInTime(null);
           setClockOutTime(null);
           setIsClockedIn(false);
-          setScheduledClockOutTime(null);
-          setAutoClockOutEnabled(false);
-          setReminderEnabled(false);
         }
       }
     } catch (error) {
       console.error("Data cleanup error:", error);
     }
-  };
-
-  const handleClockSettingsSave = (settings) => {
-    setScheduledClockOutTime(settings.scheduledTime);
-    setAutoClockOutEnabled(settings.autoClockOutEnabled);
-    setReminderEnabled(settings.reminderEnabled);
   };
 
   const renderManagerVerification = () => (
@@ -671,18 +562,6 @@ const EmployeeDashboard = ({ navigation }) => {
     </View>
   );
 
-  const renderScheduleModal = () => (
-    <ClockSettingsModal
-      visible={showScheduleModal}
-      onClose={() => setShowScheduleModal(false)}
-      onSave={handleClockSettingsSave}
-      userDocRef={userDocRef}
-      initialAutoClockOut={autoClockOutEnabled}
-      initialReminder={reminderEnabled}
-      db={db}
-    />
-  );
-
   return (
     <ScrollView
       style={styles.container}
@@ -701,17 +580,6 @@ const EmployeeDashboard = ({ navigation }) => {
           <Text style={styles.employeeName}>{employeeName || "Employee"}</Text>
         </View>
         <View style={styles.headerRight}>
-          <TouchableOpacity
-            style={styles.logoutButton}
-            onPress={() => isClockedIn && setShowScheduleModal(true)}
-            disabled={!isClockedIn}
-          >
-            <Ionicons
-              name="alarm-outline"
-              size={24}
-              color={isClockedIn ? "#4A90E2" : "#ccc"}
-            />
-          </TouchableOpacity>
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Ionicons name="log-out-outline" size={24} color="#4A90E2" />
           </TouchableOpacity>
@@ -739,11 +607,6 @@ const EmployeeDashboard = ({ navigation }) => {
           {isClockedIn && clockInTime && (
             <Text style={styles.clockTime}>
               Since {clockInTime.toLocaleTimeString()}
-            </Text>
-          )}
-          {isClockedIn && scheduledClockOutTime && (
-            <Text style={styles.clockTime}>
-              Scheduled Out: {scheduledClockOutTime.toLocaleTimeString()}
             </Text>
           )}
         </View>
@@ -796,12 +659,10 @@ const EmployeeDashboard = ({ navigation }) => {
             : null}
         </>
       )}
-      {renderScheduleModal()}
     </ScrollView>
   );
 };
 
-// Styles remain unchanged
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -987,6 +848,21 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     textAlign: "center",
     fontSize: 14,
+  },
+  changeManagerButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff",
+    padding: 12,
+    borderRadius: 10,
+    marginTop: 15,
+    elevation: 2,
+  },
+  changeManagerText: {
+    color: "#4A90E2",
+    marginLeft: 8,
+    fontWeight: "500",
   },
   managerHeader: {
     flexDirection: "row",
