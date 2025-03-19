@@ -37,13 +37,14 @@ import {
 } from "../../services/LocationService.js";
 import * as Location from "expo-location";
 import * as Battery from "expo-battery";
+import * as IntentLauncher from "expo-intent-launcher"; // Add this import
 import { SHADOWS } from "../../constants/theme.js";
 import * as Notifications from "expo-notifications";
 import ClockSettingsModal from "../../components/ClockSettingsModal";
 import {
   registerBackgroundTasks,
   checkBackgroundTasksStatus,
-} from "../../services/BackgroundService";
+} from "../../services/BackgroundService.js";
 
 // Notification handler configuration
 Notifications.setNotificationHandler({
@@ -83,6 +84,27 @@ const EmployeeDashboard = ({ navigation }) => {
 
   const userDocRef = doc(db, "users", auth.currentUser?.uid || "");
 
+  // Function to request battery optimization exemption
+  const requestBatteryOptimizationPermission = async () => {
+    if (Platform.OS === "android") {
+      try {
+        const isOptimized = await Battery.isBatteryOptimizationEnabledAsync();
+        if (isOptimized) {
+          await IntentLauncher.startActivityAsync(
+            IntentLauncher.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+            { data: `package:${IntentLauncher.getPackage()}` }
+          );
+          // Note: This opens the settings; the user must manually disable optimization
+          return true;
+        }
+      } catch (error) {
+        console.error("Battery optimization request failed:", error);
+        return false;
+      }
+    }
+    return true; // Return true for non-Android platforms
+  };
+
   useEffect(() => {
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
@@ -118,11 +140,17 @@ const EmployeeDashboard = ({ navigation }) => {
         const { status } = await Notifications.requestPermissionsAsync();
         if (status !== "granted") {
           Alert.alert("Error", "Notification permissions are required");
+          return;
         }
 
-        const isOptimized = await Battery.isBatteryOptimizationEnabledAsync();
-        if (isOptimized) {
-          await Battery.requestBatteryOptimizationDisablementAsync();
+        // Request battery optimization exemption
+        const batteryPermissionGranted =
+          await requestBatteryOptimizationPermission();
+        if (!batteryPermissionGranted) {
+          Alert.alert(
+            "Warning",
+            "Battery optimization may interfere with background tasks. Please disable it in settings."
+          );
         }
 
         const taskStatus = await checkBackgroundTasksStatus();
@@ -131,6 +159,7 @@ const EmployeeDashboard = ({ navigation }) => {
         }
       } catch (error) {
         console.error("Background tasks setup error:", error);
+        Alert.alert("Error", "Failed to setup background tasks.");
       }
     };
     setupBackgroundTasks();
@@ -772,6 +801,7 @@ const EmployeeDashboard = ({ navigation }) => {
   );
 };
 
+// Styles remain unchanged
 const styles = StyleSheet.create({
   container: {
     flex: 1,

@@ -4545,6 +4545,11 @@ expo-image@~2.0.5:
   resolved "https://registry.npmjs.org/expo-image/-/expo-image-2.0.5.tgz"
   integrity sha512-FAq7uyaTAfLWER3lN+KVAtep7IfGPZN9ygnVKW4GvgnvR4hKhTtZ5WNxiJ18KKLVb4nUKuHOpQeJNnljy3dtmA==
 
+expo-intent-launcher@~12.0.2:
+  version "12.0.2"
+  resolved "https://registry.yarnpkg.com/expo-intent-launcher/-/expo-intent-launcher-12.0.2.tgz#cb576785a6eac3ef3cb6d4a14231aa52b76b2903"
+  integrity sha512-9JYyuuONE9AxoZgRyztcgfAaIIGvrUQAbFnYOPZcrHSBWhbF1203S3ho1Hk67jWhC72Um8+pJ+rXBxAp3ZZlxA==
+
 expo-json-utils@~0.14.0:
   version "0.14.0"
   resolved "https://registry.npmjs.org/expo-json-utils/-/expo-json-utils-0.14.0.tgz"

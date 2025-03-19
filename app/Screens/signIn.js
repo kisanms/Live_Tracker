@@ -19,6 +19,7 @@ import {
 } from "react-native-responsive-screen";
 import { StatusBar } from "expo-status-bar";
 import Octicons from "@expo/vector-icons/Octicons";
+import Feather from "@expo/vector-icons/Feather";
 import { useNavigation } from "@react-navigation/native";
 import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
@@ -28,9 +29,10 @@ const SignIn = () => {
   const navigation = useNavigation();
   const [loading, setLoading] = useState(false);
   const [initializing, setInitializing] = useState(true);
-  const [email, setEmail] = useState(""); // Use state instead of ref for better control
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const emailRef = useRef(null); // For focusing inputs if needed
+  const [showPassword, setShowPassword] = useState(false); // New state for password visibility
+  const emailRef = useRef(null);
   const passwordRef = useRef(null);
 
   useEffect(() => {
@@ -41,7 +43,7 @@ const SignIn = () => {
       setInitializing(false);
     });
 
-    return () => unsubscribe(); // Cleanup listener on unmount
+    return () => unsubscribe();
   }, []);
 
   const redirectUser = async (user) => {
@@ -88,7 +90,7 @@ const SignIn = () => {
         email.trim(),
         password
       );
-      await redirectUser(userCredential.user); // Redirect after successful login
+      await redirectUser(userCredential.user);
     } catch (error) {
       let msg = error.message;
       if (msg.includes("auth/invalid-credential")) msg = "User not found";
@@ -147,7 +149,7 @@ const SignIn = () => {
             />
           </View>
 
-          {/* Password Input */}
+          {/* Password Input with Eye Toggle */}
           <View style={styles.inputContainer}>
             <Octicons name="lock" size={hp(2.7)} color="#666" />
             <TextInput
@@ -156,11 +158,21 @@ const SignIn = () => {
               value={password}
               style={styles.input}
               placeholder="Password"
-              secureTextEntry
+              secureTextEntry={!showPassword} // Toggle based on showPassword state
               placeholderTextColor="#999"
               autoCapitalize="none"
               autoCorrect={false}
             />
+            <TouchableOpacity
+              onPress={() => setShowPassword(!showPassword)}
+              style={styles.eyeIcon}
+            >
+              <Feather
+                name={showPassword ? "eye" : "eye-off"}
+                size={hp(2.7)}
+                color="#666"
+              />
+            </TouchableOpacity>
           </View>
 
           {/* Forgot Password */}
@@ -221,11 +233,11 @@ const SignIn = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff", // Light gray for a softer look
+    backgroundColor: "#fff",
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: "center", // Center content vertically when keyboard is hidden
+    justifyContent: "center",
   },
   loadingContainer: {
     flex: 1,
@@ -236,7 +248,7 @@ const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
     padding: wp(6),
-    justifyContent: "center", // Center content vertically
+    justifyContent: "center",
   },
   headerContainer: {
     alignItems: "center",
@@ -244,7 +256,7 @@ const styles = StyleSheet.create({
     marginBottom: hp(2),
   },
   headerImage: {
-    height: hp(30), // Slightly smaller for better balance
+    height: hp(30),
     width: wp(80),
     resizeMode: "contain",
   },
@@ -264,7 +276,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp(4),
     marginBottom: hp(2),
     borderWidth: 1,
-    borderColor: "#ddd", // Softer border color
+    borderColor: "#ddd",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -277,9 +289,12 @@ const styles = StyleSheet.create({
     marginLeft: wp(3),
     color: "#333",
   },
+  eyeIcon: {
+    padding: wp(2), // Add padding for better touch area
+  },
   forgotPassword: {
     fontSize: hp(1.8),
-    color: "#ff3b30", // Match button color for consistency
+    color: "#ff3b30",
     textAlign: "right",
     marginBottom: hp(2.5),
   },
@@ -296,7 +311,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   buttonDisabled: {
-    opacity: 0.6, // Slightly more subtle opacity when disabled
+    opacity: 0.6,
   },
   buttonText: {
     color: "#fff",
@@ -311,10 +326,10 @@ const styles = StyleSheet.create({
   divider: {
     flex: 1,
     height: 1,
-    backgroundColor: "#ddd", // Softer gray
+    backgroundColor: "#ddd",
   },
   dividerText: {
-    color: "#777", // Softer gray for text
+    color: "#777",
     paddingHorizontal: wp(3),
     fontSize: hp(1.8),
   },

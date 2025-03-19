@@ -13,7 +13,6 @@ import {
 } from "react-native-responsive-screen";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
-import * as Linking from "expo-linking";
 
 const AdminLocationTracking = ({ route, navigation }) => {
   // Get parameters from route
@@ -40,16 +39,6 @@ const AdminLocationTracking = ({ route, navigation }) => {
     }
     setLoading(false);
   }, [latitude, longitude]);
-
-  // const openGoogleMaps = () => {
-  //   if (markerLocation) {
-  //     const { latitude, longitude } = markerLocation;
-  //     const url = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
-  //     Linking.openURL(url);
-  //   } else {
-  //     Alert.alert("Error", "Location data is not available.");
-  //   }
-  // };
 
   if (loading) {
     return (
@@ -96,16 +85,6 @@ const AdminLocationTracking = ({ route, navigation }) => {
             <Text style={styles.employeeName}>{employeeName}</Text>
             <Text style={styles.employeeEmail}>{employeeEmail}</Text>
           </View>
-
-          {/*<TouchableOpacity
-            style={styles.seeLocationButton}
-            onPress={openGoogleMaps}
-          >
-            <Ionicons name="location-outline" size={28} color="#fff" />
-            <Text style={styles.seeLocationButtonText}>
-              Open in Google Maps
-            </Text>
-          </TouchableOpacity>*/}
         </View>
       ) : (
         <View style={styles.errorContainer}>
