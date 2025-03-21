@@ -37,6 +37,8 @@ import {
 } from "../../services/LocationService.js";
 import * as Location from "expo-location"; // Ensure this import is present
 import { SHADOWS } from "../../constants/theme.js";
+import NotificationService from '../../services/NotificationService';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const EmployeeDashboard = ({ navigation }) => {
   const [employeeName, setEmployeeName] = useState("");
@@ -53,6 +55,8 @@ const EmployeeDashboard = ({ navigation }) => {
   const [clockOutTime, setClockOutTime] = useState(null);
   const [isClockedIn, setIsClockedIn] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [selectedTime, setSelectedTime] = useState(new Date());
 
   const currentDate = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -63,6 +67,15 @@ const EmployeeDashboard = ({ navigation }) => {
 
   useEffect(() => {
     handleDataCleanup();
+    NotificationService.requestUserPermission();
+    
+    // Initialize foreground handler
+    const unsubscribe = NotificationService.initializeForegroundHandler();
+    
+    // Cleanup on component unmount
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -480,6 +493,44 @@ const EmployeeDashboard = ({ navigation }) => {
     }
   };
 
+  const handleSetClockOutReminder = async () => {
+    setShowTimePicker(true);
+  };
+
+  const handleTimeChange = async (event, selectedDate) => {
+    setShowTimePicker(false);
+    
+    // If user cancels or no date selected, just return
+    if (!selectedDate || event.type === 'dismissed') {
+      return;
+    }
+
+    // Validate that selected time is in the future
+    const now = new Date();
+    if (selectedDate <= now) {
+      Alert.alert(
+        "Invalid Time",
+        "Please select a future time for the reminder."
+      );
+      return;
+    }
+
+    try {
+      await NotificationService.scheduleClockOutReminder(
+        selectedDate,
+        auth.currentUser.uid,
+        employeeName
+      );
+      Alert.alert(
+        "Success",
+        `Clock-out reminder set for ${selectedDate.toLocaleTimeString()}`
+      );
+    } catch (error) {
+      console.error("Error setting reminder:", error);
+      Alert.alert("Error", "Failed to set reminder. Please try again.");
+    }
+  };
+
   const renderManagerVerification = () => (
     <View style={styles.verificationContainer}>
       <Text style={styles.sectionTitle}>Manager Verification</Text>
@@ -511,18 +562,29 @@ const EmployeeDashboard = ({ navigation }) => {
       <Text style={styles.sectionTitle}>Quick Actions</Text>
       <View style={styles.quickActions}>
         <TouchableOpacity
-          style={[styles.actionButton, { width: "48%" }]}
+          style={styles.actionButton}
           onPress={handleShareLocation}
         >
-          <Ionicons name="camera" size={24} color="#4A90E2" />
-          <Text style={styles.actionText}>Share Location</Text>
+          <View style={styles.actionIconContainer}>
+            <Ionicons name="camera" size={24} color="#4A90E2" />
+          </View>
+          <View style={styles.actionTextContainer}>
+            <Text style={styles.actionTitle}>Share Location</Text>
+            <Text style={styles.actionDescription}>Share your current location with photo</Text>
+          </View>
         </TouchableOpacity>
+
         <TouchableOpacity
-          style={[styles.actionButton, { width: "48%" }]}
+          style={styles.actionButton}
           onPress={() => setShowChangeManager(true)}
         >
-          <Ionicons name="person" size={20} color="#4A90E2" />
-          <Text style={styles.actionText}>Change Manager</Text>
+          <View style={styles.actionIconContainer}>
+            <Ionicons name="person" size={24} color="#4A90E2" />
+          </View>
+          <View style={styles.actionTextContainer}>
+            <Text style={styles.actionTitle}>Change Manager</Text>
+            <Text style={styles.actionDescription}>Update your reporting manager</Text>
+          </View>
         </TouchableOpacity>
       </View>
     </View>
@@ -580,20 +642,32 @@ const EmployeeDashboard = ({ navigation }) => {
           <Text style={styles.employeeName}>{employeeName || "Employee"}</Text>
         </View>
         <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          {isClockedIn && (
+            <TouchableOpacity 
+              style={styles.headerIconButton} 
+              onPress={handleSetClockOutReminder}
+            >
+              <Ionicons name="alarm-outline" size={24} color="#4A90E2" />
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity 
+            style={styles.headerIconButton} 
+            onPress={handleLogout}
+          >
             <Ionicons name="log-out-outline" size={24} color="#4A90E2" />
           </TouchableOpacity>
           <TouchableOpacity
+            style={styles.profileContainer}
             onPress={() => navigation.navigate("employeeProfile")}
           >
-            <Image
-              source={{
-                uri:
-                  profileImage ||
-                  "https://randomuser.me/api/portraits/men/41.jpg",
-              }}
-              style={styles.profileImage}
-            />
+            <View style={styles.profileImageWrapper}>
+              <Image
+                source={{
+                  uri: profileImage || "https://randomuser.me/api/portraits/men/41.jpg",
+                }}
+                style={styles.profileImage}
+              />
+            </View>
           </TouchableOpacity>
         </View>
       </View>
@@ -659,6 +733,16 @@ const EmployeeDashboard = ({ navigation }) => {
             : null}
         </>
       )}
+
+      {showTimePicker && (
+        <DateTimePicker
+          value={selectedTime}
+          mode="time"
+          is24Hour={true}
+          display="default"
+          onChange={handleTimeChange}
+        />
+      )}
     </ScrollView>
   );
 };
@@ -697,17 +781,41 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 12,
   },
-  logoutButton: {
+  headerIconButton: {
     padding: 8,
-    borderRadius: 20,
+    borderRadius: 12,
     backgroundColor: "#F5F7FA",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  profileContainer: {
+    padding: 2,
+    borderRadius: 28,
+    backgroundColor: "#fff",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  profileImageWrapper: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 2,
+    borderColor: "#4A90E2",
+    padding: 2,
+    backgroundColor: "#fff",
   },
   profileImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: "100%",
+    height: "100%",
+    borderRadius: 22,
     backgroundColor: "#f0f0f0",
   },
   clockCard: {
@@ -819,35 +927,55 @@ const styles = StyleSheet.create({
   },
   section: {
     padding: 20,
+    marginTop: 10,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "bold",
     color: "#1A1A1A",
     marginBottom: 15,
+    marginLeft: 5,
   },
   quickActions: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: hp(1),
+    flexDirection: "column",
+    gap: 12,
   },
   actionButton: {
     backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 15,
+    borderRadius: 15,
+    padding: 16,
+    flexDirection: "row",
     alignItems: "center",
-    elevation: 2,
-    height: 90,
-    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: "rgba(74, 144, 226, 0.1)",
   },
-  actionText: {
-    marginTop: 8,
+  actionIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: "rgba(74, 144, 226, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 16,
+  },
+  actionTextContainer: {
+    flex: 1,
+  },
+  actionTitle: {
+    fontSize: 16,
+    fontWeight: "600",
     color: "#1A1A1A",
-    fontWeight: "500",
-    textAlign: "center",
-    fontSize: 14,
+    marginBottom: 4,
+  },
+  actionDescription: {
+    fontSize: 13,
+    color: "#666",
+    lineHeight: 18,
   },
   changeManagerButton: {
     flexDirection: "row",
