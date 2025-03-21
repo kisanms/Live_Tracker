@@ -116,22 +116,75 @@ const ManagerDashboard = ({ navigation }) => {
     
     // Initialize foreground handler
     const unsubscribe = NotificationService.initializeForegroundHandler();
+
+    // Add focus listener for screen focus events
+    const unsubscribeFocus = navigation.addListener('focus', () => {
+      fetchManagerData();
+    });
     
     // Cleanup on component unmount
     return () => {
       if (unsubscribe) unsubscribe();
+      unsubscribeFocus();
     };
   }, []);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await fetchManagerData();
+      const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        setManagerData(userData);
+
+        if (userData.clockInTime) {
+          const clockInDate = userData.clockInTime.toDate();
+          const today = new Date();
+          if (
+            clockInDate.getDate() === today.getDate() &&
+            clockInDate.getMonth() === today.getMonth() &&
+            clockInDate.getFullYear() === today.getFullYear()
+          ) {
+            setIsClockedIn(true);
+            setClockInTime(clockInDate);
+          }
+        }
+
+        const relationshipsRef = collection(db, "managerEmployeeRelationships");
+        const activeTeamQuery = query(
+          relationshipsRef,
+          where("managerId", "==", auth.currentUser.uid),
+          where("status", "==", "active")
+        );
+
+        const teamSnapshot = await getDocs(activeTeamQuery);
+        setTeamCount(teamSnapshot.size);
+
+        let activeEmployeesCount = 0;
+
+        const employeeChecks = teamSnapshot.docs.map(
+          async (relationshipDoc) => {
+            const employeeId = relationshipDoc.data().employeeId;
+            const employeeDoc = await getDoc(doc(db, "users", employeeId));
+
+            if (employeeDoc.exists()) {
+              const employeeData = employeeDoc.data();
+              if (employeeData.clockInTime && !employeeData.clockOutTime) {
+                activeEmployeesCount++;
+              }
+            }
+          }
+        );
+
+        await Promise.all(employeeChecks);
+        setActiveCount(activeEmployeesCount);
+      }
     } catch (error) {
       console.error("Error refreshing data:", error);
       Alert.alert("Error", "Failed to refresh data.");
+    } finally {
+      setRefreshing(false);
     }
-    setRefreshing(false);
   }, []);
 
   const handleLogout = async () => {

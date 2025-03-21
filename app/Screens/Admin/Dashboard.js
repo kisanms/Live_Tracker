@@ -93,17 +93,19 @@ const AdminDashboard = ({ navigation }) => {
     if (!auth.currentUser) return;
 
     try {
+      // Get the company data
       const userDoc = await getDoc(doc(db, "companies", auth.currentUser.uid));
-      const userProfileDoc = await getDoc(
-        doc(db, "users", auth.currentUser.uid)
-      );
+      
+      // Get the user profile data which contains the profile image
+      const userProfileDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
 
       if (userDoc.exists()) {
+        const companyData = userDoc.data();
+        const profileData = userProfileDoc.exists() ? userProfileDoc.data() : {};
+        
         setAdminData({
-          ...userDoc.data(),
-          profileImage: userProfileDoc.exists()
-            ? userProfileDoc.data().profileImage
-            : null,
+          ...companyData,
+          profileImage: profileData.profileImage || null,
         });
       }
     } catch (error) {
@@ -146,9 +148,13 @@ const AdminDashboard = ({ navigation }) => {
     setRefreshing(true);
     try {
       await fetchAdminData();
-      await fetchTotalManagers();
-      await fetchTotalEmployees();
-      await fetchActiveUsers();
+      if (adminData?.companyName) {
+        await Promise.all([
+          fetchTotalManagers(),
+          fetchTotalEmployees(),
+          fetchActiveUsers()
+        ]);
+      }
     } catch (error) {
       console.error("Error refreshing data:", error);
       Alert.alert("Error", "Failed to refresh data");
@@ -160,6 +166,18 @@ const AdminDashboard = ({ navigation }) => {
     if (auth.currentUser) {
       fetchAdminData();
     }
+
+    // Add focus listener for screen focus events
+    const unsubscribeFocus = navigation.addListener('focus', () => {
+      if (auth.currentUser) {
+        fetchAdminData();
+      }
+    });
+    
+    // Cleanup on component unmount
+    return () => {
+      unsubscribeFocus();
+    };
   }, []);
 
   useEffect(() => {

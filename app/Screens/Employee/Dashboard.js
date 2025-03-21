@@ -71,63 +71,74 @@ const EmployeeDashboard = ({ navigation }) => {
     
     // Initialize foreground handler
     const unsubscribe = NotificationService.initializeForegroundHandler();
+
+    // Add focus listener for screen focus events
+    const unsubscribeFocus = navigation.addListener('focus', () => {
+      fetchEmployeeData();
+    });
     
     // Cleanup on component unmount
     return () => {
       if (unsubscribe) unsubscribe();
+      unsubscribeFocus();
     };
   }, []);
 
-  useEffect(() => {
-    const fetchEmployeeData = async () => {
-      try {
-        const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          setEmployeeName(userData.name);
-          setEmployeeEmail(userData.email);
-          setCompanyName(userData.companyName);
-          setProfileImage(userData.profileImage);
+  const fetchEmployeeData = async () => {
+    try {
+      const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        setEmployeeName(userData.name);
+        setEmployeeEmail(userData.email);
+        setCompanyName(userData.companyName);
+        setProfileImage(userData.profileImage);
 
-          if (userData.clockInTime) {
-            const clockInDate = userData.clockInTime.toDate();
-            const today = new Date();
+        if (userData.clockInTime) {
+          const clockInDate = userData.clockInTime.toDate();
+          const today = new Date();
 
-            if (
-              clockInDate.getDate() === today.getDate() &&
-              clockInDate.getMonth() === today.getMonth() &&
-              clockInDate.getFullYear() === today.getFullYear()
-            ) {
-              setIsClockedIn(true);
-              setClockInTime(clockInDate);
-            }
-          }
-
-          const relationshipsRef = collection(
-            db,
-            "managerEmployeeRelationships"
-          );
-          const relationshipQuery = query(
-            relationshipsRef,
-            where("employeeId", "==", auth.currentUser.uid),
-            where("status", "==", "active")
-          );
-
-          const existingRelationship = await getDocs(relationshipQuery);
-          if (!existingRelationship.empty) {
-            const relationshipData = existingRelationship.docs[0].data();
-            setManagerEmail(relationshipData.managerEmail);
-            setIsManagerVerified(true);
+          if (
+            clockInDate.getDate() === today.getDate() &&
+            clockInDate.getMonth() === today.getMonth() &&
+            clockInDate.getFullYear() === today.getFullYear()
+          ) {
+            setIsClockedIn(true);
+            setClockInTime(clockInDate);
           }
         }
-      } catch (error) {
-        console.error("Error fetching employee data:", error);
-        Alert.alert("Error", "Failed to load employee data.");
-      }
-    };
 
-    fetchEmployeeData();
-  }, []);
+        const relationshipsRef = collection(db, "managerEmployeeRelationships");
+        const relationshipQuery = query(
+          relationshipsRef,
+          where("employeeId", "==", auth.currentUser.uid),
+          where("status", "==", "active")
+        );
+
+        const existingRelationship = await getDocs(relationshipQuery);
+        if (!existingRelationship.empty) {
+          const relationshipData = existingRelationship.docs[0].data();
+          setManagerEmail(relationshipData.managerEmail);
+          setIsManagerVerified(true);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching employee data:", error);
+      Alert.alert("Error", "Failed to load employee data.");
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await fetchEmployeeData();
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+      Alert.alert("Error", "Failed to refresh data.");
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const verifyManager = async () => {
     if (!managerEmail.trim()) {
@@ -630,6 +641,7 @@ const EmployeeDashboard = ({ navigation }) => {
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
+          onRefresh={onRefresh}
           colors={["#4A90E2"]}
           tintColor="#4A90E2"
         />
