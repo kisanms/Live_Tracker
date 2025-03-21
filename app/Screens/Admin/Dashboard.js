@@ -316,13 +316,26 @@ const AdminDashboard = ({ navigation }) => {
       {/* Enhanced Stats Section */}
       <View style={styles.statsContainer}>
         {stats.map((stat, index) => (
-          <View key={index} style={styles.statCard}>
+          <TouchableOpacity
+            key={index}
+            style={styles.statCard}
+            onPress={() => {
+              if (stat.title === "Total Employees") {
+                navigation.navigate("employeeList");
+              } else if (stat.title === "Total Managers") {
+                navigation.navigate("managerList");
+              } else if (stat.title === "Active Now") {
+                navigation.navigate("allStaffWorkHour");
+              }
+            }}
+            activeOpacity={0.7}
+          >
             <View style={styles.statIconContainer}>
               <Ionicons name={stat.icon} size={24} color={COLORS.primary} />
             </View>
             <Text style={styles.statCount}>{stat.count}</Text>
             <Text style={styles.statTitle}>{stat.title}</Text>
-          </View>
+          </TouchableOpacity>
         ))}
       </View>
 
