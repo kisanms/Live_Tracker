@@ -2,7 +2,7 @@
   "expo": {
     "name": "Active Tracker",
     "slug": "Live_Tracker",
-    "version": "5.2.2",
+    "version": "5.2.3",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
@@ -42,7 +42,8 @@
         "android.permission.POST_NOTIFICATIONS",
         "android.permission.RECORD_AUDIO",
         "android.permission.CAMERA",
-        "VIBRATE", "RECEIVE_BOOT_COMPLETED"
+        "VIBRATE",
+        "RECEIVE_BOOT_COMPLETED"
       ]
     },
     "web": {
@@ -55,10 +56,10 @@
       [
         "expo-splash-screen",
         {
-        "image": "./assets/images/splash.png",
-        "backgroundColor": "#2196f3",
-        "imageWidth": 300,
-        "resizeMode": "cover"
+          "image": "./assets/images/splash.png",
+          "backgroundColor": "#2196f3",
+          "imageWidth": 300,
+          "resizeMode": "cover"
         }
       ],
       [
@@ -81,7 +82,9 @@
           "cameraPermission": "Allow $(PRODUCT_NAME) to use your camera."
         }
       ],
-      ["./notifee-plugin.js"]
+      [
+        "./notifee-plugin.js"
+      ]
     ],
     "experiments": {
       "typedRoutes": true

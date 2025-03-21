@@ -31,6 +31,9 @@ import {
   startLocationTracking,
   stopLocationTracking,
 } from "../../services/LocationService.js";
+import NotificationService from '../../services/NotificationService';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { COLORS, SHADOWS } from "../../constants/theme";
 
 const ManagerDashboard = ({ navigation }) => {
   const [managerData, setManagerData] = useState(null);
@@ -40,6 +43,8 @@ const ManagerDashboard = ({ navigation }) => {
   const [isClockedIn, setIsClockedIn] = useState(false);
   const [clockInTime, setClockInTime] = useState(null);
   const [clockOutTime, setClockOutTime] = useState(null);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [selectedTime, setSelectedTime] = useState(new Date());
   const currentDate = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
@@ -107,6 +112,15 @@ const ManagerDashboard = ({ navigation }) => {
   useEffect(() => {
     handleDataCleanup();
     fetchManagerData();
+    NotificationService.requestUserPermission();
+    
+    // Initialize foreground handler
+    const unsubscribe = NotificationService.initializeForegroundHandler();
+    
+    // Cleanup on component unmount
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
   const onRefresh = useCallback(async () => {
@@ -335,19 +349,53 @@ const ManagerDashboard = ({ navigation }) => {
     });
   };
 
+  const handleSetClockOutReminder = async () => {
+    setShowTimePicker(true);
+  };
+
+  const handleTimeChange = async (event, selectedDate) => {
+    setShowTimePicker(false);
+    
+    if (!selectedDate || event.type === 'dismissed') {
+      return;
+    }
+
+    const now = new Date();
+    if (selectedDate <= now) {
+      Alert.alert(
+        "Invalid Time",
+        "Please select a future time for the reminder."
+      );
+      return;
+    }
+
+    try {
+      await NotificationService.scheduleClockOutReminder(
+        selectedDate,
+        auth.currentUser.uid,
+        managerData?.name || "Manager"
+      );
+      Alert.alert(
+        "Success",
+        `Clock-out reminder set for ${selectedDate.toLocaleTimeString()}`
+      );
+    } catch (error) {
+      console.error("Error setting reminder:", error);
+      Alert.alert("Error", "Failed to set reminder. Please try again.");
+    }
+  };
+
   const teamStats = [
     {
       title: "Team Members",
       count: teamCount,
       icon: "people",
-      gradient: ["#4A90E2", "#357ABD"],
       onPress: () => navigation.navigate("managerEmployeeList"),
     },
     {
       title: "Active Now",
       count: activeCount,
       icon: "radio-button-on",
-      gradient: ["#2ECC71", "#27AE60"],
       onPress: () => navigation.navigate("allEmpWorkHour"),
     },
   ];
@@ -381,7 +429,15 @@ const ManagerDashboard = ({ navigation }) => {
           <Text style={styles.managerName}>{managerData.name}</Text>
         </View>
         <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          {isClockedIn && (
+            <TouchableOpacity 
+              style={styles.headerIconButton} 
+              onPress={handleSetClockOutReminder}
+            >
+              <Ionicons name="alarm-outline" size={24} color="#4A90E2" />
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity style={styles.headerIconButton} onPress={handleLogout}>
             <Ionicons name="log-out-outline" size={24} color="#4A90E2" />
           </TouchableOpacity>
           <TouchableOpacity
@@ -400,6 +456,28 @@ const ManagerDashboard = ({ navigation }) => {
         </View>
       </View>
 
+      <View style={styles.clockCard}>
+        <View style={styles.clockInfo}>
+          <Text style={styles.clockTitle}>Current Status</Text>
+          <Text style={styles.clockStatus}>
+            {isClockedIn ? "Clocked In" : "Clocked Out"}
+          </Text>
+          {isClockedIn && clockInTime && (
+            <Text style={styles.clockTime}>
+              Since {clockInTime.toLocaleTimeString()}
+            </Text>
+          )}
+        </View>
+        <TouchableOpacity 
+          style={[styles.clockButton, isClockedIn && styles.clockButtonActive]} 
+          onPress={handleClockInOut}
+        >
+          <Text style={[styles.clockButtonText, isClockedIn && styles.clockButtonTextActive]}>
+            {isClockedIn ? "Clock Out" : "Clock In"}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.statsContainer}>
         {teamStats.map((stat, index) => (
           <TouchableOpacity
@@ -416,82 +494,52 @@ const ManagerDashboard = ({ navigation }) => {
         ))}
       </View>
 
-      <View style={styles.quickActions}>
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
-        <View style={styles.actionButtons}>
-          <TouchableOpacity
-            style={[
-              styles.actionButton,
-              isClockedIn && styles.actionButtonActive,
-            ]}
-            onPress={handleClockInOut}
-          >
-            <View style={styles.actionIconContainer}>
-              <Ionicons
-                name={isClockedIn ? "log-out" : "log-in"}
-                size={24}
-                color={isClockedIn ? "#4A90E2" : "#4A90E2"}
-              />
-            </View>
-            <Text
-              style={[
-                styles.actionText,
-                isClockedIn && styles.actionTextActive,
-              ]}
+      {isClockedIn && (
+        <View style={styles.quickActions}>
+          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <View style={styles.actionButtons}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => navigation.navigate("EmpLocNoti")}
             >
-              {isClockedIn ? "Clock Out" : "Clock In"}
-            </Text>
-          </TouchableOpacity>
+              <View style={styles.actionIconContainer}>
+                <Ionicons name="location" size={24} color="#4A90E2" />
+              </View>
+              <Text style={styles.actionText}>Current Emp Loc</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => navigation.navigate("EmpLocNoti")}
-          >
-            <View style={styles.actionIconContainer}>
-              <Ionicons name="location" size={24} color="#4A90E2" />
-            </View>
-            <Text style={styles.actionText}>Current Emp Loc</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => navigation.navigate("allEmpLoc")}
+            >
+              <View style={styles.actionIconContainer}>
+                <Ionicons name="map" size={24} color="#4A90E2" />
+              </View>
+              <Text style={styles.actionText}>All Staff Loc</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => navigation.navigate("allEmpLoc")}
-          >
-            <View style={styles.actionIconContainer}>
-              <Ionicons name="map" size={24} color="#4A90E2" />
-            </View>
-            <Text style={styles.actionText}>All Staff Loc</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={handleShareLocation}
-          >
-            <View style={styles.actionIconContainer}>
-              <Ionicons name="camera" size={24} color="#4A90E2" />
-            </View>
-            <Text style={styles.actionText}>Share Location</Text>
-          </TouchableOpacity>
-          {/* <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => navigation.navigate("TaskAssignment")}
-          >
-            <View style={styles.actionIconContainer}>
-              <Ionicons name="checkbox" size={24} color="#4A90E2" />
-            </View>
-            <Text style={styles.actionText}>Assign Task</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => navigation.navigate("TaskAnalytics")}
-          >
-            <View style={styles.actionIconContainer}>
-              <Ionicons name="bar-chart" size={24} color="#4A90E2" />
-            </View>
-            <Text style={styles.actionText}>TaskAnalytics</Text>
-          </TouchableOpacity> */}
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={handleShareLocation}
+            >
+              <View style={styles.actionIconContainer}>
+                <Ionicons name="camera" size={24} color="#4A90E2" />
+              </View>
+              <Text style={styles.actionText}>Share Location</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      )}
+
+      {showTimePicker && (
+        <DateTimePicker
+          value={selectedTime}
+          mode="time"
+          is24Hour={true}
+          display="default"
+          onChange={handleTimeChange}
+        />
+      )}
     </ScrollView>
   );
 };
@@ -499,56 +547,52 @@ const ManagerDashboard = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F7FA",
+    backgroundColor: COLORS.lightGray,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F5F7FA",
+    backgroundColor: COLORS.lightGray,
   },
   loadingText: {
     fontSize: 16,
-    color: "#4A90E2",
+    color: COLORS.black,
     fontWeight: "500",
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: hp(2.5),
-    paddingTop: hp(5),
-    backgroundColor: "#FFF",
-    borderBottomLeftRadius: 25,
-    borderBottomRightRadius: 25,
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    paddingHorizontal: 16,
+    paddingTop: hp(6),
+    paddingBottom: hp(2),
+    backgroundColor: COLORS.white,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(0,0,0,0.1)",
   },
   headerContent: {
     flex: 1,
   },
   dateText: {
     fontSize: 13,
-    color: "#666",
+    color: COLORS.gray,
     marginBottom: 4,
     fontWeight: "500",
   },
   welcomeText: {
-    fontSize: 16,
-    color: "#666",
-    marginBottom: 4,
+    fontSize: 15,
+    color: COLORS.gray,
+    marginBottom: 2,
   },
   managerTitle: {
-    color: "#4A90E2",
-    fontWeight: "bold",
+    color: COLORS.primary,
+    fontWeight: "600",
   },
   managerName: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#1A1A1A",
+    fontSize: 22,
+    fontWeight: "700",
+    color: COLORS.black,
   },
   headerRight: {
     flexDirection: "row",
@@ -557,96 +601,137 @@ const styles = StyleSheet.create({
   },
   profileImageContainer: {
     borderWidth: 2,
-    borderColor: "#4A90E2",
-    borderRadius: 25,
+    borderColor: COLORS.primary,
+    borderRadius: 22,
     padding: 2,
   },
   profileImage: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
   },
-  logoutButton: {
+  headerIconButton: {
     padding: 8,
-    borderRadius: 20,
-    backgroundColor: "#F5F7FA",
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    borderRadius: 12,
+    backgroundColor: COLORS.lightGray,
+  },
+  clockCard: {
+    margin: 16,
+    padding: 20,
+    backgroundColor: COLORS.primary,
+    borderRadius: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    ...SHADOWS.medium,
+  },
+  clockInfo: {
+    flex: 1,
+  },
+  clockTitle: {
+    color: "rgba(255,255,255,0.9)",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  clockStatus: {
+    color: COLORS.white,
+    fontSize: 24,
+    fontWeight: "700",
+    marginVertical: 4,
+  },
+  clockTime: {
+    color: "rgba(255,255,255,0.9)",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  clockButton: {
+    backgroundColor: "rgba(255,255,255,0.15)",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.25)",
+  },
+  clockButtonActive: {
+    backgroundColor: COLORS.danger,
+    borderColor: COLORS.danger,
+  },
+  clockButtonText: {
+    color: COLORS.white,
+    fontWeight: "600",
+    fontSize: 15,
+  },
+  clockButtonTextActive: {
+    color: COLORS.white,
   },
   statsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    padding: 20,
-    marginTop: 10,
+    paddingHorizontal: 16,
+    marginBottom: 24,
   },
   statCard: {
-    backgroundColor: "#FFF",
+    backgroundColor: COLORS.white,
     borderRadius: 16,
-    padding: 20,
-    alignItems: "center",
+    padding: 16,
     width: "48%",
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    alignItems: "center",
+    justifyContent: "center",
+    ...SHADOWS.small,
   },
   statIconContainer: {
-    backgroundColor: "#4A90E2",
+    backgroundColor: COLORS.primary,
     borderRadius: 12,
-    padding: 10,
+    padding: 12,
     marginBottom: 12,
   },
   statCount: {
     fontSize: 28,
-    fontWeight: "bold",
-    color: "#1A1A1A",
+    fontWeight: "700",
+    color: COLORS.black,
     marginBottom: 4,
+    textAlign: "center",
   },
   statTitle: {
     fontSize: 14,
-    color: "#666",
+    color: COLORS.gray,
     fontWeight: "500",
+    textAlign: "center",
   },
   quickActions: {
-    padding: 20,
+    paddingHorizontal: 16,
+    paddingTop: 8,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: "bold",
-    color: "#1A1A1A",
-    marginBottom: 15,
+    fontWeight: "700",
+    color: COLORS.black,
+    marginBottom: 16,
   },
   actionButtons: {
     flexDirection: "row",
     justifyContent: "space-between",
-    flexWrap: "wrap",
-    gap: 10,
+    gap: 12,
   },
   actionButton: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 20,
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 16,
     alignItems: "center",
-    width: "48%",
-    elevation: 2,
-  },
-  actionButtonActive: {
-    backgroundColor: "#E6F0FA",
+    width: "31%",
+    ...SHADOWS.small,
   },
   actionIconContainer: {
+    backgroundColor: `${COLORS.primary}15`,
+    borderRadius: 12,
+    padding: 10,
     marginBottom: 8,
   },
   actionText: {
-    fontSize: 14,
-    color: "#1A1A1A",
+    fontSize: 13,
+    color: COLORS.black,
     fontWeight: "600",
-  },
-  actionTextActive: {
-    color: "#4A90E2",
+    textAlign: "center",
   },
 });
 

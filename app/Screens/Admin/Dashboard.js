@@ -30,6 +30,8 @@ import {
   getDocs,
 } from "firebase/firestore";
 import { db } from "../../firebase";
+import * as Clipboard from 'expo-clipboard';
+
 
 const AdminDashboard = ({ navigation }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -221,8 +223,15 @@ const AdminDashboard = ({ navigation }) => {
       setGeneratedKey(key);
       Alert.alert(
         "Success",
-        `Key generated successfully!\n\nKey: ${key}\n\nPlease share this key with the manager securely.`,
+        `Key generated successfully!\n\nKey: ${key}`,
         [
+          {
+            text: "Copy Key",
+            onPress: async () => {
+              await Clipboard.setStringAsync(key);
+              Alert.alert("Success", "Key copied to clipboard!");
+            },
+          },
           {
             text: "Close",
             onPress: () => {
@@ -230,6 +239,7 @@ const AdminDashboard = ({ navigation }) => {
               setGeneratedKey("");
               setIsModalVisible(false);
             },
+            style: "cancel",
           },
         ]
       );
@@ -415,6 +425,21 @@ const AdminDashboard = ({ navigation }) => {
               keyboardType="email-address"
               autoCapitalize="none"
             />
+            {generatedKey ? (
+              <View style={styles.keyContainer}>
+                <Text style={styles.keyText}>{generatedKey}</Text>
+                <TouchableOpacity
+                  style={styles.copyButton}
+                  onPress={async () => {
+                    await Clipboard.setStringAsync(generatedKey);
+                    Alert.alert("Success", "Key copied to clipboard!");
+                  }}
+                >
+                  <Ionicons name="copy-outline" size={20} color={COLORS.white} />
+                  <Text style={styles.copyButtonText}>Copy Key</Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={[styles.modalButton, styles.generateButton]}
@@ -426,6 +451,7 @@ const AdminDashboard = ({ navigation }) => {
                 style={[styles.modalButton, styles.cancelButton]}
                 onPress={() => {
                   setManagerEmail("");
+                  setGeneratedKey("");
                   setIsModalVisible(false);
                 }}
               >
@@ -671,6 +697,34 @@ const styles = StyleSheet.create({
     textShadowColor: "rgba(0, 0, 0, 0.2)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
+  },
+  keyContainer: {
+    backgroundColor: "#F8F9FA",
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#E9ECEF",
+  },
+  keyText: {
+    fontSize: 16,
+    color: COLORS.black,
+    fontWeight: "500",
+    marginBottom: 12,
+  },
+  copyButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.primary,
+    padding: 8,
+    borderRadius: 8,
+    justifyContent: "center",
+    gap: 8,
+  },
+  copyButtonText: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: "600",
   },
 });
 export default AdminDashboard;

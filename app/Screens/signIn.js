@@ -34,22 +34,33 @@ const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false); // New state for password visibility
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
+      if (user && !isNavigating) {
         await redirectUser(user);
       }
       setInitializing(false);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [isNavigating]);
 
   const redirectUser = async (user) => {
+    if (isNavigating) return;
+    
     try {
+      setIsNavigating(true);
       const userDoc = await getDoc(doc(db, "users", user.uid));
       const companyDoc = await getDoc(doc(db, "companies", user.uid));
+
+      if (!userDoc.exists() && !companyDoc.exists()) {
+        Alert.alert("Error", "User data not found");
+        await auth.signOut();
+        setIsNavigating(false);
+        return;
+      }
 
       if (companyDoc.exists() && companyDoc.data().role === "admin") {
         navigation.replace("adminDashboard");
@@ -66,14 +77,13 @@ const SignIn = () => {
             Alert.alert("Error", "Invalid user role");
             await auth.signOut();
         }
-      } else {
-        Alert.alert("Error", "User data not found");
-        await auth.signOut();
       }
     } catch (error) {
       console.error("Error redirecting user:", error);
       Alert.alert("Error", "Failed to verify user role");
       await auth.signOut();
+    } finally {
+      setIsNavigating(false);
     }
   };
 
@@ -82,6 +92,8 @@ const SignIn = () => {
       Alert.alert("Sign In", "Please fill all the details!");
       return;
     }
+
+    if (isNavigating || loading) return;
 
     setLoading(true);
     try {
