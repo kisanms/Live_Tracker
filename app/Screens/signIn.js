@@ -35,23 +35,43 @@ const SignIn = () => {
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
   const [isNavigating, setIsNavigating] = useState(false);
+  const mounted = useRef(true);
 
   useEffect(() => {
+    let isMounted = true;
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user && !isNavigating) {
-        await redirectUser(user);
+      try {
+        if (user && !isNavigating && isMounted) {
+          setIsNavigating(true);
+          await redirectUser(user);
+        } else if (!user && isMounted) {
+          setInitializing(false);
+        }
+      } catch (error) {
+        console.error("Auth state change error:", error);
+        if (isMounted) {
+          setInitializing(false);
+        }
       }
-      setInitializing(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
   }, [isNavigating]);
+
+  useEffect(() => {
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
   const redirectUser = async (user) => {
     if (isNavigating) return;
     
     try {
-      setIsNavigating(true);
       const userDoc = await getDoc(doc(db, "users", user.uid));
       const companyDoc = await getDoc(doc(db, "companies", user.uid));
 
@@ -59,6 +79,7 @@ const SignIn = () => {
         Alert.alert("Error", "User data not found");
         await auth.signOut();
         setIsNavigating(false);
+        setInitializing(false);
         return;
       }
 
@@ -83,7 +104,10 @@ const SignIn = () => {
       Alert.alert("Error", "Failed to verify user role");
       await auth.signOut();
     } finally {
-      setIsNavigating(false);
+      if (mounted.current) {
+        setIsNavigating(false);
+        setInitializing(false);
+      }
     }
   };
 
@@ -118,8 +142,25 @@ const SignIn = () => {
 
   if (initializing) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#ff3b30" />
+      <View style={[styles.loadingContainer, { backgroundColor: '#fff' }]}>
+        <Image
+          source={require("../../assets/images/signUP1.jpg")}
+          style={styles.splashImage}
+        />
+        <ActivityIndicator size="large" color="#ff3b30" style={styles.splashLoader} />
+      </View>
+    );
+  }
+
+  // Only show the sign-in form if there's no authenticated user
+  if (auth.currentUser) {
+    return (
+      <View style={[styles.loadingContainer, { backgroundColor: '#fff' }]}>
+        <Image
+          source={require("../../assets/images/signUP1.jpg")}
+          style={styles.splashImage}
+        />
+        <ActivityIndicator size="large" color="#ff3b30" style={styles.splashLoader} />
       </View>
     );
   }
@@ -358,6 +399,15 @@ const styles = StyleSheet.create({
     fontSize: hp(1.8),
     color: "#ff3b30",
     fontWeight: "600",
+  },
+  splashImage: {
+    height: hp(30),
+    width: wp(80),
+    resizeMode: "contain",
+    marginBottom: hp(4),
+  },
+  splashLoader: {
+    marginTop: hp(2),
   },
 });
 
