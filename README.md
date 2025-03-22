@@ -262,6 +262,9 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
 - clock out automatically functioning now
 - **March 14**
 - checking the clock-out auto but not works in the background
+- **March 15**
+- Removing the implementation of automatic clockout in the background its not working now doing R&D on notifee
+
 ## 🎉 Features Implementation
 
 ### Admin Dashboard
