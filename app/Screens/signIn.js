@@ -144,10 +144,10 @@ const SignIn = () => {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: '#fff' }]}>
         <Image
-          source={require("../../assets/images/signUP1.jpg")}
+          source={require("../../assets/images/icon small.png")}
           style={styles.splashImage}
         />
-        <ActivityIndicator size="large" color="#ff3b30" style={styles.splashLoader} />
+        <ActivityIndicator size="large" color="#4A90E2" style={styles.splashLoader} />
       </View>
     );
   }
@@ -157,10 +157,10 @@ const SignIn = () => {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: '#fff' }]}>
         <Image
-          source={require("../../assets/images/signUP1.jpg")}
+          source={require("../../assets/images/icon small.png")}
           style={styles.splashImage}
         />
-        <ActivityIndicator size="large" color="#ff3b30" style={styles.splashLoader} />
+        <ActivityIndicator size="large" color="#4A90E2" style={styles.splashLoader} />
       </View>
     );
   }
@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
   },
   splashImage: {
     height: hp(30),
-    width: wp(80),
+    width: wp(50),
     resizeMode: "contain",
     marginBottom: hp(4),
   },
