@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
   Alert,
   Linking,
+  TextInput,
+  Modal,
 } from "react-native";
 import {
   widthPercentageToDP as wp,
@@ -29,8 +31,12 @@ import { db, auth } from "../../../firebase";
 
 const ManagerList = ({ navigation }) => {
   const [managers, setManagers] = useState([]);
+  const [filteredManagers, setFilteredManagers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [adminData, setAdminData] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [sortOrder, setSortOrder] = useState('default'); // 'default', 'asc', 'desc'
 
   useEffect(() => {
     // First fetch admin's company data
@@ -72,11 +78,36 @@ const ManagerList = ({ navigation }) => {
         status: doc.data().isOnline ? "Active" : "Away",
       }));
       setManagers(managerData);
+      setFilteredManagers(managerData);
       setLoading(false);
     });
 
     return () => unsubscribe();
   }, [adminData]);
+
+  useEffect(() => {
+    if (!managers) return;
+    
+    let result = [...managers];
+    
+    // Apply search filter
+    if (searchQuery) {
+      result = result.filter(manager => 
+        manager.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        manager.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        manager.department?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    
+    // Apply sort
+    if (sortOrder === 'asc') {
+      result.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortOrder === 'desc') {
+      result.sort((a, b) => b.name.localeCompare(a.name));
+    }
+    
+    setFilteredManagers(result);
+  }, [managers, searchQuery, sortOrder]);
 
   const handleLocationPress = async (manager) => {
     try {
@@ -227,6 +258,62 @@ const ManagerList = ({ navigation }) => {
     </TouchableOpacity>
   );
 
+  const FilterModal = () => (
+    <Modal
+      visible={showFilterModal}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={() => setShowFilterModal(false)}
+    >
+      <TouchableOpacity 
+        style={styles.modalOverlay}
+        activeOpacity={1}
+        onPress={() => setShowFilterModal(false)}
+      >
+        <View style={styles.modalContent}>
+          <TouchableOpacity 
+            style={styles.filterOption}
+            onPress={() => {
+              setSortOrder('asc');
+              setShowFilterModal(false);
+            }}
+          >
+            <Ionicons name="arrow-up" size={20} color={sortOrder === 'asc' ? "#4A90E2" : "#666"} />
+            <Text style={[styles.filterText, sortOrder === 'asc' && styles.activeFilterText]}>
+              Sort A to Z
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.filterOption}
+            onPress={() => {
+              setSortOrder('desc');
+              setShowFilterModal(false);
+            }}
+          >
+            <Ionicons name="arrow-down" size={20} color={sortOrder === 'desc' ? "#4A90E2" : "#666"} />
+            <Text style={[styles.filterText, sortOrder === 'desc' && styles.activeFilterText]}>
+              Sort Z to A
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.filterOption}
+            onPress={() => {
+              setSortOrder('default');
+              setShowFilterModal(false);
+            }}
+          >
+            <Ionicons name="refresh" size={20} color={sortOrder === 'default' ? "#4A90E2" : "#666"} />
+            <Text style={[styles.filterText, sortOrder === 'default' && styles.activeFilterText]}>
+              Default Order
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    </Modal>
+  );
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -234,17 +321,42 @@ const ManagerList = ({ navigation }) => {
           <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Managers</Text>
-        <TouchableOpacity style={styles.filterButton}>
-          <Ionicons name="filter" size={24} color="#4A90E2" />
+        <TouchableOpacity 
+          style={styles.filterButton}
+          onPress={() => setShowFilterModal(true)}
+        >
+          <Ionicons 
+            name="options" 
+            size={24} 
+            color={sortOrder !== 'default' ? "#4A90E2" : "#666"} 
+          />
         </TouchableOpacity>
       </View>
 
+      <View style={styles.searchContainer}>
+        <Ionicons name="search-outline" size={20} color="#666" />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search by name, email or department"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholderTextColor="#666"
+        />
+        {searchQuery !== '' && (
+          <TouchableOpacity onPress={() => setSearchQuery('')}>
+            <Ionicons name="close-circle" size={20} color="#666" />
+          </TouchableOpacity>
+        )}
+      </View>
+
       <FlatList
-        data={managers}
+        data={filteredManagers}
         renderItem={renderManager}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
       />
+      
+      <FilterModal />
     </View>
   );
 };
@@ -342,6 +454,47 @@ const styles = StyleSheet.create({
   },
   filterButton: {
     padding: 8,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingHorizontal: wp(4),
+    paddingVertical: hp(1),
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: wp(3.5),
+    color: '#000',
+    paddingHorizontal: wp(3),
+    paddingVertical: hp(1),
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: wp(4),
+  },
+  filterOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: hp(2),
+    gap: wp(3),
+  },
+  filterText: {
+    fontSize: wp(3.8),
+    color: '#666',
+  },
+  activeFilterText: {
+    color: '#4A90E2',
+    fontWeight: '600',
   },
 });
 
