@@ -11,6 +11,8 @@ import {
   TouchableOpacity,
   Linking,
   Alert,
+  TextInput,
+  Modal,
 } from "react-native";
 import { COLORS, SHADOWS } from "../../../constants/theme";
 import { db, auth } from "../../../firebase";
@@ -32,8 +34,13 @@ import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 
 const AllStaffWorkHour = ({ navigation }) => {
   const [staff, setStaff] = useState([]);
+  const [filteredStaff, setFilteredStaff] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [sortOrder, setSortOrder] = useState('default');
+  const [roleFilter, setRoleFilter] = useState('all'); // 'all', 'manager', 'employee'
 
   const fetchCompanyUsers = async () => {
     try {
@@ -165,6 +172,45 @@ const AllStaffWorkHour = ({ navigation }) => {
   useEffect(() => {
     fetchStaff();
   }, []);
+
+  useEffect(() => {
+    if (!staff) return;
+    
+    let result = [...staff];
+    
+    // Apply search filter
+    if (searchQuery) {
+      result = result.filter(member => 
+        member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        member.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        member.department?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    
+    // Apply role filter
+    if (roleFilter !== 'all') {
+      result = result.filter(member => 
+        roleFilter === 'manager' ? member.isManager : !member.isManager
+      );
+    }
+    
+    // Apply sort
+    if (sortOrder === 'asc') {
+      result.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortOrder === 'desc') {
+      result.sort((a, b) => b.name.localeCompare(a.name));
+    } else if (sortOrder === 'duration') {
+      result.sort((a, b) => {
+        const getDuration = (item) => {
+          if (!item.lastPersistentClockIn || !item.clockOutTime) return 0;
+          return item.clockOutTime.toDate() - item.lastPersistentClockIn.toDate();
+        };
+        return getDuration(b) - getDuration(a);
+      });
+    }
+    
+    setFilteredStaff(result);
+  }, [staff, searchQuery, sortOrder, roleFilter]);
 
   const NoStaffFound = () => (
     <View style={styles.noStaffContainer}>
@@ -380,6 +426,130 @@ const AllStaffWorkHour = ({ navigation }) => {
     );
   };
 
+  const FilterModal = () => (
+    <Modal
+      visible={showFilterModal}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={() => setShowFilterModal(false)}
+    >
+      <TouchableOpacity 
+        style={styles.modalOverlay}
+        activeOpacity={1}
+        onPress={() => setShowFilterModal(false)}
+      >
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>Sort By</Text>
+          
+          <TouchableOpacity 
+            style={styles.filterOption}
+            onPress={() => {
+              setSortOrder('asc');
+              setShowFilterModal(false);
+            }}
+          >
+            <Ionicons 
+              name="arrow-up" 
+              size={20} 
+              color={sortOrder === 'asc' ? COLORS.primary : COLORS.gray} 
+            />
+            <Text style={[styles.filterText, sortOrder === 'asc' && styles.activeFilterText]}>
+              Name (A to Z)
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.filterOption}
+            onPress={() => {
+              setSortOrder('desc');
+              setShowFilterModal(false);
+            }}
+          >
+            <Ionicons 
+              name="arrow-down" 
+              size={20} 
+              color={sortOrder === 'desc' ? COLORS.primary : COLORS.gray} 
+            />
+            <Text style={[styles.filterText, sortOrder === 'desc' && styles.activeFilterText]}>
+              Name (Z to A)
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.filterOption}
+            onPress={() => {
+              setSortOrder('duration');
+              setShowFilterModal(false);
+            }}
+          >
+            <MaterialIcons 
+              name="access-time" 
+              size={20} 
+              color={sortOrder === 'duration' ? COLORS.primary : COLORS.gray} 
+            />
+            <Text style={[styles.filterText, sortOrder === 'duration' && styles.activeFilterText]}>
+              Work Duration
+            </Text>
+          </TouchableOpacity>
+
+          <View style={styles.divider} />
+          <Text style={styles.modalTitle}>Filter By Role</Text>
+
+          <TouchableOpacity 
+            style={styles.filterOption}
+            onPress={() => {
+              setRoleFilter('all');
+              setShowFilterModal(false);
+            }}
+          >
+            <Ionicons 
+              name="people" 
+              size={20} 
+              color={roleFilter === 'all' ? COLORS.primary : COLORS.gray} 
+            />
+            <Text style={[styles.filterText, roleFilter === 'all' && styles.activeFilterText]}>
+              All Staff
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.filterOption}
+            onPress={() => {
+              setRoleFilter('manager');
+              setShowFilterModal(false);
+            }}
+          >
+            <Ionicons 
+              name="briefcase" 
+              size={20} 
+              color={roleFilter === 'manager' ? COLORS.primary : COLORS.gray} 
+            />
+            <Text style={[styles.filterText, roleFilter === 'manager' && styles.activeFilterText]}>
+              Managers Only
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.filterOption}
+            onPress={() => {
+              setRoleFilter('employee');
+              setShowFilterModal(false);
+            }}
+          >
+            <Ionicons 
+              name="person" 
+              size={20} 
+              color={roleFilter === 'employee' ? COLORS.primary : COLORS.gray} 
+            />
+            <Text style={[styles.filterText, roleFilter === 'employee' && styles.activeFilterText]}>
+              Employees Only
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    </Modal>
+  );
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -400,6 +570,32 @@ const AllStaffWorkHour = ({ navigation }) => {
             <Ionicons name="arrow-back" size={24} color="black" />
           </TouchableOpacity>
           <Text style={styles.title}>Staff Work Hours</Text>
+          <TouchableOpacity 
+            style={styles.filterButton}
+            onPress={() => setShowFilterModal(true)}
+          >
+            <Ionicons 
+              name="options" 
+              size={24} 
+              color={sortOrder !== 'default' || roleFilter !== 'all' ? COLORS.primary : COLORS.gray} 
+            />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.searchContainer}>
+          <Ionicons name="search-outline" size={20} color={COLORS.gray} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search by name, email or department"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholderTextColor={COLORS.gray}
+          />
+          {searchQuery !== '' && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <Ionicons name="close-circle" size={20} color={COLORS.gray} />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
@@ -407,7 +603,7 @@ const AllStaffWorkHour = ({ navigation }) => {
         <NoStaffFound />
       ) : (
         <FlatList
-          data={staff}
+          data={filteredStaff}
           renderItem={renderStaffItem}
           keyExtractor={(item) => item.userId}
           contentContainerStyle={styles.list}
@@ -424,6 +620,8 @@ const AllStaffWorkHour = ({ navigation }) => {
           }
         />
       )}
+      
+      <FilterModal />
     </View>
   );
 };
@@ -442,14 +640,14 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: COLORS.white,
     padding: wp(5),
-    paddingTop: hp(6),
-    borderBottomRightRadius: wp(8),
-    borderBottomLeftRadius: wp(8),
+    paddingTop: hp(3),
     ...SHADOWS.medium,
   },
   headerContainer: {
     flexDirection: "row",
-    gap: wp(2),
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: hp(2),
   },
   backButton: {
     marginRight: wp(2),
@@ -555,6 +753,61 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.gray,
     textAlign: " center",
+  },
+  filterButton: {
+    padding: wp(2),
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.white,
+    paddingHorizontal: wp(4),
+    paddingVertical: hp(1),
+    borderRadius: wp(2),
+    marginTop: hp(1),
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: wp(3.5),
+    color: COLORS.black,
+    paddingHorizontal: wp(3),
+    paddingVertical: hp(0.5),
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: COLORS.white,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: wp(4),
+  },
+  modalTitle: {
+    fontSize: wp(4),
+    fontWeight: '600',
+    color: COLORS.black,
+    marginBottom: hp(1),
+  },
+  filterOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: hp(1.5),
+    gap: wp(3),
+  },
+  filterText: {
+    fontSize: wp(3.8),
+    color: COLORS.gray,
+  },
+  activeFilterText: {
+    color: COLORS.primary,
+    fontWeight: '600',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#E2E8F0',
+    marginVertical: hp(2),
   },
 });
 
