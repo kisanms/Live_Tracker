@@ -112,24 +112,48 @@ const StaffDetails = ({ navigation, route }) => {
           <TouchableOpacity
             style={styles.staffCard}
             onPress={() => navigateToImageGallery(item.id)}
+            activeOpacity={0.7}
           >
-            <Image
-              source={{
-                uri: item.profileImage || "https://via.placeholder.com/50",
-              }}
-              style={styles.profileImage}
-              contentFit="cover"
-            />
-            <View style={styles.staffInfo}>
-              <Text style={styles.staffName}>{item.name}</Text>
-              <Text style={styles.staffEmail}>{item.email}</Text>
-              <Text style={styles.staffRole}>
-                Role: {item.role.charAt(0).toUpperCase() + item.role.slice(1)}
-              </Text>
+            <View style={styles.cardLeft}>
+              <Image
+                source={{
+                  uri: item.profileImage || "https://via.placeholder.com/50",
+                }}
+                style={styles.profileImage}
+              />
+              <View style={styles.staffInfo}>
+                <Text style={styles.staffName}>{item.name}</Text>
+                <Text style={styles.staffEmail}>{item.email}</Text>
+              </View>
+            </View>
+            <View style={styles.cardRight}>
+              <View style={[
+                styles.roleTag, 
+                { 
+                  backgroundColor: item.role === "manager" ? "#E3F2FD" : "#F5F5F5",
+                }
+              ]}>
+                <Text style={[
+                  styles.roleText,
+                  {
+                    color: item.role === "manager" ? "#1976D2" : "#616161"
+                  }
+                ]}>
+                  {item.role.charAt(0).toUpperCase() + item.role.slice(1)}
+                </Text>
+              </View>
+              <Ionicons 
+                name="chevron-forward" 
+                size={20} 
+                color="#BDBDBD"
+                style={styles.chevron} 
+              />
             </View>
           </TouchableOpacity>
         )}
         contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        ItemSeparatorComponent={() => <View style={styles.separator} />}
       />
     </View>
   );
@@ -180,50 +204,65 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   listContent: {
-    paddingVertical: 15,
-    paddingHorizontal: wp("4%"),
+    paddingVertical: hp(2),
+    paddingHorizontal: wp(4),
   },
   staffCard: {
-    flexDirection: "row",
-    backgroundColor: "#fff",
-    marginVertical: 8,
-    borderRadius: 15,
-    padding: 15,
-    borderWidth: 1,
-    borderColor: "#e0e0e0", // Subtle border
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.15,
-    shadowRadius: 5,
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#fff',
+    paddingVertical: hp(1.5),
+    paddingHorizontal: wp(3),
+    borderRadius: 12,
+  },
+  cardLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
   },
   profileImage: {
-    width: wp("18%"), // Slightly larger for better visibility
-    height: wp("18%"),
-    borderRadius: wp("9%"), // Fully circular
-    borderWidth: 2,
-    borderColor: "#4A90E2", // Accent border color
-    marginRight: 15,
+    width: wp(12),
+    height: wp(12),
+    borderRadius: wp(6),
+    backgroundColor: '#F5F5F5',
   },
   staffInfo: {
+    marginLeft: wp(3),
     flex: 1,
   },
   staffName: {
-    fontSize: 18,
-    fontWeight: "600", // Slightly lighter bold for elegance
-    color: "#333",
-    marginBottom: 4, // Space between name and email
+    fontSize: wp(3.8),
+    fontWeight: '600',
+    color: '#2D3748',
+    marginBottom: 2,
   },
   staffEmail: {
-    fontSize: 14,
-    color: "#777", // Softer gray for secondary info
-    marginBottom: 4,
+    fontSize: wp(3.2),
+    color: '#718096',
   },
-  staffRole: {
-    fontSize: 14,
-    color: "#999",
-    fontStyle: "italic", // Italic for subtle distinction
+  cardRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: wp(2),
+  },
+  roleTag: {
+    paddingHorizontal: wp(2),
+    paddingVertical: hp(0.5),
+    borderRadius: 6,
+    marginRight: wp(3),
+  },
+  roleText: {
+    fontSize: wp(3),
+    fontWeight: '500',
+  },
+  chevron: {
+    marginLeft: wp(1),
+  },
+  separator: {
+    height: 1,
+    backgroundColor: '#E2E8F0',
+    marginVertical: hp(1),
   },
 });
 

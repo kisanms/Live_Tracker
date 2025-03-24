@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
   Alert,
   Linking,
+  TextInput,
+  Modal,
 } from "react-native";
 import { COLORS, SHADOWS } from "../../../constants/theme";
 import { Ionicons } from "@expo/vector-icons";
@@ -30,8 +32,12 @@ import { db, auth } from "../../../firebase";
 
 const EmployeeList = ({ navigation }) => {
   const [employees, setEmployees] = useState([]);
+  const [filteredEmployees, setFilteredEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [adminData, setAdminData] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [sortOrder, setSortOrder] = useState('default'); // 'default', 'asc', 'desc'
 
   useEffect(() => {
     // First fetch admin's company data
@@ -78,6 +84,29 @@ const EmployeeList = ({ navigation }) => {
 
     return () => unsubscribe();
   }, [adminData]);
+
+  useEffect(() => {
+    if (!employees) return;
+    
+    let result = [...employees];
+    
+    // Apply search filter
+    if (searchQuery) {
+      result = result.filter(emp => 
+        emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        emp.email.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    
+    // Apply sort
+    if (sortOrder === 'asc') {
+      result.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortOrder === 'desc') {
+      result.sort((a, b) => b.name.localeCompare(a.name));
+    }
+    
+    setFilteredEmployees(result);
+  }, [employees, searchQuery, sortOrder]);
 
   const handleLocationPress = async (employee) => {
     try {
@@ -153,28 +182,104 @@ const EmployeeList = ({ navigation }) => {
       onPress={() =>
         navigation.navigate("adminEmployeeProfile", { employeeId: item.id })
       }
+      activeOpacity={0.7}
     >
-      <Image source={{ uri: item.profileImage }} style={styles.employeeImage} />
+      <Image 
+        source={{ uri: item.profileImage || 'https://via.placeholder.com/60' }} 
+        style={styles.employeeImage} 
+      />
       <View style={styles.employeeInfo}>
-        <Text style={styles.employeeName}>{item.name}</Text>
-        <Text style={styles.employeeRole}>{item.department}</Text>
-        <Text style={styles.employeeRole}>{item.email}</Text>
-      </View>
-      <View style={styles.actions}>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => handleLocationPress(item)}
-        >
-          <Ionicons name="location" size={20} color={COLORS.primary} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => handleCallPress(item.id)}
-        >
-          <Ionicons name="call" size={20} color={COLORS.success} />
-        </TouchableOpacity>
+        <Text style={styles.employeeName} numberOfLines={1}>{item.name}</Text>
+        <View style={styles.actions}>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => handleLocationPress(item)}
+          >
+            <Ionicons 
+              name="location" 
+              size={20} 
+              color={"#4A90E2"}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => handleCallPress(item.id)}
+          >
+            <Ionicons 
+              name="call" 
+              size={20} 
+              color={"#4CAF50"}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => Linking.openURL(`mailto:${item.email}`)}
+          >
+            <Ionicons 
+              name="mail" 
+              size={20} 
+              color={"#FF9800"}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
     </TouchableOpacity>
+  );
+
+  const FilterModal = () => (
+    <Modal
+      visible={showFilterModal}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={() => setShowFilterModal(false)}
+    >
+      <TouchableOpacity 
+        style={styles.modalOverlay}
+        activeOpacity={1}
+        onPress={() => setShowFilterModal(false)}
+      >
+        <View style={styles.modalContent}>
+          <TouchableOpacity 
+            style={styles.filterOption}
+            onPress={() => {
+              setSortOrder('asc');
+              setShowFilterModal(false);
+            }}
+          >
+            <Ionicons name="arrow-up" size={20} color={sortOrder === 'asc' ? COLORS.primary : COLORS.gray} />
+            <Text style={[styles.filterText, sortOrder === 'asc' && styles.activeFilterText]}>
+              Sort A to Z
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.filterOption}
+            onPress={() => {
+              setSortOrder('desc');
+              setShowFilterModal(false);
+            }}
+          >
+            <Ionicons name="arrow-down" size={20} color={sortOrder === 'desc' ? COLORS.primary : COLORS.gray} />
+            <Text style={[styles.filterText, sortOrder === 'desc' && styles.activeFilterText]}>
+              Sort Z to A
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.filterOption}
+            onPress={() => {
+              setSortOrder('default');
+              setShowFilterModal(false);
+            }}
+          >
+            <Ionicons name="refresh" size={20} color={sortOrder === 'default' ? COLORS.primary : COLORS.gray} />
+            <Text style={[styles.filterText, sortOrder === 'default' && styles.activeFilterText]}>
+              Default Order
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    </Modal>
   );
 
   return (
@@ -184,16 +289,42 @@ const EmployeeList = ({ navigation }) => {
           <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Employees</Text>
-        <TouchableOpacity style={styles.filterButton}>
-          <Ionicons name="filter" size={24} color={COLORS.primary} />
+        <TouchableOpacity 
+          style={styles.filterButton}
+          onPress={() => setShowFilterModal(true)}
+        >
+          <Ionicons 
+            name="options" 
+            size={24} 
+            color={sortOrder !== 'default' ? COLORS.primary : COLORS.gray} 
+          />
         </TouchableOpacity>
       </View>
+
+      <View style={styles.searchContainer}>
+        <Ionicons name="search-outline" size={20} color={COLORS.gray} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search by name or email"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholderTextColor={COLORS.gray}
+        />
+        {searchQuery !== '' && (
+          <TouchableOpacity onPress={() => setSearchQuery('')}>
+            <Ionicons name="close-circle" size={20} color={COLORS.gray} />
+          </TouchableOpacity>
+        )}
+      </View>
+
       <FlatList
-        data={employees}
+        data={filteredEmployees}
         renderItem={renderEmployee}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
       />
+      
+      <FilterModal />
     </View>
   );
 };
@@ -223,52 +354,82 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   employeeCard: {
-    flexDirection: "row",
-    backgroundColor: COLORS.cardBg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.white,
     borderRadius: 12,
-    padding: 15,
-    marginBottom: 15,
-    ...SHADOWS.medium,
+    padding: wp(2.5),
+    marginBottom: hp(1),
+    ...SHADOWS.small,
   },
   employeeImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: wp(12),
+    height: wp(12),
+    borderRadius: wp(6),
+    backgroundColor: '#F1F5F9',
   },
   employeeInfo: {
     flex: 1,
-    marginLeft: 15,
+    marginLeft: wp(3),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   employeeName: {
-    fontSize: 16,
-    fontWeight: "bold",
+    fontSize: wp(3.8),
+    fontWeight: "600",
     color: COLORS.black,
-  },
-  employeeRole: {
-    fontSize: 14,
-    color: COLORS.gray,
-    marginTop: 4,
-  },
-  statusContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 8,
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 6,
-  },
-  statusText: {
-    fontSize: 12,
-    color: COLORS.gray,
+    flex: 1,
+    marginRight: wp(2),
   },
   actions: {
-    justifyContent: "space-around",
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: wp(3),
   },
   actionButton: {
-    padding: 8,
+    padding: 4,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.white,
+    paddingHorizontal: wp(4),
+    paddingVertical: hp(1),
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: wp(3.5),
+    color: COLORS.black,
+    paddingHorizontal: wp(3),
+    paddingVertical: hp(1),
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: COLORS.white,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: wp(4),
+  },
+  filterOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: hp(2),
+    gap: wp(3),
+  },
+  filterText: {
+    fontSize: wp(3.8),
+    color: COLORS.gray,
+  },
+  activeFilterText: {
+    color: COLORS.primary,
+    fontWeight: '600',
   },
 });
 

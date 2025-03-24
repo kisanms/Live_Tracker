@@ -192,32 +192,6 @@ const ManagerList = ({ navigation }) => {
           <Text style={styles.managerName}>{item.name}</Text>
           <Text style={styles.department}>{item.department}</Text>
         </View>
-        {/*<View
-          style={[
-            styles.statusBadge,
-            {
-              backgroundColor: item.status === "Active" ? "#E7F7ED" : "#FFE8D9",
-            },
-          ]}
-        >
-          <View
-            style={[
-              styles.statusDot,
-              {
-                backgroundColor:
-                  item.status === "Active" ? "#4CAF50" : "#FF9800",
-              },
-            ]}
-          />
-          <Text
-            style={[
-              styles.statusText,
-              { color: item.status === "Active" ? "#4CAF50" : "#FF9800" },
-            ]}
-          >
-            {item.status}
-          </Text>
-        </View>*/}
       </View>
 
       <View style={styles.cardFooter}>
