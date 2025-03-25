@@ -133,6 +133,116 @@ const DateItem = memo(({ date, locations, onPress, index }) => (
   </TouchableOpacity>
 ));
 
+const MonthPickerModal = memo(({ visible, onClose, onSelect, currentDate }) => {
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth();
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [showYearPicker, setShowYearPicker] = useState(false);
+
+  const years = Array.from(
+    { length: currentYear - 2020 + 1 },
+    (_, i) => currentYear - i
+  );
+
+  const handleMonthSelect = (monthIndex) => {
+    const selectedDate = new Date(selectedYear, monthIndex, 1);
+    onSelect(selectedDate);
+    onClose();
+  };
+
+  const handleYearSelect = (year) => {
+    setSelectedYear(year);
+    setShowYearPicker(false);
+  };
+
+  return (
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={visible}
+      onRequestClose={onClose}
+    >
+      <View style={styles.monthPickerOverlay}>
+        <View style={styles.monthPickerContent}>
+          <LinearGradient
+            colors={[COLORS.primary, COLORS.primary + "CC"]}
+            style={styles.monthPickerHeader}
+          >
+            <Text style={styles.monthPickerTitle}>Select Month</Text>
+            <TouchableOpacity onPress={onClose}>
+              <Ionicons name="close" size={24} color={COLORS.white} />
+            </TouchableOpacity>
+          </LinearGradient>
+          <View style={styles.monthPickerBody}>
+            <TouchableOpacity
+              style={styles.yearSelector}
+              onPress={() => setShowYearPicker(true)}
+            >
+              <Text style={styles.yearSelectorText}>{selectedYear}</Text>
+              <Ionicons name="chevron-down" size={20} color={COLORS.primary} />
+            </TouchableOpacity>
+
+            {showYearPicker ? (
+              <View style={styles.yearPickerContainer}>
+                <FlatList
+                  data={years}
+                  keyExtractor={(year) => year.toString()}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      style={[
+                        styles.yearOption,
+                        selectedYear === item && styles.selectedYear,
+                      ]}
+                      onPress={() => handleYearSelect(item)}
+                    >
+                      <Text
+                        style={[
+                          styles.yearOptionText,
+                          selectedYear === item && styles.selectedYearText,
+                        ]}
+                      >
+                        {item}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                  showsVerticalScrollIndicator={false}
+                />
+              </View>
+            ) : (
+              <View style={styles.monthGrid}>
+                {months.map((month, index) => (
+                  <TouchableOpacity
+                    key={month}
+                    style={[
+                      styles.monthButton,
+                      currentMonth === index && selectedYear === currentYear && styles.selectedMonth,
+                    ]}
+                    onPress={() => handleMonthSelect(index)}
+                  >
+                    <Text
+                      style={[
+                        styles.monthButtonText,
+                        currentMonth === index && selectedYear === currentYear && styles.selectedMonthText,
+                      ]}
+                    >
+                      {month.slice(0, 3)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+});
+
 export default function AllStaffLocNotiDetails({ route, navigation }) {
   const { staff } = route.params;
   const [locations, setLocations] = useState([]);
@@ -141,6 +251,9 @@ export default function AllStaffLocNotiDetails({ route, navigation }) {
   const [selectedLocations, setSelectedLocations] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
+  const [showMonthPicker, setShowMonthPicker] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [filteredDates, setFilteredDates] = useState([]);
 
   const fetchLocations = async () => {
     try {
@@ -187,6 +300,21 @@ export default function AllStaffLocNotiDetails({ route, navigation }) {
     fetchLocations();
   }, []);
 
+  useEffect(() => {
+    if (selectedDate) {
+      const filtered = Object.keys(groupedLocations).filter(date => {
+        const locationDate = new Date(date.split('-').reverse().join('-'));
+        return (
+          locationDate.getMonth() === selectedDate.getMonth() &&
+          locationDate.getFullYear() === selectedDate.getFullYear()
+        );
+      });
+      setFilteredDates(filtered);
+    } else {
+      setFilteredDates(Object.keys(groupedLocations));
+    }
+  }, [selectedDate, groupedLocations]);
+
   const handleDatePress = (locations) => {
     setSelectedLocations(locations);
     setModalVisible(true);
@@ -199,6 +327,15 @@ export default function AllStaffLocNotiDetails({ route, navigation }) {
   const closeModal = () => {
     setModalVisible(false);
     setSelectedLocation(null);
+  };
+
+  const handleMonthSelect = (date) => {
+    setSelectedDate(date);
+  };
+
+  const clearMonthFilter = () => {
+    setSelectedDate(new Date());
+    setFilteredDates(Object.keys(groupedLocations));
   };
 
   const renderDateItem = useCallback(
@@ -275,6 +412,26 @@ export default function AllStaffLocNotiDetails({ route, navigation }) {
         </LinearGradient>
       </View>
 
+      <View style={styles.searchContainer}>
+        <TouchableOpacity
+          style={styles.monthSearchButton}
+          onPress={() => setShowMonthPicker(true)}
+        >
+          <Ionicons name="calendar" size={20} color={COLORS.primary} />
+          <Text style={styles.monthSearchText}>
+            {selectedDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
+          </Text>
+        </TouchableOpacity>
+        {selectedDate && (
+          <TouchableOpacity
+            style={styles.clearButton}
+            onPress={clearMonthFilter}
+          >
+            <Ionicons name="close-circle" size={20} color={COLORS.gray} />
+          </TouchableOpacity>
+        )}
+      </View>
+
       <View style={styles.tableContainer}>
         <LinearGradient
           colors={[COLORS.primary, COLORS.primary + "CC"]}
@@ -283,12 +440,12 @@ export default function AllStaffLocNotiDetails({ route, navigation }) {
           <Text style={styles.tableHeaderText}>Dates</Text>
         </LinearGradient>
         <FlatList
-          data={Object.keys(groupedLocations)}
+          data={filteredDates}
           renderItem={renderDateItem}
           keyExtractor={(item) => item}
           contentContainerStyle={styles.tableContent}
           ListEmptyComponent={
-            <Text style={styles.emptyText}>No locations found</Text>
+            <Text style={styles.emptyText}>No locations found for selected month</Text>
           }
         />
       </View>
@@ -329,6 +486,13 @@ export default function AllStaffLocNotiDetails({ route, navigation }) {
         visible={!!selectedLocation}
         location={selectedLocation}
         onClose={() => setSelectedLocation(null)}
+      />
+
+      <MonthPickerModal
+        visible={showMonthPicker}
+        onClose={() => setShowMonthPicker(false)}
+        onSelect={handleMonthSelect}
+        currentDate={selectedDate}
       />
     </SafeAreaView>
   );
@@ -516,5 +680,128 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     marginLeft: wp(2),
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: wp(4),
+    marginBottom: hp(2),
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    padding: wp(3),
+    ...SHADOWS.small,
+  },
+  monthSearchButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8F9FA',
+    padding: wp(3),
+    borderRadius: 8,
+  },
+  monthSearchText: {
+    marginLeft: wp(2),
+    fontSize: 15,
+    color: COLORS.black,
+    fontWeight: '500',
+  },
+  clearButton: {
+    marginLeft: wp(2),
+    padding: wp(1),
+  },
+  monthPickerOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+  },
+  monthPickerContent: {
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    width: '90%',
+    maxHeight: hp(70),
+    overflow: 'hidden',
+    ...SHADOWS.large,
+  },
+  monthPickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: wp(4),
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+  },
+  monthPickerTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: COLORS.white,
+    flex: 1,
+  },
+  monthPickerBody: {
+    padding: wp(4),
+  },
+  yearSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F8F9FA',
+    padding: wp(3),
+    borderRadius: 8,
+    marginBottom: hp(2),
+  },
+  yearSelectorText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: COLORS.primary,
+    marginRight: wp(2),
+  },
+  yearPickerContainer: {
+    maxHeight: hp(40),
+    backgroundColor: '#F8F9FA',
+    borderRadius: 8,
+    padding: wp(2),
+  },
+  yearOption: {
+    paddingVertical: hp(1.5),
+    paddingHorizontal: wp(4),
+    borderRadius: 8,
+    marginVertical: hp(0.5),
+  },
+  selectedYear: {
+    backgroundColor: COLORS.primary,
+  },
+  yearOptionText: {
+    fontSize: 16,
+    color: COLORS.black,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  selectedYearText: {
+    color: COLORS.white,
+  },
+  monthGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  monthButton: {
+    width: '30%',
+    paddingVertical: hp(1.5),
+    paddingHorizontal: wp(2),
+    marginBottom: hp(1),
+    borderRadius: 8,
+    backgroundColor: '#F8F9FA',
+    alignItems: 'center',
+  },
+  selectedMonth: {
+    backgroundColor: COLORS.primary,
+  },
+  monthButtonText: {
+    fontSize: 14,
+    color: COLORS.black,
+    fontWeight: '500',
+  },
+  selectedMonthText: {
+    color: COLORS.white,
   },
 });

@@ -281,6 +281,7 @@ const styles = StyleSheet.create({
     marginLeft: 5,
     alignItems: "center",
     justifyContent: "center",
+
   },
   list: {
     padding: 16,
@@ -288,3 +289,4 @@ const styles = StyleSheet.create({
 });
 
 export default ManagerEmployeeList;
+

@@ -7,12 +7,13 @@ import {
   TouchableOpacity,
   Image,
   SafeAreaView,
+  ActivityIndicator,
 } from "react-native";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
-import { COLORS, SHADOWS } from "../../../constants/theme";
+import { COLORS } from "../../../constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { db, auth } from "../../../firebase";
 import {
@@ -67,27 +68,31 @@ const AllStaffLocNoti = ({ navigation }) => {
     <TouchableOpacity
       style={styles.staffCard}
       onPress={() => handleStaffPress(item)}
+      activeOpacity={0.7}
     >
-      <Image
-        source={{
-          uri:
-            item.profileImage ||
-            "https://randomuser.me/api/portraits/men/1.jpg",
-        }}
-        style={styles.staffImage}
-      />
-      <View style={styles.staffInfo}>
-        <Text style={styles.staffName}>{item.name || "Unnamed Staff"}</Text>
-        <Text style={styles.staffRole}>
-          {item.role || "Role not specified"}
-        </Text>
+      <View style={styles.cardContent}>
+        <Image
+          source={{
+            uri:
+              item.profileImage ||
+              "https://randomuser.me/api/portraits/men/1.jpg",
+          }}
+          style={styles.staffImage}
+        />
+        <View style={styles.staffInfo}>
+          <Text style={styles.staffName} numberOfLines={1}>
+            {item.name || "Unnamed Staff"}
+          </Text>
+          <Text style={styles.staffRole} numberOfLines={1}>
+            {item.role || "Role not specified"}
+          </Text>
+        </View>
+        <Ionicons
+          name="chevron-forward"
+          size={20}
+          color={COLORS.gray}
+        />
       </View>
-      <Ionicons
-        name="chevron-forward"
-        size={24}
-        color={COLORS.gray}
-        style={styles.chevron}
-      />
     </TouchableOpacity>
   );
 
@@ -98,18 +103,19 @@ const AllStaffLocNoti = ({ navigation }) => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="arrow-back" size={24} color={COLORS.white} />
+          <Ionicons name="arrow-back" size={20} color={COLORS.white} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>All Staff</Text>
+        <View style={styles.headerRight} />
       </View>
 
       {loading ? (
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading staff data...</Text>
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="small" color={COLORS.primary} />
         </View>
       ) : staffList.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No staff members found</Text>
+        <View style={styles.centerContainer}>
+          <Text style={styles.emptyText}>No staff found</Text>
         </View>
       ) : (
         <FlatList
@@ -127,82 +133,71 @@ const AllStaffLocNoti = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F9FA",
+    backgroundColor: COLORS.white,
   },
   header: {
-    backgroundColor: COLORS.primary,
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: hp(2),
     paddingHorizontal: wp(4),
-    ...SHADOWS.medium,
+    paddingVertical: hp(1.5),
+    backgroundColor: COLORS.primary,
   },
   backButton: {
     padding: wp(2),
-    borderRadius: 12,
-    marginRight: wp(3),
   },
   headerTitle: {
-    fontSize: 22,
-    fontWeight: "bold",
+    flex: 1,
+    fontSize: 18,
+    fontWeight: "600",
     color: COLORS.white,
+    textAlign: "center",
+  },
+  headerRight: {
+    width: wp(12),
   },
   listContainer: {
-    padding: wp(4),
-    paddingBottom: hp(2),
+    padding: wp(3),
   },
   staffCard: {
-    flexDirection: "row",
     backgroundColor: COLORS.white,
-    borderRadius: 16,
-    padding: wp(4),
-    marginBottom: hp(1.5),
+    marginBottom: hp(0.8),
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.lightGray,
+  },
+  cardContent: {
+    flexDirection: "row",
     alignItems: "center",
-    ...SHADOWS.small,
+    padding: wp(3),
   },
   staffImage: {
-    width: wp(15),
-    height: wp(15),
-    borderRadius: wp(7.5),
-    marginRight: wp(4),
-    borderWidth: 2,
-    borderColor: COLORS.primary,
+    width: wp(12),
+    height: wp(12),
+    borderRadius: wp(6),
+    marginRight: wp(3),
   },
   staffInfo: {
     flex: 1,
+    marginRight: wp(2),
   },
   staffName: {
-    fontSize: 18,
-    fontWeight: "600",
+    fontSize: 15,
+    fontWeight: "500",
     color: COLORS.black,
-    marginBottom: hp(0.5),
+    marginBottom: hp(0.2),
   },
   staffRole: {
-    fontSize: 14,
-    color: COLORS.gray,
-    textTransform: "capitalize",
-  },
-  chevron: {
-    marginLeft: wp(2),
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingText: {
-    fontSize: 16,
+    fontSize: 13,
     color: COLORS.gray,
   },
-  emptyContainer: {
+  centerContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
   emptyText: {
-    fontSize: 16,
+    fontSize: 14,
     color: COLORS.gray,
-    fontStyle: "italic",
   },
 });
 

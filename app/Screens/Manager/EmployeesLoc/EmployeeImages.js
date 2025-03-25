@@ -24,6 +24,7 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
+import { COLORS } from "../../../constants/theme";
 
 const EmployeeImages = ({ navigation }) => {
   const [employees, setEmployees] = useState([]);

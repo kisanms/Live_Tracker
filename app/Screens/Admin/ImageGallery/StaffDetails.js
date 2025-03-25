@@ -136,7 +136,7 @@ const StaffDetails = ({ navigation, route }) => {
                 <Text style={[
                   styles.roleText,
                   {
-                    color: item.role === "manager" ? "#1976D2" : "#616161"
+                    color: item.role === "manager" ? "#1976D8" : "#616161"
                   }
                 ]}>
                   {item.role.charAt(0).toUpperCase() + item.role.slice(1)}
