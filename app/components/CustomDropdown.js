@@ -18,6 +18,7 @@ const CustomDropdown = ({
   selectedValue,
   onValueChange,
   placeholder = "Select an option",
+  required = false,
 }) => {
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -28,7 +29,10 @@ const CustomDropdown = ({
   return (
     <View>
       <TouchableOpacity
-        style={styles.dropdownButton}
+        style={[
+          styles.dropdownButton,
+          required && !selectedValue && styles.requiredField
+        ]}
         onPress={() => setModalVisible(true)}
       >
         <Text
@@ -41,6 +45,7 @@ const CustomDropdown = ({
         </Text>
         <Feather name="chevron-down" size={hp(2.5)} color="#666" />
       </TouchableOpacity>
+      
 
       <Modal
         visible={modalVisible}
@@ -168,6 +173,7 @@ const styles = StyleSheet.create({
     color: "#ff3b30",
     fontWeight: "bold",
   },
+ 
 });
 
 export default CustomDropdown;

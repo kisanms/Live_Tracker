@@ -244,6 +244,12 @@ export default function SignUp() {
 
   const handleSignUp = async () => {
     try {
+      // Validate role first
+      if (!role) {
+        Alert.alert("Error", "Please select your role");
+        return;
+      }
+
       // Validate all fields
       if (!name || name.length <= 1) {
         Alert.alert("Error", "Name must be more than 1 character");
@@ -390,7 +396,8 @@ export default function SignUp() {
                 setAdminManagerKey("");
               }
             }}
-            placeholder="Select Your Role"
+            placeholder="Select Your Role *"
+            required={true}
           />
 
           {/* Admin/Manager Key Input */}
