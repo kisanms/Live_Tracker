@@ -12,6 +12,7 @@ import {
   Platform,
   StyleSheet,
   Alert,
+  
 } from "react-native";
 import {
   widthPercentageToDP as wp,
@@ -32,6 +33,7 @@ import {
   setDoc,
   updateDoc,
   serverTimestamp,
+
 } from "firebase/firestore";
 import { db } from "../firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
@@ -241,83 +243,116 @@ export default function SignUp() {
   };
 
   const handleSignUp = async () => {
-    if (
-      !nameVerify ||
-      !emailVerify ||
-      !mobileVerify ||
-      !passwordVerify ||
-      !role ||
-      !companyNameVerify
-    ) {
-      Alert.alert("Error", "Please fill all fields correctly!");
-      return;
-    }
-
-    if (role === "manager" || role === "employee") {
-      const isCompanyValid = await verifyCompanyName(companyName);
-      if (!isCompanyValid) {
-        Alert.alert("Error", "Company name does not exist.");
+    try {
+      // Validate all fields
+      if (!name || name.length <= 1) {
+        Alert.alert("Error", "Name must be more than 1 character");
         return;
       }
-    }
+      if (!email || !email.includes("@")) {
+        Alert.alert("Error", "Please enter a valid email");
+        return;
+      }
+      if (!mobile || !/^[6-9]\d{9}$/.test(mobile)) {
+        Alert.alert("Error", "Please enter a valid 10-digit mobile number");
+        return;
+      }
+      if (!password || !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/.test(password)) {
+        Alert.alert("Error", "Password must contain at least 8 characters, one uppercase letter, one lowercase letter, and one number");
+        return;
+      }
+      if (!companyName) {
+        Alert.alert("Error", "Please enter company name");
+        return;
+      }
 
-    setLoading(true);
-    try {
+      // Check if company exists
+      const companyQuery = query(collection(db, "companies"), where("companyName", "==", companyName));
+      const companySnapshot = await getDocs(companyQuery);
+      if (companySnapshot.empty) {
+        Alert.alert("Error", "Company does not exist");
+        return;
+      }
+
+      let keyDoc = null; // Declare keyDoc outside the if block
+
+      // If role is manager, verify manager key
       if (role === "manager") {
-        const isValidKey = await verifyManagerKey(adminManagerKey);
-        if (!isValidKey) {
-          Alert.alert("Error", "Invalid manager key or email mismatch");
+        if (!adminManagerKey) {
+          Alert.alert("Error", "Please enter manager key");
+          return;
+        }
+
+        // Query for the manager key
+        const keyQuery = query(collection(db, "managerKeys"), where("key", "==", adminManagerKey));
+        const keySnapshot = await getDocs(keyQuery);
+        
+        if (keySnapshot.empty) {
+          Alert.alert("Error", "Invalid manager key");
+          return;
+        }
+
+        keyDoc = keySnapshot.docs[0]; // Store the document reference
+        const keyData = keyDoc.data();
+        
+        // Check if key is already used
+        if (keyData.isUsed) {
+          Alert.alert("Error", "This manager key has already been used");
+          return;
+        }
+
+        // Check if email matches
+        if (keyData.email !== email) {
+          Alert.alert("Error", "This manager key is not assigned to this email");
+          return;
+        }
+
+        // Check if company matches
+        if (keyData.companyName !== companyName) {
+          Alert.alert("Error", "You are not invited from this company. Please check the company name.");
           return;
         }
       }
 
-      // Create user with email and password
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+      // Create user in Firebase Authentication
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
       // Store user data in Firestore
-      await setDoc(doc(db, "users", userCredential.user.uid), {
+      await setDoc(doc(db, "users", user.uid), {
         name,
         email,
         mobile,
         role,
         companyName,
         createdAt: serverTimestamp(),
+        profileImage: null,
       });
 
-      // If it's a manager, update the manager key as used
-      if (role === "manager") {
-        const keyQuery = query(
-          collection(db, "managerKeys"),
-          where("key", "==", adminManagerKey),
-          where("email", "==", email)
-        );
-        const keySnapshot = await getDocs(keyQuery);
-        if (!keySnapshot.empty) {
-          await updateDoc(doc(db, "managerKeys", keySnapshot.docs[0].id), {
-            isUsed: true,
-            usedBy: userCredential.user.uid,
-            usedAt: serverTimestamp(),
-          });
-        }
+      // If role is manager, update manager key status
+      if (role === "manager" && keyDoc) {
+        await updateDoc(doc(db, "managerKeys", keyDoc.id), {
+          isUsed: true,
+          usedBy: user.uid,
+          usedAt: serverTimestamp(),
+        });
       }
 
       Alert.alert("Success", "Account created successfully!");
-      navigation.navigate("signIn");
+      navigation.replace("signIn");
     } catch (error) {
-      let msg = error.message;
-      if (msg.includes("(auth/invalid-credential)")) msg = "User not found";
-      if (msg.includes("(auth/invalid-email)")) msg = "Invalid email address";
-      if (msg.includes("(auth/email-already-in-use)."))
-        msg = "Email already in use";
-      if (msg.includes("(auth/network-request-failed)"))
-        msg = "Please check your internet connection";
-      Alert.alert("Error", msg || "Failed to create account");
-    } finally {
-      setLoading(false);
+      console.error("Signup error:", error);
+      let errorMessage = "Failed to create account. Please try again.";
+      
+      if (error.code === "auth/email-already-in-use") {
+        errorMessage = "Email is already registered";
+      } else if (error.code === "auth/weak-password") {
+        errorMessage = "Password is too weak";
+      } else if (error.code === "auth/invalid-email") {
+        errorMessage = "Invalid email format";
+      }
+      
+      Alert.alert("Error", errorMessage);
     }
   };
 

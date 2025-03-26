@@ -34,54 +34,22 @@ const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false); // New state for password visibility
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
-  const [isNavigating, setIsNavigating] = useState(false);
-  const mounted = useRef(true);
 
   useEffect(() => {
-    let isMounted = true;
-
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      try {
-        if (user && !isNavigating && isMounted) {
-          setIsNavigating(true);
-          await redirectUser(user);
-        } else if (!user && isMounted) {
-          setInitializing(false);
-        }
-      } catch (error) {
-        console.error("Auth state change error:", error);
-        if (isMounted) {
-          setInitializing(false);
-        }
+      if (user) {
+        await redirectUser(user);
       }
+      setInitializing(false);
     });
 
-    return () => {
-      isMounted = false;
-      unsubscribe();
-    };
-  }, [isNavigating]);
-
-  useEffect(() => {
-    return () => {
-      mounted.current = false;
-    };
+    return () => unsubscribe();
   }, []);
 
   const redirectUser = async (user) => {
-    if (isNavigating) return;
-    
     try {
       const userDoc = await getDoc(doc(db, "users", user.uid));
       const companyDoc = await getDoc(doc(db, "companies", user.uid));
-
-      if (!userDoc.exists() && !companyDoc.exists()) {
-        Alert.alert("Error", "User data not found");
-        await auth.signOut();
-        setIsNavigating(false);
-        setInitializing(false);
-        return;
-      }
 
       if (companyDoc.exists() && companyDoc.data().role === "admin") {
         navigation.replace("adminDashboard");
@@ -98,16 +66,14 @@ const SignIn = () => {
             Alert.alert("Error", "Invalid user role");
             await auth.signOut();
         }
+      } else {
+        Alert.alert("Error", "User data not found");
+        await auth.signOut();
       }
     } catch (error) {
       console.error("Error redirecting user:", error);
       Alert.alert("Error", "Failed to verify user role");
       await auth.signOut();
-    } finally {
-      if (mounted.current) {
-        setIsNavigating(false);
-        setInitializing(false);
-      }
     }
   };
 
@@ -116,8 +82,6 @@ const SignIn = () => {
       Alert.alert("Sign In", "Please fill all the details!");
       return;
     }
-
-    if (isNavigating || loading) return;
 
     setLoading(true);
     try {
@@ -142,25 +106,8 @@ const SignIn = () => {
 
   if (initializing) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: '#fff' }]}>
-        <Image
-          source={require("../../assets/images/icon small.png")}
-          style={styles.splashImage}
-        />
-        <ActivityIndicator size="large" color="#4A90E2" style={styles.splashLoader} />
-      </View>
-    );
-  }
-
-  // Only show the sign-in form if there's no authenticated user
-  if (auth.currentUser) {
-    return (
-      <View style={[styles.loadingContainer, { backgroundColor: '#fff' }]}>
-        <Image
-          source={require("../../assets/images/icon small.png")}
-          style={styles.splashImage}
-        />
-        <ActivityIndicator size="large" color="#4A90E2" style={styles.splashLoader} />
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#ff3b30" />
       </View>
     );
   }
@@ -399,15 +346,6 @@ const styles = StyleSheet.create({
     fontSize: hp(1.8),
     color: "#ff3b30",
     fontWeight: "600",
-  },
-  splashImage: {
-    height: hp(30),
-    width: wp(50),
-    resizeMode: "contain",
-    marginBottom: hp(4),
-  },
-  splashLoader: {
-    marginTop: hp(2),
   },
 });
 

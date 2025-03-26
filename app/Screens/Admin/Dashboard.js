@@ -236,6 +236,7 @@ const AdminDashboard = ({ navigation }) => {
         createdBy: auth.currentUser.uid,
         createdAt: serverTimestamp(),
         isUsed: false,
+        companyName: adminData.companyName,
       });
 
       setGeneratedKey(key);
