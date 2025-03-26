@@ -28,7 +28,6 @@
     "expo-camera": "~16.0.16",
     "expo-clipboard": "~7.0.1",
     "expo-constants": "~17.0.4",
-    "expo-dev-client": "~5.0.6",
     "expo-device": "~7.0.2",
     "expo-file-system": "~18.0.11",
     "expo-font": "~13.0.1",

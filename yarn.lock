@@ -3546,16 +3546,6 @@ ajv@^8.0.0, ajv@^8.8.2, ajv@^8.9.0:
     json-schema-traverse "^1.0.0"
     require-from-string "^2.0.2"
 
-ajv@8.11.0:
-  version "8.11.0"
-  resolved "https://registry.npmjs.org/ajv/-/ajv-8.11.0.tgz"
-  integrity sha512-wGgprdCvMalC0BztXvitD2hC04YffAvtsUn93JbGXYLAtCUO4xd17mCCZQxUOItiBwZvJScWo8NIvQMQ71rdpg==
-  dependencies:
-    fast-deep-equal "^3.1.1"
-    json-schema-traverse "^1.0.0"
-    require-from-string "^2.0.2"
-    uri-js "^4.2.2"
-
 anser@^1.4.9:
   version "1.4.10"
   resolved "https://registry.npmjs.org/anser/-/anser-1.4.10.tgz"
@@ -5031,39 +5021,6 @@ expo-constants@*, expo-constants@~17.0.0, expo-constants@~17.0.3, expo-constants
     "@expo/config" "~10.0.8"
     "@expo/env" "~0.4.1"
 
-expo-dev-client@~5.0.6:
-  version "5.0.6"
-  resolved "https://registry.npmjs.org/expo-dev-client/-/expo-dev-client-5.0.6.tgz"
-  integrity sha512-UMrS21EQ5TMooQgLp+0YrH+UKpxvO+SzkrAdWyVTrjUJ1Qi1yQCbtcErXkYbAdLbItSF3H04fVvd0lzg0KL3Wg==
-  dependencies:
-    expo-dev-launcher "5.0.19"
-    expo-dev-menu "6.0.14"
-    expo-dev-menu-interface "1.9.2"
-    expo-manifests "~0.15.0"
-    expo-updates-interface "~1.0.0"
-
-expo-dev-launcher@5.0.19:
-  version "5.0.19"
-  resolved "https://registry.npmjs.org/expo-dev-launcher/-/expo-dev-launcher-5.0.19.tgz"
-  integrity sha512-3zlOxpWVuV1RDe8OKoejL7XhzidHvtg3iEw564dhXePH5J+Ha9Owkqqiz7A27iqQrENjU/XWBtOxHszj+OBk4Q==
-  dependencies:
-    ajv "8.11.0"
-    expo-dev-menu "6.0.14"
-    expo-manifests "~0.15.0"
-    resolve-from "^5.0.0"
-
-expo-dev-menu-interface@1.9.2:
-  version "1.9.2"
-  resolved "https://registry.npmjs.org/expo-dev-menu-interface/-/expo-dev-menu-interface-1.9.2.tgz"
-  integrity sha512-9piGiHZYnNjoO9oQFWlVsndQ1jhTdGCKf81WfCMHbQBamna/zucC1A+jbGpyzE4icXZZ29CpsSd4uVR+tB2Rfw==
-
-expo-dev-menu@6.0.14:
-  version "6.0.14"
-  resolved "https://registry.npmjs.org/expo-dev-menu/-/expo-dev-menu-6.0.14.tgz"
-  integrity sha512-bG4NXm4epHSmZdWW9hZCS7dTcKO82CyVfYMbNSOw5o/FKO9cY/AgfSj6ERPE9zBqYEJJEJaoJ0mzv0d47/h23g==
-  dependencies:
-    expo-dev-menu-interface "1.9.2"
-
 expo-device@~7.0.2:
   version "7.0.2"
   resolved "https://registry.npmjs.org/expo-device/-/expo-device-7.0.2.tgz"
@@ -5109,11 +5066,6 @@ expo-image@~2.0.5:
   resolved "https://registry.npmjs.org/expo-image/-/expo-image-2.0.5.tgz"
   integrity sha512-FAq7uyaTAfLWER3lN+KVAtep7IfGPZN9ygnVKW4GvgnvR4hKhTtZ5WNxiJ18KKLVb4nUKuHOpQeJNnljy3dtmA==
 
-expo-json-utils@~0.14.0:
-  version "0.14.0"
-  resolved "https://registry.npmjs.org/expo-json-utils/-/expo-json-utils-0.14.0.tgz"
-  integrity sha512-xjGfK9dL0B1wLnOqNkX0jM9p48Y0I5xEPzHude28LY67UmamUyAACkqhZGaPClyPNfdzczk7Ej6WaRMT3HfXvw==
-
 expo-keep-awake@~14.0.1:
   version "14.0.1"
   resolved "https://registry.npmjs.org/expo-keep-awake/-/expo-keep-awake-14.0.1.tgz"
@@ -5136,14 +5088,6 @@ expo-location@~18.0.4:
   version "18.0.4"
   resolved "https://registry.npmjs.org/expo-location/-/expo-location-18.0.4.tgz"
   integrity sha512-OrZTxRpfi4bCJxjW186wt3kfoe0FHwXceE6dXdbxvjxnwMP9cbKeqY6Y2M1bVwboq7PI2eV/e1rOaGq+F+fZyw==
-
-expo-manifests@~0.15.0:
-  version "0.15.4"
-  resolved "https://registry.npmjs.org/expo-manifests/-/expo-manifests-0.15.4.tgz"
-  integrity sha512-Ki6+twRbm+HTX3L8larhOdDbSYPG3ojGnZepR/+TGg3JF/5yyscosDVY6c6z8xEGjKIjs1F813yq9yAfiPh8/g==
-  dependencies:
-    "@expo/config" "~10.0.4"
-    expo-json-utils "~0.14.0"
 
 expo-modules-autolinking@2.0.4:
   version "2.0.4"
@@ -5226,11 +5170,6 @@ expo-task-manager@~12.0.0, expo-task-manager@~12.0.3:
   integrity sha512-XNbDWPqBJw9kuWrYFhpcjRBbuxMUlgiFdEUHpm7VmMqGmm86UAZTO20zSGkM0U25yIcmQgsHiEbfV9B2S84dqA==
   dependencies:
     unimodules-app-loader "~5.0.0"
-
-expo-updates-interface@~1.0.0:
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/expo-updates-interface/-/expo-updates-interface-1.0.0.tgz"
-  integrity sha512-93oWtvULJOj+Pp+N/lpTcFfuREX1wNeHtp7Lwn8EbzYYmdn37MvZU3TPW2tYYCZuhzmKEXnUblYcruYoDu7IrQ==
 
 expo-web-browser@~14.0.1:
   version "14.0.1"
