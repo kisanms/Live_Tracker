@@ -269,6 +269,8 @@ Live Tracker is a location-tracking application built with Expo, featuring role-
 - Because of that some persistant clock-in data deleted
 - **March 17**
 - Notifee trying with firebase cloud messaging.
+- **March 18**
+- Notifee working
 
 ## 🎉 Features Implementation
 
