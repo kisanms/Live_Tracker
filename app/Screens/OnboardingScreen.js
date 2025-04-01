@@ -214,7 +214,7 @@ const OnboardingScreen = ({ navigation }) => {
     <View style={styles.container}>
       <StatusBar translucent backgroundColor="transparent" />
       <ImageBackground
-        source={require("../../assets/images/bg.jpg")}
+        source={require("../../assets/images/bg.png")}
         style={styles.backgroundImage}
       >
         <SafeAreaView style={styles.safeArea}>
