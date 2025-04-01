@@ -135,13 +135,13 @@ const styles = StyleSheet.create({
     marginTop: hp(3),
   },
   linkText: {
-    fontSize: hp(1.8),
+    fontSize: hp(1.9),
     color: "#666",
   },
   linkButton: {
-    fontSize: hp(1.8),
+    fontSize: hp(1.9),
     color: "#4A90E2",
-    fontWeight: "bold",
+    fontWeight: "800",
   },
 });
 
