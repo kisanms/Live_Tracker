@@ -128,7 +128,7 @@ const SignIn = () => {
           <View style={styles.headerContainer}>
             <Image
               style={styles.headerImage}
-              source={require("../../assets/images/signUP1.jpg")}
+              source={require("../../assets/images/sign3.jpg")}
             />
             <Text style={styles.title}>Sign In</Text>
           </View>
@@ -252,11 +252,11 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     alignItems: "center",
-    paddingVertical: hp(3),
-    marginBottom: hp(2),
+    paddingVertical: hp(1),
+    marginBottom: hp(1),
   },
   headerImage: {
-    height: hp(30),
+    height: hp(38),
     width: wp(80),
     resizeMode: "contain",
   },

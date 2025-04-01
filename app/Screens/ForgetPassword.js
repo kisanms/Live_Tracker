@@ -34,12 +34,12 @@ const styles = StyleSheet.create({
   headerContainer: {
     alignItems: "center",
 
-    paddingVertical: hp(4),
+    paddingVertical: hp(2),
   },
   headerImage: {
-    height: hp(30),
+    height: hp(45),
     width: wp(90),
-    resizeMode: "contain",
+    resizeMode: "cover",
   },
   title: {
     fontSize: hp(4),
@@ -75,12 +75,12 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   button: {
-    backgroundColor: "#ff3b30",
+    backgroundColor: "#4A90E2",
     height: hp(6.5),
     borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#ff3b30",
+    shadowColor: "#4A90E2",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -95,13 +95,13 @@ const styles = StyleSheet.create({
     marginTop: hp(3),
   },
   linkText: {
-    fontSize: hp(1.8),
+    fontSize: hp(2),
     color: "#666",
   },
   linkButton: {
-    fontSize: hp(1.8),
-    color: "#ff3b30",
-    fontWeight: "bold",
+    fontSize: hp(2),
+    color: "#4A90E2",
+    fontWeight: "800",
   },
 });
 
@@ -168,7 +168,7 @@ export default function ForgotPassword() {
           <View style={styles.headerContainer}>
             <Image
               style={styles.headerImage}
-              source={require("../../assets/images/forgot.jpg")}
+              source={require("../../assets/images/fp.jpg")}
             />
             <Text style={styles.title}>Reset Password</Text>
           </View>

@@ -12,7 +12,6 @@ import {
   Platform,
   StyleSheet,
   Alert,
-  
 } from "react-native";
 import {
   widthPercentageToDP as wp,
@@ -33,7 +32,6 @@ import {
   setDoc,
   updateDoc,
   serverTimestamp,
-
 } from "firebase/firestore";
 import { db } from "../firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
@@ -95,19 +93,19 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   errorText: {
-    color: "#ff3b30",
+    color: "#4A90E2",
     fontSize: hp(1.6),
     marginLeft: wp(4),
     marginTop: -hp(1),
     marginBottom: hp(1),
   },
   button: {
-    backgroundColor: "#ff3b30",
+    backgroundColor: "#4A90E2",
     height: hp(6.5),
     borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#ff3b30",
+    shadowColor: "#4A90E2",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -127,7 +125,7 @@ const styles = StyleSheet.create({
   },
   linkButton: {
     fontSize: hp(1.8),
-    color: "#ff3b30",
+    color: "#4A90E2",
     fontWeight: "bold",
   },
 });
@@ -263,8 +261,14 @@ export default function SignUp() {
         Alert.alert("Error", "Please enter a valid 10-digit mobile number");
         return;
       }
-      if (!password || !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/.test(password)) {
-        Alert.alert("Error", "Password must contain at least 8 characters, one uppercase letter, one lowercase letter, and one number");
+      if (
+        !password ||
+        !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/.test(password)
+      ) {
+        Alert.alert(
+          "Error",
+          "Password must contain at least 8 characters, one uppercase letter, one lowercase letter, and one number"
+        );
         return;
       }
       if (!companyName) {
@@ -273,7 +277,10 @@ export default function SignUp() {
       }
 
       // Check if company exists
-      const companyQuery = query(collection(db, "companies"), where("companyName", "==", companyName));
+      const companyQuery = query(
+        collection(db, "companies"),
+        where("companyName", "==", companyName)
+      );
       const companySnapshot = await getDocs(companyQuery);
       if (companySnapshot.empty) {
         Alert.alert("Error", "Company does not exist");
@@ -290,9 +297,12 @@ export default function SignUp() {
         }
 
         // Query for the manager key
-        const keyQuery = query(collection(db, "managerKeys"), where("key", "==", adminManagerKey));
+        const keyQuery = query(
+          collection(db, "managerKeys"),
+          where("key", "==", adminManagerKey)
+        );
         const keySnapshot = await getDocs(keyQuery);
-        
+
         if (keySnapshot.empty) {
           Alert.alert("Error", "Invalid manager key");
           return;
@@ -300,7 +310,7 @@ export default function SignUp() {
 
         keyDoc = keySnapshot.docs[0]; // Store the document reference
         const keyData = keyDoc.data();
-        
+
         // Check if key is already used
         if (keyData.isUsed) {
           Alert.alert("Error", "This manager key has already been used");
@@ -309,19 +319,29 @@ export default function SignUp() {
 
         // Check if email matches
         if (keyData.email !== email) {
-          Alert.alert("Error", "This manager key is not assigned to this email");
+          Alert.alert(
+            "Error",
+            "This manager key is not assigned to this email"
+          );
           return;
         }
 
         // Check if company matches
         if (keyData.companyName !== companyName) {
-          Alert.alert("Error", "You are not invited from this company. Please check the company name.");
+          Alert.alert(
+            "Error",
+            "You are not invited from this company. Please check the company name."
+          );
           return;
         }
       }
 
       // Create user in Firebase Authentication
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
       const user = userCredential.user;
 
       // Store user data in Firestore
@@ -349,7 +369,7 @@ export default function SignUp() {
     } catch (error) {
       console.error("Signup error:", error);
       let errorMessage = "Failed to create account. Please try again.";
-      
+
       if (error.code === "auth/email-already-in-use") {
         errorMessage = "Email is already registered";
       } else if (error.code === "auth/weak-password") {
@@ -357,7 +377,7 @@ export default function SignUp() {
       } else if (error.code === "auth/invalid-email") {
         errorMessage = "Invalid email format";
       }
-      
+
       Alert.alert("Error", errorMessage);
     }
   };
@@ -428,7 +448,7 @@ export default function SignUp() {
               (nameVerify ? (
                 <Feather name="check-circle" size={20} color="#4CAF50" />
               ) : (
-                <Entypo name="circle-with-cross" size={20} color="#ff3b30" />
+                <Entypo name="circle-with-cross" size={20} color="#4A90E2" />
               ))}
           </View>
           {name.length > 0 && !nameVerify && (
@@ -450,7 +470,7 @@ export default function SignUp() {
               (emailVerify ? (
                 <Feather name="check-circle" size={20} color="#4CAF50" />
               ) : (
-                <Entypo name="circle-with-cross" size={20} color="#ff3b30" />
+                <Entypo name="circle-with-cross" size={20} color="#4A90E2" />
               ))}
           </View>
           {email.length > 0 && !emailVerify && (
@@ -471,7 +491,7 @@ export default function SignUp() {
               (mobileVerify ? (
                 <Feather name="check-circle" size={20} color="#4CAF50" />
               ) : (
-                <Entypo name="circle-with-cross" size={20} color="#ff3b30" />
+                <Entypo name="circle-with-cross" size={20} color="#4A90E2" />
               ))}
           </View>
           {mobile.length > 0 && !mobileVerify && (
