@@ -44,7 +44,8 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     alignItems: "center",
-    paddingVertical: hp(4),
+    paddingVertical: hp(2),
+    marginBottom: hp(1),
   },
   inputContainer: {
     backgroundColor: "white",
@@ -94,19 +95,35 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   headerImage: {
-    height: hp(38),
-    width: wp(80),
+    height: hp(35),
+    width: wp(85),
     resizeMode: "contain",
-    marginVertical: hp(-8.5),
+    marginVertical: hp(-8),
+    marginBottom: hp(-2.5),
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: hp(1),
+    zIndex: 1,
+  },
+  appTitle: {
+    fontSize: hp(4),
+    fontWeight: "800",
+    color: "#2c3e50",
+    letterSpacing: 1,
+  },
+  appTitleAccent: {
+    fontSize: hp(4),
+    fontWeight: "800",
+    color: "#4A90E2",
+    letterSpacing: 1,
   },
   title: {
     fontSize: hp(3.5),
-    fontWeight: "bold",
+    fontWeight: "700",
     textAlign: "center",
     color: "#333",
-    marginVertical: hp(4),
-    paddingTop: hp(2),
-    marginBottom: hp(-1),
   },
   linkContainer: {
     flexDirection: "row",
@@ -244,8 +261,12 @@ export default function CompanyRegistration() {
         <View style={styles.contentContainer}>
           <StatusBar style="dark" />
 
-          {/* Header Image */}
+          {/* Header Image with Overlapping Title */}
           <View style={styles.headerContainer}>
+            <View style={styles.titleContainer}>
+              <Text style={styles.appTitle}>Active</Text>
+              <Text style={styles.appTitleAccent}>Tracker</Text>
+            </View>
             <Image
               style={styles.headerImage}
               source={require("../../assets/images/compReg.jpg")}

@@ -126,10 +126,15 @@ const SignIn = () => {
 
           {/* Header Image */}
           <View style={styles.headerContainer}>
+          <View style={styles.titleContainer}>
+              <Text style={styles.appTitle}>Active</Text>
+              <Text style={styles.appTitleAccent}>Tracker</Text>
+            </View>
             <Image
               style={styles.headerImage}
               source={require("../../assets/images/sign3.jpg")}
             />
+           
             <Text style={styles.title}>Sign In</Text>
           </View>
 
@@ -257,15 +262,33 @@ const styles = StyleSheet.create({
   },
   headerImage: {
     height: hp(38),
-    width: wp(80),
+    width: wp(85),
     resizeMode: "contain",
+    marginBottom: hp(-2),
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: hp(0.5),
+  },
+  appTitle: {
+    fontSize: hp(4),
+    fontWeight: "800",
+    color: "#2c3e50",
+    letterSpacing: 1,
+  },
+  appTitleAccent: {
+    fontSize: hp(4),
+    fontWeight: "800",
+    color: "#4A90E2",
+    letterSpacing: 1,
   },
   title: {
     fontSize: hp(3.5),
     fontWeight: "700",
     textAlign: "center",
     color: "#333",
-    marginTop: hp(1),
+    marginTop: hp(-2),
   },
   inputContainer: {
     backgroundColor: "#fff",

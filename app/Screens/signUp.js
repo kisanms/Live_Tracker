@@ -51,10 +51,29 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   headerImage: {
-    height: hp(39),
+    height: hp(30),
     width: wp(80),
     resizeMode: "contain",
-    marginVertical: hp(-3),
+    marginVertical: hp(-1),
+  },
+   titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: hp(0.5),
+  },
+  appTitle: {
+    marginTop: hp(1),
+    fontSize: hp(4),
+    fontWeight: "800",
+    color: "#2c3e50",
+    letterSpacing: 1,
+  },
+  appTitleAccent: {
+    marginTop: hp(1),
+    fontSize: hp(4),
+    fontWeight: "800",
+    color: "#4A90E2",
+    letterSpacing: 1,
   },
   title: {
     fontSize: hp(4),
@@ -392,6 +411,10 @@ export default function SignUp() {
 
           {/* Header Image */}
           <View style={styles.headerContainer}>
+          <View style={styles.titleContainer}>
+              <Text style={styles.appTitle}>Active</Text>
+              <Text style={styles.appTitleAccent}>Tracker</Text>
+            </View>
             <Image
               style={styles.headerImage}
               source={require("../../assets/images/signIn2.jpg")}
