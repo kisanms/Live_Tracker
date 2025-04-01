@@ -107,7 +107,7 @@ const SignIn = () => {
   if (initializing) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#ff3b30" />
+        <ActivityIndicator size="large" color="#4A90E2" />
       </View>
     );
   }
@@ -294,28 +294,30 @@ const styles = StyleSheet.create({
   },
   forgotPassword: {
     fontSize: hp(1.8),
-    color: "#ff3b30",
+    color: "#4A90E2",
     textAlign: "right",
     marginBottom: hp(2.5),
+    fontWeight: "600",
   },
   button: {
-    backgroundColor: "#ff3b30",
+    backgroundColor: "#4A90E2",
     height: hp(6.5),
     borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#ff3b30",
+    shadowColor: "#4A90E2",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 4.65,
     elevation: 8,
+    marginBottom: hp(2),
   },
   buttonDisabled: {
     opacity: 0.6,
   },
   buttonText: {
     color: "#fff",
-    fontSize: hp(2.5),
+    fontSize: hp(3),
     fontWeight: "600",
   },
   dividerContainer: {
@@ -344,8 +346,8 @@ const styles = StyleSheet.create({
   },
   linkButton: {
     fontSize: hp(1.8),
-    color: "#ff3b30",
-    fontWeight: "600",
+    color: "#4A90E2",
+    fontWeight: "800",
   },
 });
 
