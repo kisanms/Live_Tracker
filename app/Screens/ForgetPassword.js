@@ -40,13 +40,14 @@ const styles = StyleSheet.create({
     height: hp(45),
     width: wp(90),
     resizeMode: "cover",
+    marginVertical: hp(-3),
   },
   title: {
     fontSize: hp(4),
     fontWeight: "bold",
     textAlign: "center",
     color: "#333",
-    marginVertical: hp(2),
+    marginVertical: hp(-1),
     marginBottom: hp(-1),
   },
   inputContainer: {

@@ -49,23 +49,19 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     alignItems: "center",
-    // backgroundColor: "rgba(255, 59, 48, 0.05)",
-    paddingVertical: hp(4),
-    // borderBottomLeftRadius: 30,
-    // borderBottomRightRadius: 30,
-    // marginBottom: hp(2),
   },
   headerImage: {
-    height: hp(21),
+    height: hp(39),
     width: wp(80),
     resizeMode: "contain",
+    marginVertical: hp(-3),
   },
   title: {
     fontSize: hp(4),
     fontWeight: "bold",
     textAlign: "center",
     color: "#333",
-    marginVertical: hp(-2),
+    marginVertical: hp(3),
   },
   inputContainer: {
     backgroundColor: "white",
@@ -93,7 +89,7 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   errorText: {
-    color: "#4A90E2",
+    color: "#ff3b30",
     fontSize: hp(1.6),
     marginLeft: wp(4),
     marginTop: -hp(1),
@@ -263,11 +259,11 @@ export default function SignUp() {
       }
       if (
         !password ||
-        !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/.test(password)
+        !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{6,}$/.test(password)
       ) {
         Alert.alert(
           "Error",
-          "Password must contain at least 8 characters, one uppercase letter, one lowercase letter, and one number"
+          "Password must contain at least 6 characters, one uppercase letter, one lowercase letter, and one number"
         );
         return;
       }
@@ -398,7 +394,7 @@ export default function SignUp() {
           <View style={styles.headerContainer}>
             <Image
               style={styles.headerImage}
-              source={require("../../assets/images/signIn1.jpg")}
+              source={require("../../assets/images/signIn2.jpg")}
             />
             <Text style={styles.title}>Sign Up</Text>
           </View>
@@ -448,7 +444,7 @@ export default function SignUp() {
               (nameVerify ? (
                 <Feather name="check-circle" size={20} color="#4CAF50" />
               ) : (
-                <Entypo name="circle-with-cross" size={20} color="#4A90E2" />
+                <Entypo name="circle-with-cross" size={20} color="#ff3b30" />
               ))}
           </View>
           {name.length > 0 && !nameVerify && (
@@ -470,7 +466,7 @@ export default function SignUp() {
               (emailVerify ? (
                 <Feather name="check-circle" size={20} color="#4CAF50" />
               ) : (
-                <Entypo name="circle-with-cross" size={20} color="#4A90E2" />
+                <Entypo name="circle-with-cross" size={20} color="#ff3b30" />
               ))}
           </View>
           {email.length > 0 && !emailVerify && (
@@ -491,7 +487,7 @@ export default function SignUp() {
               (mobileVerify ? (
                 <Feather name="check-circle" size={20} color="#4CAF50" />
               ) : (
-                <Entypo name="circle-with-cross" size={20} color="#4A90E2" />
+                <Entypo name="circle-with-cross" size={20} color="#ff3b30" />
               ))}
           </View>
           {mobile.length > 0 && !mobileVerify && (

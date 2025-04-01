@@ -293,11 +293,11 @@ const styles = StyleSheet.create({
     padding: wp(2), // Add padding for better touch area
   },
   forgotPassword: {
-    fontSize: hp(1.8),
+    fontSize: hp(1.9),
     color: "#4A90E2",
     textAlign: "right",
     marginBottom: hp(2.5),
-    fontWeight: "600",
+    fontWeight: "800",
   },
   button: {
     backgroundColor: "#4A90E2",
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
   dividerContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: hp(3),
+    marginVertical: hp(2),
   },
   divider: {
     flex: 1,
@@ -341,11 +341,11 @@ const styles = StyleSheet.create({
     marginVertical: hp(1),
   },
   linkText: {
-    fontSize: hp(1.8),
+    fontSize: hp(1.9),
     color: "#666",
   },
   linkButton: {
-    fontSize: hp(1.8),
+    fontSize: hp(1.9),
     color: "#4A90E2",
     fontWeight: "800",
   },

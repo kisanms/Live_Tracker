@@ -79,12 +79,12 @@ const styles = StyleSheet.create({
     marginBottom: hp(1),
   },
   button: {
-    backgroundColor: "#ff3b30",
+    backgroundColor: "#4A90E2",
     height: hp(6.5),
     borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#ff3b30",
+    shadowColor: "#4A90E2",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -94,32 +94,34 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   headerImage: {
-    height: hp(20),
-    width: wp(90),
+    height: hp(38),
+    width: wp(80),
     resizeMode: "contain",
+    marginVertical: hp(-8.5),
   },
   title: {
     fontSize: hp(3.5),
     fontWeight: "bold",
     textAlign: "center",
     color: "#333",
-    marginVertical: hp(2),
+    marginVertical: hp(4),
+    paddingTop: hp(2),
     marginBottom: hp(-1),
   },
   linkContainer: {
     flexDirection: "row",
     justifyContent: "center",
-    marginTop: hp(3),
-    paddingVertical: hp(2),
+    marginTop: hp(2),
+    paddingVertical: hp(-2),
   },
   linkText: {
-    fontSize: hp(1.8),
+    fontSize: hp(2),
     color: "#666",
   },
   linkButton: {
-    fontSize: hp(1.8),
-    color: "#ff3b30",
-    fontWeight: "bold",
+    fontSize: hp(2),
+    color: "#4A90E2",
+    fontWeight: "800",
   },
 });
 
@@ -246,7 +248,7 @@ export default function CompanyRegistration() {
           <View style={styles.headerContainer}>
             <Image
               style={styles.headerImage}
-              source={require("../../assets/images/GPS_MAP13.jpg")}
+              source={require("../../assets/images/compReg.jpg")}
             />
             <Text style={styles.title}>Company Registration</Text>
           </View>
