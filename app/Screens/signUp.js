@@ -56,9 +56,9 @@ const styles = StyleSheet.create({
     resizeMode: "contain",
     marginVertical: hp(-1),
   },
-   titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  titleContainer: {
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: hp(0.5),
   },
   appTitle: {
@@ -128,6 +128,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4.65,
     elevation: 8,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
   },
   linkContainer: {
     flexDirection: "row",
@@ -257,23 +260,29 @@ export default function SignUp() {
 
   const handleSignUp = async () => {
     try {
+      setLoading(true); // Set loading state at the beginning
+
       // Validate role first
       if (!role) {
         Alert.alert("Error", "Please select your role");
+        setLoading(false);
         return;
       }
 
       // Validate all fields
       if (!name || name.length <= 1) {
         Alert.alert("Error", "Name must be more than 1 character");
+        setLoading(false);
         return;
       }
       if (!email || !email.includes("@")) {
         Alert.alert("Error", "Please enter a valid email");
+        setLoading(false);
         return;
       }
       if (!mobile || !/^[6-9]\d{9}$/.test(mobile)) {
         Alert.alert("Error", "Please enter a valid 10-digit mobile number");
+        setLoading(false);
         return;
       }
       if (
@@ -282,12 +291,14 @@ export default function SignUp() {
       ) {
         Alert.alert(
           "Error",
-          "Password must contain at least 6 characters, one uppercase letter, one lowercase letter, and one number"
+          "Password must contain exact 6 characters only, one uppercase letter, one lowercase letter, and one number"
         );
+        setLoading(false);
         return;
       }
       if (!companyName) {
         Alert.alert("Error", "Please enter company name");
+        setLoading(false);
         return;
       }
 
@@ -299,15 +310,17 @@ export default function SignUp() {
       const companySnapshot = await getDocs(companyQuery);
       if (companySnapshot.empty) {
         Alert.alert("Error", "Company does not exist");
+        setLoading(false);
         return;
       }
 
-      let keyDoc = null; // Declare keyDoc outside the if block
+      let keyDoc = null;
 
       // If role is manager, verify manager key
       if (role === "manager") {
         if (!adminManagerKey) {
           Alert.alert("Error", "Please enter manager key");
+          setLoading(false);
           return;
         }
 
@@ -320,15 +333,17 @@ export default function SignUp() {
 
         if (keySnapshot.empty) {
           Alert.alert("Error", "Invalid manager key");
+          setLoading(false);
           return;
         }
 
-        keyDoc = keySnapshot.docs[0]; // Store the document reference
+        keyDoc = keySnapshot.docs[0];
         const keyData = keyDoc.data();
 
         // Check if key is already used
         if (keyData.isUsed) {
           Alert.alert("Error", "This manager key has already been used");
+          setLoading(false);
           return;
         }
 
@@ -338,6 +353,7 @@ export default function SignUp() {
             "Error",
             "This manager key is not assigned to this email"
           );
+          setLoading(false);
           return;
         }
 
@@ -347,6 +363,7 @@ export default function SignUp() {
             "Error",
             "You are not invited from this company. Please check the company name."
           );
+          setLoading(false);
           return;
         }
       }
@@ -394,6 +411,8 @@ export default function SignUp() {
       }
 
       Alert.alert("Error", errorMessage);
+    } finally {
+      setLoading(false); // Always set loading to false at the end
     }
   };
 
@@ -411,7 +430,7 @@ export default function SignUp() {
 
           {/* Header Image */}
           <View style={styles.headerContainer}>
-          <View style={styles.titleContainer}>
+            <View style={styles.titleContainer}>
               <Text style={styles.appTitle}>Active</Text>
               <Text style={styles.appTitleAccent}>Tracker</Text>
             </View>
@@ -551,14 +570,14 @@ export default function SignUp() {
           </View>
           {password.length > 0 && !passwordVerify && (
             <Text style={styles.errorText}>
-              Password must contain uppercase, lowercase, number and be at least
-              6 characters
+              Password must contain uppercase, lowercase, number and exact 6
+              characters only.
             </Text>
           )}
 
           {/* Submit Button */}
           <TouchableOpacity
-            style={[styles.button, { opacity: loading ? 0.7 : 1 }]}
+            style={[styles.button, loading && styles.buttonDisabled]}
             onPress={handleSignUp}
             disabled={loading}
           >

@@ -9,6 +9,7 @@ import {
   Alert,
   RefreshControl,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { heightPercentageToDP as hp } from "react-native-responsive-screen";
 import { Ionicons } from "@expo/vector-icons";
@@ -31,8 +32,8 @@ import {
   startLocationTracking,
   stopLocationTracking,
 } from "../../services/LocationService.js";
-import NotificationService from '../../services/NotificationService';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import NotificationService from "../../services/NotificationService";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { COLORS, SHADOWS } from "../../constants/theme";
 
 const ManagerDashboard = ({ navigation }) => {
@@ -45,6 +46,7 @@ const ManagerDashboard = ({ navigation }) => {
   const [clockOutTime, setClockOutTime] = useState(null);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [selectedTime, setSelectedTime] = useState(new Date());
+  const [isClockLoading, setIsClockLoading] = useState(false);
   const currentDate = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
@@ -113,15 +115,15 @@ const ManagerDashboard = ({ navigation }) => {
     handleDataCleanup();
     fetchManagerData();
     NotificationService.requestUserPermission();
-    
+
     // Initialize foreground handler
     const unsubscribe = NotificationService.initializeForegroundHandler();
 
     // Add focus listener for screen focus events
-    const unsubscribeFocus = navigation.addListener('focus', () => {
+    const unsubscribeFocus = navigation.addListener("focus", () => {
       fetchManagerData();
     });
-    
+
     // Cleanup on component unmount
     return () => {
       if (unsubscribe) unsubscribe();
@@ -265,6 +267,7 @@ const ManagerDashboard = ({ navigation }) => {
 
   const handleClockInOut = async () => {
     try {
+      setIsClockLoading(true);
       const currentTime = new Date();
       const userDocRef = doc(db, "users", auth.currentUser.uid);
 
@@ -275,6 +278,7 @@ const ManagerDashboard = ({ navigation }) => {
             "Error",
             "Location services are not enabled. Please enable them in settings."
           );
+          setIsClockLoading(false);
           return;
         }
 
@@ -288,6 +292,7 @@ const ManagerDashboard = ({ navigation }) => {
             "Error",
             "Location permissions are required to clock in."
           );
+          setIsClockLoading(false);
           return;
         }
 
@@ -305,6 +310,7 @@ const ManagerDashboard = ({ navigation }) => {
       } else {
         if (!clockInTime) {
           Alert.alert("Error", "No clock-in time found");
+          setIsClockLoading(false);
           return;
         }
 
@@ -352,6 +358,8 @@ const ManagerDashboard = ({ navigation }) => {
     } catch (error) {
       console.error("Clock in/out error:", error);
       Alert.alert("Error", "Failed to update clock status");
+    } finally {
+      setIsClockLoading(false);
     }
   };
 
@@ -408,8 +416,8 @@ const ManagerDashboard = ({ navigation }) => {
 
   const handleTimeChange = async (event, selectedDate) => {
     setShowTimePicker(false);
-    
-    if (!selectedDate || event.type === 'dismissed') {
+
+    if (!selectedDate || event.type === "dismissed") {
       return;
     }
 
@@ -483,14 +491,17 @@ const ManagerDashboard = ({ navigation }) => {
         </View>
         <View style={styles.headerRight}>
           {isClockedIn && (
-            <TouchableOpacity 
-              style={styles.headerIconButton} 
+            <TouchableOpacity
+              style={styles.headerIconButton}
               onPress={handleSetClockOutReminder}
             >
               <Ionicons name="alarm-outline" size={24} color="#4A90E2" />
             </TouchableOpacity>
           )}
-          <TouchableOpacity style={styles.headerIconButton} onPress={handleLogout}>
+          <TouchableOpacity
+            style={styles.headerIconButton}
+            onPress={handleLogout}
+          >
             <Ionicons name="log-out-outline" size={24} color="#4A90E2" />
           </TouchableOpacity>
           <TouchableOpacity
@@ -521,13 +532,27 @@ const ManagerDashboard = ({ navigation }) => {
             </Text>
           )}
         </View>
-        <TouchableOpacity 
-          style={[styles.clockButton, isClockedIn && styles.clockButtonActive]} 
+        <TouchableOpacity
+          style={[
+            styles.clockButton,
+            isClockedIn && styles.clockButtonActive,
+            isClockLoading && styles.clockButtonLoading,
+          ]}
           onPress={handleClockInOut}
+          disabled={isClockLoading}
         >
-          <Text style={[styles.clockButtonText, isClockedIn && styles.clockButtonTextActive]}>
-            {isClockedIn ? "Clock Out" : "Clock In"}
-          </Text>
+          {isClockLoading ? (
+            <ActivityIndicator color="#FFFFFF" size="small" />
+          ) : (
+            <Text
+              style={[
+                styles.clockButtonText,
+                isClockedIn && styles.clockButtonTextActive,
+              ]}
+            >
+              {isClockedIn ? "Clock Out" : "Clock In"}
+            </Text>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -704,6 +729,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.25)",
+    minWidth: 100,
+    alignItems: "center",
+    justifyContent: "center",
   },
   clockButtonActive: {
     backgroundColor: COLORS.danger,
@@ -716,6 +744,9 @@ const styles = StyleSheet.create({
   },
   clockButtonTextActive: {
     color: COLORS.white,
+  },
+  clockButtonLoading: {
+    opacity: 0.8,
   },
   statsContainer: {
     flexDirection: "row",

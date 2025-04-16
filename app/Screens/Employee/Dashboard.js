@@ -10,6 +10,7 @@ import {
   TextInput,
   RefreshControl,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 
 import {
@@ -37,8 +38,8 @@ import {
 } from "../../services/LocationService.js";
 import * as Location from "expo-location"; // Ensure this import is present
 import { SHADOWS } from "../../constants/theme.js";
-import NotificationService from '../../services/NotificationService';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import NotificationService from "../../services/NotificationService";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 const EmployeeDashboard = ({ navigation }) => {
   const [employeeName, setEmployeeName] = useState("");
@@ -57,6 +58,7 @@ const EmployeeDashboard = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [selectedTime, setSelectedTime] = useState(new Date());
+  const [isClockLoading, setIsClockLoading] = useState(false);
 
   const currentDate = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -68,15 +70,15 @@ const EmployeeDashboard = ({ navigation }) => {
   useEffect(() => {
     handleDataCleanup();
     NotificationService.requestUserPermission();
-    
+
     // Initialize foreground handler
     const unsubscribe = NotificationService.initializeForegroundHandler();
 
     // Add focus listener for screen focus events
-    const unsubscribeFocus = navigation.addListener('focus', () => {
+    const unsubscribeFocus = navigation.addListener("focus", () => {
       fetchEmployeeData();
     });
-    
+
     // Cleanup on component unmount
     return () => {
       if (unsubscribe) unsubscribe();
@@ -376,17 +378,18 @@ const EmployeeDashboard = ({ navigation }) => {
 
   const handleClockInOut = async () => {
     try {
+      setIsClockLoading(true);
       const currentTime = new Date();
       const userDocRef = doc(db, "users", auth.currentUser.uid);
 
       if (!isClockedIn) {
-        // Clock In Logic
         const servicesEnabled = await Location.hasServicesEnabledAsync();
         if (!servicesEnabled) {
           Alert.alert(
             "Error",
             "Location services are not enabled. Please enable them in settings."
           );
+          setIsClockLoading(false);
           return;
         }
 
@@ -400,38 +403,38 @@ const EmployeeDashboard = ({ navigation }) => {
             "Error",
             "Location permissions are required to clock in."
           );
+          setIsClockLoading(false);
           return;
         }
 
-        // Start location tracking
         await startLocationTracking();
 
-        // Handle clock in with persistent storage
-        await handlePersistentClockIn(); // This now handles both user doc update and persistent storage
-
-        setClockInTime(currentTime);
-        setClockOutTime(null);
-        setIsClockedIn(true);
+        try {
+          await handlePersistentClockIn();
+          setClockInTime(currentTime);
+          setClockOutTime(null);
+          setIsClockedIn(true);
+        } catch (error) {
+          await stopLocationTracking();
+          throw error;
+        }
       } else {
-        // Clock Out Logic
         if (!clockInTime) {
           Alert.alert("Error", "No clock-in time found");
+          setIsClockLoading(false);
           return;
         }
 
         try {
-          // Fetch current location before clocking out
           const location = await Location.getCurrentPositionAsync({});
           const lastLocation = {
             latitude: location.coords.latitude,
             longitude: location.coords.longitude,
           };
 
-          const workDuration = (currentTime - clockInTime) / (1000 * 60 * 60); // hours
+          const workDuration = (currentTime - clockInTime) / (1000 * 60 * 60);
 
-          // Use transaction for clock out to ensure all updates happen together
           await runTransaction(db, async (transaction) => {
-            // Add work hours record
             const workHoursRef = doc(collection(db, "workHours"));
             transaction.set(workHoursRef, {
               employeeId: auth.currentUser.uid,
@@ -444,7 +447,6 @@ const EmployeeDashboard = ({ navigation }) => {
               lastLocation: lastLocation,
             });
 
-            // Update user document
             transaction.update(userDocRef, {
               clockOutTime: currentTime,
               currentStatus: "Inactive",
@@ -454,12 +456,11 @@ const EmployeeDashboard = ({ navigation }) => {
             });
           });
 
-          // Stop location tracking after successful database updates
           await stopLocationTracking();
+          Alert.alert("Success", "Clock-out successfully.");
 
           setIsClockedIn(false);
           setClockOutTime(currentTime);
-          Alert.alert("Success", "Clock-out successfully.");
         } catch (error) {
           console.error("Clock out transaction failed:", error);
           Alert.alert("Error", "Failed to clock out. Please try again.");
@@ -468,6 +469,8 @@ const EmployeeDashboard = ({ navigation }) => {
     } catch (error) {
       console.error("Clock in/out error:", error);
       Alert.alert("Error", "Failed to update clock status");
+    } finally {
+      setIsClockLoading(false);
     }
   };
 
@@ -510,9 +513,9 @@ const EmployeeDashboard = ({ navigation }) => {
 
   const handleTimeChange = async (event, selectedDate) => {
     setShowTimePicker(false);
-    
+
     // If user cancels or no date selected, just return
-    if (!selectedDate || event.type === 'dismissed') {
+    if (!selectedDate || event.type === "dismissed") {
       return;
     }
 
@@ -581,7 +584,9 @@ const EmployeeDashboard = ({ navigation }) => {
           </View>
           <View style={styles.actionTextContainer}>
             <Text style={styles.actionTitle}>Share Location</Text>
-            <Text style={styles.actionDescription}>Share your current location with photo</Text>
+            <Text style={styles.actionDescription}>
+              Share your current location with photo
+            </Text>
           </View>
         </TouchableOpacity>
 
@@ -594,7 +599,9 @@ const EmployeeDashboard = ({ navigation }) => {
           </View>
           <View style={styles.actionTextContainer}>
             <Text style={styles.actionTitle}>Change Manager</Text>
-            <Text style={styles.actionDescription}>Update your reporting manager</Text>
+            <Text style={styles.actionDescription}>
+              Update your reporting manager
+            </Text>
           </View>
         </TouchableOpacity>
       </View>
@@ -655,15 +662,15 @@ const EmployeeDashboard = ({ navigation }) => {
         </View>
         <View style={styles.headerRight}>
           {isClockedIn && (
-            <TouchableOpacity 
-              style={styles.headerIconButton} 
+            <TouchableOpacity
+              style={styles.headerIconButton}
               onPress={handleSetClockOutReminder}
             >
               <Ionicons name="alarm-outline" size={24} color="#4A90E2" />
             </TouchableOpacity>
           )}
-          <TouchableOpacity 
-            style={styles.headerIconButton} 
+          <TouchableOpacity
+            style={styles.headerIconButton}
             onPress={handleLogout}
           >
             <Ionicons name="log-out-outline" size={24} color="#4A90E2" />
@@ -675,7 +682,9 @@ const EmployeeDashboard = ({ navigation }) => {
             <View style={styles.profileImageWrapper}>
               <Image
                 source={{
-                  uri: profileImage || "https://randomuser.me/api/portraits/men/41.jpg",
+                  uri:
+                    profileImage ||
+                    "https://randomuser.me/api/portraits/men/41.jpg",
                 }}
                 style={styles.profileImage}
               />
@@ -696,10 +705,21 @@ const EmployeeDashboard = ({ navigation }) => {
             </Text>
           )}
         </View>
-        <TouchableOpacity style={styles.clockButton} onPress={handleClockInOut}>
-          <Text style={styles.clockButtonText}>
-            {isClockedIn ? "Clock Out" : "Clock In"}
-          </Text>
+        <TouchableOpacity
+          style={[
+            styles.clockButton,
+            isClockLoading && styles.clockButtonLoading,
+          ]}
+          onPress={handleClockInOut}
+          disabled={isClockLoading}
+        >
+          {isClockLoading ? (
+            <ActivityIndicator color="#4A90E2" size="small" />
+          ) : (
+            <Text style={styles.clockButtonText}>
+              {isClockedIn ? "Clock Out" : "Clock In"}
+            </Text>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -861,6 +881,12 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 20,
+    minWidth: 100,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  clockButtonLoading: {
+    opacity: 0.8,
   },
   clockButtonText: {
     color: "#4A90E2",
