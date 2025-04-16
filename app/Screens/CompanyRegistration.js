@@ -102,8 +102,8 @@ const styles = StyleSheet.create({
     marginBottom: hp(-2.5),
   },
   titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: hp(1),
     zIndex: 1,
   },
@@ -360,8 +360,8 @@ export default function CompanyRegistration() {
           </View>
           {password.length > 0 && !passwordVerify && (
             <Text style={styles.errorText}>
-              Password must contain uppercase, lowercase, number and be at least
-              6 characters.
+              Password must contain uppercase, lowercase, number and exact 6
+              characters only.
             </Text>
           )}
 
